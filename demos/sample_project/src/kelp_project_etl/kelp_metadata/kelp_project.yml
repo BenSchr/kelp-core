@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=/workspaces/kelp/.vscode/kelp_json_schema.json
+kelp_project:
+  metadata_paths: ["./models"]
+
+  models:
+    +catalog: ${ catalog }
+    +tags:
+      kelp_managed: ""
+    bronze:
+      +schema: kelp_bronze
+    silver:
+      +schema: kelp_silver
+    gold:
+      +schema: kelp_gold
+    raw:
+      +schema: sdp_test
+    conformed:
+      +schema: sdp_test
+
+vars:
+  default:
+    catalog: kelp_catalog
+    dev:
+      catalog: ${ default.catalog }

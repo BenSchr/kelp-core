@@ -1,0 +1,7 @@
+kelp_models:
+  - name: silver_customers_cleaned
+    description: "This is the silver cleaned customer model"
+    quality:
+      engine: "sdp"
+      expect_all_or_quarantine:
+        country_not_unknown: "lower(country) != 'unknown'"

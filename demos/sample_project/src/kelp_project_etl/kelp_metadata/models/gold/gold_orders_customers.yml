@@ -1,0 +1,53 @@
+kelp_models:
+  - table_type: materialized_view
+    name: gold_orders_customers
+    description: "Gold materialized view: enriched orders joined with customer attributes for analytics and reporting."
+    tags:
+      domain: "orders"
+      stage: "gold"
+      owner: "analytics-team"
+    columns:
+      - name: order_id
+        data_type: string
+        description: "Primary order identifier used to join and deduplicate orders."
+        tags:
+          business: "key"
+      - name: order_state
+        data_type: string
+        description: "Order lifecycle state (e.g., Pending, Shipped, Delivered)."
+      - name: product
+        data_type: string
+      - name: quantity
+        data_type: bigint
+      - name: price
+        data_type: double
+        description: "Unit price of the order line."
+      - name: total_price
+        data_type: double
+        description: "Derived column: price * quantity. Use for revenue computations."
+      - name: store
+        data_type: string
+      - name: user_id
+        data_type: string
+        description: "Identifier for the customer/user; links back to bronze/silver customer tables."
+        tags:
+          pii: "false"
+      - name: country
+        data_type: string
+        description: "Customer country from the customer record; useful for geo rollups."
+    quality:
+      engine: "sdp"
+      expect_all_or_quarantine:
+        price_non_negative: "price >= 0"
+        quantity_non_negative: "quantity >= 0"
+        order_id_present: "order_id IS NOT NULL"
+    metrics:
+      - name: total_revenue
+        expression: "sum(total_price)"
+        description: "Total revenue across orders in the view."
+      - name: order_count
+        expression: "count(distinct order_id)"
+        description: "Number of unique orders represented."
+      - name: avg_order_value
+        expression: "avg(total_price)"
+        description: "Average order value computed over orders in the view."
