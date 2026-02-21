@@ -51,3 +51,8 @@ kelp_models:
       - name: avg_order_value
         expression: "avg(total_price)"
         description: "Average order value computed over orders in the view."
+    constraints:
+      - name: pk_1
+        columns:
+          - order_id
+        type: primary_key

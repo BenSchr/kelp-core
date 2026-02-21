@@ -1,39 +1,14 @@
 from pathlib import Path
 from kelp.config.catalog import parse_catalog
-from kelp.config.project import load_project
-from kelp.config.vars import resolve_variables
-from kelp.constants import KELP_PROJECT_FILENAME
+from kelp.config.project import load_project_config
+from kelp.config.vars import resolve_vars_with_target
 from kelp.models.runtime_context import RuntimeContext
 from kelp.utils.jinja_parser import load_yaml_with_jinja, _deep_merge_dicts
+from kelp.config.settings import create_settings_resolver
+import logging
 
 
-def resolve_project_root() -> str:
-    """Resolve the project root path."""
-
-    project_filename = KELP_PROJECT_FILENAME
-    current_path = Path.cwd()
-    # Check in current and two parent directories
-    for _ in range(3):
-        candidate = current_path / project_filename
-        if candidate.exists() and candidate.is_file():
-            return str(current_path)
-        current_path = current_path.parent
-    # Check in child directories of current path, two levels deep
-    for child in Path.cwd().iterdir():
-        if child.is_dir():
-            candidate = child / project_filename
-            if candidate.exists() and candidate.is_file():
-                return str(child)
-            # Check one more level deep
-            for grandchild in child.iterdir():
-                if grandchild.is_dir():
-                    candidate = grandchild / project_filename
-                    if candidate.exists() and candidate.is_file():
-                        return str(grandchild)
-
-    raise FileNotFoundError(
-        f"Project root with '{project_filename}' not found in current, child and parent directories."
-    )
+logger = logging.getLogger(__name__)
 
 
 def load_config_files(project_root: str, file_paths: list[str], vars: dict) -> dict:
@@ -49,20 +24,40 @@ def load_config_files(project_root: str, file_paths: list[str], vars: dict) -> d
 
 
 def load_runtime_config(
-    project_file_path: str | None = None, env: str | None = None, overwrite_vars: dict = {}
+    project_file_path: str | None = None,
+    target: str | None = None,
+    init_vars: dict | None = None,
 ) -> RuntimeContext:
-    project_root = None
-    if not project_file_path:
-        project_root = resolve_project_root()
-        project_file_path = Path(project_root).joinpath(KELP_PROJECT_FILENAME)
-    if not project_root:
-        project_root = Path(project_file_path).parent
-    runtime_vars, full_vars = resolve_variables(project_file_path, env, overwrite_vars)
+    """
+    Load runtime configuration using the new modular approach with target support.
 
-    project_config = load_project(project_file_path, full_vars)
+    Features:
+    - Uses simple variable priority: init_vars > target_vars > default_vars
+    - Supports target-specific configurations
+    - Settings resolver for project settings (separate concern)
+    - Auto-detects Spark if available for settings resolution
 
+    Priority for project file resolution: spark.conf > os env > folder search
+
+    Args:
+        project_file_path: Explicit project file path. If not provided, resolved via spark/os env/folder search.
+        target: Target name to use (e.g., 'dev', 'prod'). Optional.
+        init_vars: Variables to override (highest priority).
+
+    Returns:
+        RuntimeContext with resolved configuration.
+    """
+
+    # Load project configuration with resolved variables
+    project_config = load_project_config(project_file_path, target, init_vars)
+
+    project_root = Path(project_config.project_file_path).parent
+    runtime_vars = project_config.runtime_vars
+
+    # Load metadata files with resolved variables
     raw_config = load_config_files(project_root, project_config.metadata_paths, runtime_vars)
 
+    # Parse catalog
     catalog = parse_catalog(
         raw_config.get("kelp_models", []),
         project_config.models,
@@ -72,6 +67,6 @@ def load_runtime_config(
         project_root=str(project_root),
         catalog=catalog,
         project_config=project_config,
-        env=env,
+        target=target,  # Store target as target for backward compatibility
         runtime_vars=runtime_vars,
     )

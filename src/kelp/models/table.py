@@ -4,6 +4,8 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 from enum import Enum
 
+from pydantic.json_schema import SkipJsonSchema
+
 
 class TableType(Enum):
     EXTERNAL = "external"
@@ -18,7 +20,7 @@ class TableType(Enum):
 
 
 class Table(BaseModel):
-    origin_file_path: str | None = Field(
+    origin_file_path: SkipJsonSchema[str] | None = Field(
         default=None,
     )
     table_type: TableType = Field(default=TableType.MANAGED, validate_default=True)
@@ -31,7 +33,7 @@ class Table(BaseModel):
     path: str | None = Field(default=None)
     partition_cols: list[str] = Field(default_factory=list)
     cluster_by_auto: bool = Field(default=False)
-    cluster_by: list[str] = Field(default_factory=list, max_items=4)
+    cluster_by: list[str] = Field(default_factory=list, max_length=4)
     row_filter: str | None = Field(default=None)
     columns: list[Column] = Field(default_factory=list)
     quality: SDPQuality | DQXQuality | None = Field(default=None, discriminator="engine")
@@ -79,16 +81,6 @@ class GeneratedIdentityColumnConfig(BaseModel):
     increment_by: int = Field(default=1)
 
 
-class TestClass:
-    """My test class
-
-    Attributes:
-        a (int): an integer parameter
-    """
-
-    a: int = 5
-
-
 class GeneratedExpressionColumnConfig(BaseModel):
     type: Literal["expression"]
     expression: str = Field()  # The expression used to generate the column
@@ -128,4 +120,4 @@ class DQXQuality(Quality):
     engine: Literal["dqx"]
     sdp_expect_level: Literal["warn", "fail", "drop", "deactivate"] = Field(default="warn")
     sdp_quarantine: bool = Field(default=False)
-    checks: list[dict] = Field(default_factory=dict)
+    checks: list[dict] = Field(default_factory=list)

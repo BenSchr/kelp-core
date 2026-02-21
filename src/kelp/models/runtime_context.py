@@ -7,5 +7,5 @@ class RuntimeContext(BaseModel):
     project_root: str
     catalog: Catalog
     project_config: ProjectConfig
-    env: str | None = None
+    target: str | None = None
     runtime_vars: dict | None = None

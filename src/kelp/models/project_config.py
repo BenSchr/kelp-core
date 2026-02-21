@@ -1,5 +1,6 @@
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
+from pydantic.json_schema import SkipJsonSchema
 
 
 class QuarantineConfig(BaseModel):
@@ -34,3 +35,5 @@ class ProjectConfig(BaseModel):
     models: dict = Field(default_factory=dict)
     quarantine_config: QuarantineConfig = Field(default_factory=QuarantineConfig)
     remote_catalog_config: RemoteCatalogConfig = Field(default_factory=RemoteCatalogConfig)
+    runtime_vars: SkipJsonSchema[dict] = Field(default_factory=dict)
+    project_file_path: SkipJsonSchema[str] = Field(default="")

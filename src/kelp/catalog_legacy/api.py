@@ -1,6 +1,6 @@
 import logging
 
-from kelp.catalog.uc_adapter import UnityCatalogAdapter
+from kelp.catalog_legacy.uc_adapter import UnityCatalogAdapter
 from kelp.config.lifecycle import get_context
 
 logger = logging.getLogger(f"{__name__}")

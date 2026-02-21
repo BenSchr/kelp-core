@@ -46,7 +46,7 @@ def json_schema(
 @app.command()
 def validate(
     config_path: Annotated[str, typer.Option("-c", help="Path to the kelp_project.yml")] = None,
-    env: Annotated[str, typer.Option(help="Environment to validate against")] = None,
+    target: Annotated[str, typer.Option(help="Environment to validate against")] = "dev",
     debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
 ) -> None:
     from kelp.config.lifecycle import init
@@ -62,7 +62,7 @@ def validate(
 
     log_level = "DEBUG" if debug else None
 
-    run_ctx = init(config_path, env, log_level=log_level)
+    run_ctx = init(config_path, target, log_level=log_level)
     validated = True if run_ctx else False
     if validated:
         typer.secho("✓ Configuration is valid!", fg=typer.colors.GREEN)

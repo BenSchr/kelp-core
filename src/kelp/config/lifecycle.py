@@ -1,4 +1,5 @@
 import logging
+import threading
 from kelp.models.runtime_context import RuntimeContext
 from kelp.config.runtime import load_runtime_config
 from kelp.utils.logging import configure_logging
@@ -13,30 +14,34 @@ class ContextMissingError(Exception):
 
 
 class ContextStore:
+    _lock = threading.Lock()
     ctx_state: RuntimeContext | None = None
 
     @classmethod
     def get(cls) -> RuntimeContext | None:
-        return cls.ctx_state
+        with cls._lock:
+            return cls.ctx_state
 
     @classmethod
     def set(cls, ctx: RuntimeContext, overwrite: bool = False) -> None:
-        if cls.ctx_state is not None and not overwrite:
-            raise ContextExistsError(
-                "A global context already exists. Use overwrite=True to replace it."
-            )
-        cls.ctx_state = ctx
+        with cls._lock:
+            if cls.ctx_state is not None and not overwrite:
+                raise ContextExistsError(
+                    "A global context already exists. Use overwrite=True to replace it."
+                )
+            cls.ctx_state = ctx
 
     @classmethod
     def clear(cls) -> None:
-        cls.ctx_state = None
+        with cls._lock:
+            cls.ctx_state = None
 
     @classmethod
     def getOrCreate(
         cls,
-        project_file_path: str,
-        env: str,
-        overwrite_vars: dict,
+        project_file_path: str | None = None,
+        target: str | None = None,
+        overwrite_vars: dict | None = None,
         refresh: bool = False,
         store_in_global: bool = True,
     ) -> RuntimeContext:
@@ -44,24 +49,33 @@ class ContextStore:
         If a global Context already exists, it is returned unless `refresh` is True,
         in which case a new Context is created and stored globally.
         """
-        if cls.ctx_state is not None and not refresh:
-            return cls.ctx_state
+        with cls._lock:
+            if cls.ctx_state is not None and not refresh:
+                return cls.ctx_state
+        # configure logging if not already configured through init
+        configure_logging()
 
-        ctx = load_runtime_config(project_file_path, env, overwrite_vars)
-        if store_in_global:
-            cls.set(ctx, overwrite=True)
+        ctx = load_runtime_config(project_file_path, target, overwrite_vars)
+        with cls._lock:
+            if store_in_global and (cls.ctx_state is None or refresh):
+                cls.ctx_state = ctx
+            if cls.ctx_state is not None and not refresh:
+                ctx = cls.ctx_state
         logger = logging.getLogger(__name__)
         logger.debug(
-            f"Runtime context initialized with project_file_path={project_file_path}, env={env}, overwrite_vars={overwrite_vars}"
+            "Runtime context initialized with project_file_path=%s, target=%s, overwrite_vars=%s",
+            project_file_path,
+            target,
+            overwrite_vars,
         )
-        logger.debug(f"Resolved runtime variables: {ctx.runtime_vars}")
+        logger.debug("Resolved runtime variables: %s", ctx.runtime_vars)
 
         return ctx
 
 
 def init(
-    project_root: str,
-    env: str | None = None,
+    project_root: str | None = None,
+    target: str | None = None,
     overwrite_vars: dict | None = None,
     *,
     refresh: bool = False,
@@ -83,16 +97,19 @@ def init(
         configure_logging(log_level)
     return ContextStore.getOrCreate(
         project_root,
-        env,
+        target,
         overwrite_vars,
         refresh=refresh,
         store_in_global=store_in_global,
     )
 
 
-def get_context() -> RuntimeContext:
+def get_context(init: bool = True) -> RuntimeContext:
     """Return the stored global RuntimeContext."""
-    ctx = ContextStore.get()
+    if init:
+        ctx = ContextStore.getOrCreate()
+    else:
+        ctx = ContextStore.get()
     if ctx is None:
         raise ContextMissingError("No global context is set. Please initialize one first.")
     return ctx

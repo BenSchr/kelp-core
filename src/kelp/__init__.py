@@ -10,5 +10,6 @@ internal runtime implementations.
 """
 
 from kelp.config import init, get_context
+from kelp import catalog
 
-__all__ = ["init", "get_context"]
+__all__ = ["init", "get_context", "catalog"]

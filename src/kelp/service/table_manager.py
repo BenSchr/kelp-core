@@ -241,7 +241,7 @@ class TableManager:
 
     @classmethod
     def get_spark_schema_ddl(
-        self,
+        cls,
         table: Table,
         table_type: str = "Table",
         if_not_exists: bool = False,

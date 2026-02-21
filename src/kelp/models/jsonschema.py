@@ -23,6 +23,13 @@ class JsonSchemaModel(BaseModel):
         description="Path to a YAML file containing variables that overwrite the ones defined in the project file. "
         "May be added to .gitignore to set individual developer vars like schema names.",
     )
+    targets: dict[str, Any] | None = Field(
+        default=None, description="List of target configurations for deployment or other purposes."
+    )
+    targets_path: str | None = Field(
+        default=None,
+        description="Path to an external YAML file or folder containing target configurations. This allows separating target definitions from the main project file.",
+    )
 
 
 def generate_json_schema() -> dict:

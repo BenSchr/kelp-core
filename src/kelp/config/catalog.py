@@ -16,19 +16,21 @@ def load_catalog(
     final_tables: list[Table] = []
 
     for m_path in model_paths:
-        model_paths = Path(project_root).joinpath(m_path)
-        logger.debug("Scanning models path: %s", model_paths)
-        if not model_paths.exists():
-            logger.warning("Models path does not exist, skipping: %s", model_paths)
+        resolved_path = Path(project_root).joinpath(m_path)
+        logger.debug("Scanning models path: %s", resolved_path)
+        if not resolved_path.exists():
+            logger.warning(
+                "Models path does not exist, skipping: %s", resolved_path)
             continue
 
-        parsed_results = load_yaml_with_jinja(path=model_paths, jinja_context=vars)
+        parsed_results = load_yaml_with_jinja(
+            path=resolved_path, jinja_context=vars)
         models = parsed_results.get("kelp_models", [])
         for model_data in models:
             table_dict = {}
             origin_file_path = model_data.get("origin_file_path")
             table_dict["origin_file_path"] = origin_file_path
-            logger.debug(f"Processing model from file: {origin_file_path}")
+            logger.debug("Processing model from file: %s", origin_file_path)
             # apply project-level and folder-level defaults using recursive helper
             model_data = apply_cfg_hierarchy_to_dict_recursive(
                 model_data, project_models_config, tpl_path=origin_file_path
@@ -43,7 +45,7 @@ def load_catalog(
                 logger.error(
                     "Failed to parse Table '%s' in models path '%s': %s",
                     table_dict.get("name", "<unknown>"),
-                    model_paths,
+                    resolved_path,
                     e,
                 )
                 raise e
@@ -52,7 +54,8 @@ def load_catalog(
             "Finished scanning model paths. candidate tables count=%d",
             len(final_tables),
         )
-        return Catalog(models=final_tables)
+
+    return Catalog(models=final_tables)
 
 
 def parse_catalog(raw_models: list, project_models_config: dict) -> Catalog:
@@ -62,7 +65,7 @@ def parse_catalog(raw_models: list, project_models_config: dict) -> Catalog:
         table_dict = {}
         origin_file_path = model_data.get("origin_file_path")
         table_dict["origin_file_path"] = origin_file_path
-        logger.debug(f"Processing model from file: {origin_file_path}")
+        logger.debug("Processing model from file: %s", origin_file_path)
         # apply project-level and folder-level defaults using recursive helper
         model_data = apply_cfg_hierarchy_to_dict_recursive(
             model_data, project_models_config, tpl_path=origin_file_path

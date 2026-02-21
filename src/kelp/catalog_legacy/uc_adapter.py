@@ -44,7 +44,8 @@ class UnityCatalogAdapter:
     _spark: SparkSession
 
     def __init__(
-        self, config: RemoteCatalogConfig | None = None, spark: SparkSession | None = None
+        # , spark: SparkSession | None = None
+        self, config: RemoteCatalogConfig | None = None
     ):
         self.catalog_config = config or get_context().project_config.remote_catalog_config
         # self._spark = spark or SparkSession.active()
@@ -283,11 +284,11 @@ class UnityCatalogAdapter:
             "constraints_fk": {"create": [], "update": [], "delete": []},
         }
 
-        ### Table-level comparison
+        # Table-level comparison
         if remote.description != local.description:
             diffs["table_description"] = local.description
 
-        ### Table tags comparison
+        # Table tags comparison
         # Compare table tags, respecting tag_mode and managed_tags
         diffs["table_tags"] = compare_two_dicts(
             local.tags or {},
@@ -311,37 +312,33 @@ class UnityCatalogAdapter:
             lc = local_constraint_map.get(rc_name)
             if lc is None:
                 # Constraint not found locally; mark for deletion
-                if lc.type == "primary_key":
+                if rc.type == "primary_key":
                     diffs["constraints_pk"]["delete"] = rc
-                elif lc.type == "foreign_key":
+                elif rc.type == "foreign_key":
                     diffs["constraints_fk"]["delete"].append(rc)
+                continue
 
-            if lc:
-                if lc.type != rc.type:
-                    logger.warning(
-                        "Constraint type change detected for constraint %s; manual intervention required. skipping constraint sync for %s",
-                        rc_name,
-                        rc_name,
-                    )
-                    continue
+            if lc.type != rc.type:
+                logger.warning(
+                    "Constraint type change detected for constraint %s; manual intervention required. skipping constraint sync for %s",
+                    rc_name,
+                    rc_name,
+                )
+                continue
 
-                if lc.columns != rc.columns:
-                    # Columns have changed; mark for update
-                    if lc.type == "primary_key":
-                        diffs["constraints_pk"]["update"] = lc
-                    elif lc.type == "foreign_key":
-                        diffs["constraints_fk"]["update"].append(lc)
-                if lc.type == "foreign_key" and (
-                    lc.reference_table != rc.reference_table
-                    or lc.reference_columns != rc.reference_columns
-                ):
+            if lc.columns != rc.columns:
+                # Columns have changed; mark for update
+                if lc.type == "primary_key":
+                    diffs["constraints_pk"]["update"] = lc
+                elif lc.type == "foreign_key":
                     diffs["constraints_fk"]["update"].append(lc)
-            else:
-                # Compare constraint definitions (simplified comparison here)
-                if rc.constraint_type != lc.constraint_type or rc.columns != lc.columns:
-                    diffs["constraints_fk"]["update"].append(lc)
+            if lc.type == "foreign_key" and (
+                lc.reference_table != rc.reference_table
+                or lc.reference_columns != rc.reference_columns
+            ):
+                diffs["constraints_fk"]["update"].append(lc)
 
-        ## check for remote missing constraints that exist locally and mark for creation
+        # check for remote missing constraints that exist locally and mark for creation
         for lc_name, lc in local_constraint_map.items():
             rc = remote_constraint_map.get(lc_name)
             if rc is None:
@@ -390,7 +387,7 @@ class UnityCatalogAdapter:
             List of SQL queries to be executed.
         """
 
-        ## Skip Streaming Tables
+        # Skip Streaming Tables
         if table_type == "streaming_table":
             logger.warning(
                 "Comment on streaming tables is not supported in Unity Catalog; Use SDP definition skipping %s",
@@ -427,7 +424,8 @@ class UnityCatalogAdapter:
                 full_table_name=full_table_name,
                 alter_action=ALTER_COLUMN_QUERY.format(
                     column_name=column_name,
-                    alter_action=SET_COMMENT_QUERY.format(comment=description.replace("'", "''")),
+                    alter_action=SET_COMMENT_QUERY.format(
+                        comment=description.replace("'", "''")),
                 ),
             )
         else:
@@ -450,7 +448,8 @@ class UnityCatalogAdapter:
         """
 
         # Implementation to update table tags in Unity Catalog
-        tags_str = ", ".join([f"""'{k}'='{v.replace("'", "''")}'""" for k, v in tags.items()])
+        tags_str = ", ".join(
+            [f"""'{k}'='{v.replace("'", "''")}'""" for k, v in tags.items()])
         table_type = TABLE_TYPE_MAPPING.get(table_type, "TABLE")
         query = BASE_ALTER_QUERY.format(
             table_type=table_type,
@@ -490,7 +489,8 @@ class UnityCatalogAdapter:
             List of SQL queries to be executed.
         """
         # Implementation to update column tags in Unity Catalog
-        tags_str = ", ".join([f"""'{k}'='{v.replace("'", "''")}'""" for k, v in tags.items()])
+        tags_str = ", ".join(
+            [f"""'{k}'='{v.replace("'", "''")}'""" for k, v in tags.items()])
         queries = []
 
         if table_type == "view":
@@ -500,7 +500,8 @@ class UnityCatalogAdapter:
                     path=f"{full_table_name}.{column_name}",
                     tag_key=k,
                 )
-                logger.debug("Generated query (optional unset): %s", unset_query)
+                logger.debug(
+                    "Generated query (optional unset): %s", unset_query)
                 queries.append(unset_query)
 
                 query = SET_TAG_ON_TYPE_QUERY.format(
@@ -587,7 +588,8 @@ class UnityCatalogAdapter:
             full_table_name=full_table_name,
             alter_action=SET_TABLE_PROPERTIES_QUERY.format(
                 properties=", ".join(
-                    [f"""'{k}'='{v.replace("'", "''")}'""" for k, v in properties.items()]
+                    [f"""'{k}'='{v.replace("'", "''")}'""" for k,
+                     v in properties.items()]
                 )
             ),
         )
