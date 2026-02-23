@@ -11,8 +11,8 @@ Priority for resolution (highest to lowest):
 5. Default settings
 """
 
-import os
 import logging
+import os
 from typing import Any
 
 from kelp.constants import KELP_ENV_PREFIX

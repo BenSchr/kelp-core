@@ -1,9 +1,12 @@
 import json
 from pathlib import Path
 from typing import Annotated
+
 import typer
-from kelp.models.jsonschema import generate_json_schema
+from dotenv import load_dotenv
+
 from kelp.cli.catalog import app as catalog_app
+from kelp.models.jsonschema import generate_json_schema
 
 app = typer.Typer(
     name="kelp",
@@ -49,16 +52,8 @@ def validate(
     target: Annotated[str, typer.Option(help="Environment to validate against")] = "dev",
     debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
 ) -> None:
+    load_dotenv()
     from kelp.config.lifecycle import init
-    from kelp.config.runtime import resolve_project_root
-
-    if not config_path:
-        try:
-            config_path = resolve_project_root()
-            typer.secho(f"✓ Found project root at: {config_path}", fg=typer.colors.GREEN)
-        except FileNotFoundError as e:
-            typer.secho(f"✗ {str(e)}", fg=typer.colors.RED)
-            raise typer.Exit(code=1)
 
     log_level = "DEBUG" if debug else None
 
@@ -69,6 +64,11 @@ def validate(
     else:
         typer.secho("✗ Configuration is invalid!", fg=typer.colors.RED)
         raise typer.Exit(code=1)
+    typer.echo(f"Project config loaded from: {run_ctx.project_config.project_file_path}")
+    typer.echo(f"Target environment: {run_ctx.target}")
+    typer.echo(f"Runtime variables: {run_ctx.runtime_vars}")
+    typer.echo(f"Relative models path: {run_ctx.project_config.models_path}")
+    typer.echo(f"Models found: {len(run_ctx.catalog.index)}")
 
 
 def main() -> None:

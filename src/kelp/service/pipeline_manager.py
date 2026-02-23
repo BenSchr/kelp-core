@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
-from typing import List, Set
 
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service import pipelines as sp
 
 from kelp.models.project_config import QuarantineConfig
 from kelp.models.table import Table
+from kelp.utils.common import find_path_by_name
 from kelp.utils.databricks import get_table_from_dbx_sdk
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class PipelineManager:
         self,
         pipeline_id: str,
         quarantine_config: QuarantineConfig | None = None,
-    ) -> List[Table]:
+    ) -> list[Table]:
         """Fetch all relevant tables from a Databricks pipeline.
 
         Args:
@@ -71,7 +71,7 @@ class PipelineManager:
         logger.info(f"Successfully fetched {len(tables)} tables")
         return tables
 
-    def _fetch_updates(self, pipeline_id: str) -> List[sp.UpdateInfo]:
+    def _fetch_updates(self, pipeline_id: str) -> list[sp.UpdateInfo]:
         """Fetch pipeline updates, sorted by creation time descending."""
         page = self.w.pipelines.list_updates(pipeline_id=pipeline_id, max_results=5)
         updates = list(page.updates or [])
@@ -81,7 +81,7 @@ class PipelineManager:
     def _events_for_window(
         self,
         pipeline_id: str,
-        updates: List[sp.UpdateInfo],
+        updates: list[sp.UpdateInfo],
     ) -> dict[str, list[sp.PipelineEvent]]:
         """Fetch events for the given pipeline updates."""
         if not updates:
@@ -109,10 +109,10 @@ class PipelineManager:
         return update_event_map
 
     def _extract_dataset_names(
-        self, updates: List[sp.UpdateInfo], event_map: dict[str, list[sp.PipelineEvent]]
-    ) -> List[str]:
+        self, updates: list[sp.UpdateInfo], event_map: dict[str, list[sp.PipelineEvent]]
+    ) -> list[str]:
         """Extract unique dataset names from pipeline events."""
-        names: Set[str] = set()
+        names: set[str] = set()
         for update in updates:
             for event in event_map.get(update.update_id, []):
                 if event.event_type == "dataset_definition":
@@ -156,5 +156,43 @@ class PipelineManager:
     @staticmethod
     def _to_iso_ts(ms: int) -> str:
         """Convert millisecond epoch to RFC3339 UTC timestamp."""
-        ts = dt.datetime.fromtimestamp(ms / 1000.0).replace(tzinfo=dt.timezone.utc)
+        ts = dt.datetime.fromtimestamp(ms / 1000.0).replace(tzinfo=dt.UTC)
         return ts.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+    @classmethod
+    def detect_pipeline_ids(self, target) -> list[str]:
+        """Detect pipeline IDs in local files"""
+        # search for .databricks/bundle/<target> folder
+        # look for resources.json and extract pipeline_id from there
+        # return list of unique pipeline_ids found
+
+        # Find .databricks/bundle/<target>/**/*.json files search childs and parents two times both
+        folder = find_path_by_name(".", ".databricks")
+        if not folder:
+            logger.warning(f"No .databricks/bundle/{target} folder found for pipeline detection")
+            return []
+        target_folder = folder / "bundle" / target
+        if not target_folder.exists():
+            logger.warning(f"No .databricks/bundle/{target} folder found for pipeline detection")
+            return []
+        resource_path = target_folder / "resources.json"
+        if not resource_path.exists() or not resource_path.is_file():
+            logger.warning(f"No resources.json found in {folder} for pipeline detection")
+            return []
+        try:
+            import json
+
+            with open(resource_path) as f:
+                resources = json.load(f)
+            pipeline_ids = set()
+            for res, data in resources["state"].items():
+                if res.startswith("resources.pipelines"):
+                    id = data.get("__id__")
+                    if id:
+                        pipeline_ids.add(id)
+        except Exception as e:
+            logger.warning(f"Failed to read resources.json for pipeline detection: {e}")
+            return []
+
+        logger.debug(f"Detected pipeline IDs: {pipeline_ids}")
+        return list(pipeline_ids)

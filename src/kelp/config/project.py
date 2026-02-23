@@ -1,14 +1,57 @@
+"""Project configuration discovery, loading, and parsing.
+
+This module handles:
+- Project file discovery (auto-detection from current directory or explicit specification)
+- Project YAML loading with Jinja template rendering
+- Target-specific configuration resolution
+- Project configuration model instantiation
+
+Project discovery priority: Spark config > OS environment > Directory search
+Target configuration can be inline (in project file) or in separate target files.
+"""
+
+import logging
 from pathlib import Path
 from typing import Any
+
 from kelp.config.settings import create_settings_resolver
 from kelp.config.vars import resolve_vars_with_target
 from kelp.constants import KELP_PROJECT_FILENAME, KELP_PROJECT_HEADER
 from kelp.models.project_config import ProjectConfig
+from kelp.utils.common import find_path_by_name
 from kelp.utils.jinja_parser import _deep_merge_dicts, load_yaml_with_jinja
 from kelp.utils.yaml_parser import load_yaml
-import logging
 
 logger = logging.getLogger(__name__)
+
+
+def resolve_project_root_dir() -> str:
+    """Search for project root directory containing the project file.
+
+    Searches for KELP_PROJECT_FILENAME in parent directories (up to 3 levels)
+    and child directories (up to 3 levels) from the current working directory.
+
+    Returns:
+        Absolute path to the directory containing the project file.
+
+    Raises:
+        FileNotFoundError: If project file is not found in the search path.
+    """
+    project_filename = KELP_PROJECT_FILENAME
+    project_path = find_path_by_name(
+        Path.cwd(),
+        project_filename,
+        search_strategy="both",
+        max_depth_up=3,
+        max_depth_down=3,
+    )
+
+    if project_path is None:
+        raise FileNotFoundError(
+            f"Project root with '{project_filename}' not found in current, child and parent directories."
+        )
+
+    return str(project_path.parent if project_path.is_file() else project_path)
 
 
 def load_project_yaml(
@@ -16,39 +59,8 @@ def load_project_yaml(
     runtime_vars: dict[str, Any],
 ) -> dict:
     """Load the project YAML file as a dict."""
-
     project_data = load_yaml_with_jinja(project_file_path, jinja_context=runtime_vars)
-
     return project_data
-
-
-def _search_project_root() -> str:
-    """Search for project root by looking in folder structure."""
-
-    project_filename = KELP_PROJECT_FILENAME
-    current_path = Path.cwd()
-    # Check in current and two parent directories
-    for _ in range(3):
-        candidate = current_path / project_filename
-        if candidate.exists() and candidate.is_file():
-            return str(current_path)
-        current_path = current_path.parent
-    # Check in child directories of current path, two levels deep
-    for child in Path.cwd().iterdir():
-        if child.is_dir():
-            candidate = child / project_filename
-            if candidate.exists() and candidate.is_file():
-                return str(child)
-            # Check one more level deep
-            for grandchild in child.iterdir():
-                if grandchild.is_dir():
-                    candidate = grandchild / project_filename
-                    if candidate.exists() and candidate.is_file():
-                        return str(grandchild)
-
-    raise FileNotFoundError(
-        f"Project root with '{project_filename}' not found in current, child and parent directories."
-    )
 
 
 def resolve_project_file_path() -> str:
@@ -71,7 +83,7 @@ def resolve_project_file_path() -> str:
         raise FileNotFoundError(f"Specified project file not found: {resolved_file}")
 
     # Fallback to folder search
-    project_root = _search_project_root()
+    project_root = resolve_project_root_dir()
     return str(Path(project_root).joinpath(KELP_PROJECT_FILENAME))
 
 
@@ -79,9 +91,20 @@ def load_target_yaml(
     target_file_path: str | Path,
     project_header: str,
     target: str | None = None,
-    runtime_vars: dict[str, Any] = {},
+    runtime_vars: dict[str, Any] | None = None,
 ) -> dict:
-    """Load the target YAML file as a dict."""
+    """Load the target YAML file as a dict.
+
+    Args:
+        target_file_path: Path to the target file.
+        project_header: Header key to extract from target config.
+        target: Target name to load.
+        runtime_vars: Variables for Jinja rendering. If None, empty dict is used.
+
+    Returns:
+        Loaded and filtered target configuration.
+    """
+    runtime_vars = runtime_vars or {}
     if target_file_path is None or target is None:
         return {}
 

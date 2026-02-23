@@ -1,5 +1,6 @@
-from kelp.models.table import Table
 from databricks.sdk import WorkspaceClient
+
+from kelp.models.table import Table
 
 
 def get_table_from_dbx_sdk(

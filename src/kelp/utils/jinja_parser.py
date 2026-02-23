@@ -1,9 +1,10 @@
+from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 from functools import partial
+from pathlib import Path
+
 import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, TemplateNotFound
-from collections.abc import Iterable
 
 
 def render_string_with_jinja(s, jinja_context=None, jinja_env=None):
@@ -82,7 +83,9 @@ def load_yaml_with_jinja(
         raise ValueError(f"Path {path} is neither a file nor a directory.")
 
     def load_and_render(file_path: Path, base_dir: Path) -> dict:
+
         relative_path = file_path.relative_to(base_dir)
+
         rendered_content = _render_jinja(str(relative_path), context, env)
         try:
             parsed_yaml = yaml.safe_load(rendered_content) or {}

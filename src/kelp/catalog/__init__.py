@@ -7,6 +7,6 @@ Public surface:
 - Orchestrator: ``UnityCatalogAdapter``
 """
 
-from kelp.catalog.api import sync_table, sync_catalog
+from kelp.catalog.api import sync_catalog, sync_table
 
 __all__ = ["sync_catalog", "sync_table"]

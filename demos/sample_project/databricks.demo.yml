@@ -19,6 +19,9 @@ variables:
     description: The source catalog to read from
   source_schema:
     description: The source schema to read from
+  kelp_project_file:
+    description: Path to kelp project file
+    default: ${workspace.file_path}/src/kelp_project_etl/kelp_project.yml
 
 scripts:
   pre_deploy:

@@ -8,7 +8,6 @@ from pyspark.sql.functions import expr
 from kelp.pipelines.utils import merge_params
 from kelp.service.table_manager import TableManager
 
-
 # -----------------------
 # Helpers
 # -----------------------

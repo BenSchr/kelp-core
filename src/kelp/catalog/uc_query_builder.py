@@ -41,12 +41,9 @@ _DROP_CONSTRAINT = "ALTER TABLE {fqn} DROP CONSTRAINT {name}"
 
 _NO_TABLE_COMMENT_TYPES: frozenset[str] = frozenset({"streaming_table"})
 
-_NO_PROPERTIES_TYPES: frozenset[str] = frozenset(
-    {"view", "materialized_view", "streaming_table"})
-_NO_CLUSTER_TYPES: frozenset[str] = frozenset(
-    {"view", "materialized_view", "streaming_table"})
-_NO_CONSTRAINT_TYPES: frozenset[str] = frozenset(
-    {"view", "materialized_view", "streaming_table"})
+_NO_PROPERTIES_TYPES: frozenset[str] = frozenset({"view", "materialized_view", "streaming_table"})
+_NO_CLUSTER_TYPES: frozenset[str] = frozenset({"view", "materialized_view", "streaming_table"})
+_NO_CONSTRAINT_TYPES: frozenset[str] = frozenset({"view", "materialized_view", "streaming_table"})
 
 _UC_TYPE: dict[str, str] = {
     "managed": "TABLE",
@@ -91,14 +88,13 @@ class UCQueryBuilder:
         queries: list[str] = []
 
         queries.extend(self._description_queries(fqn, diff, table_type))
-        queries.extend(self._table_tag_queries(
-            fqn, diff.table_tags, table_type))
-        queries.extend(self._table_property_queries(
-            fqn, diff.table_properties, table_type))
+        queries.extend(self._table_tag_queries(fqn, diff.table_tags, table_type))
+        queries.extend(self._table_property_queries(fqn, diff.table_properties, table_type))
         queries.extend(self._column_queries(fqn, diff, table_type))
         queries.extend(self._cluster_by_queries(fqn, diff, table_type))
-        queries.extend(self._constraint_queries(
-            fqn, diff.constraint_pk, diff.constraint_fk, table_type))
+        queries.extend(
+            self._constraint_queries(fqn, diff.constraint_pk, diff.constraint_fk, table_type)
+        )
 
         return queries
 
@@ -107,9 +103,7 @@ class UCQueryBuilder:
             return []
 
         if table_type in _NO_TABLE_COMMENT_TYPES:
-            logger.warning(
-                "COMMENT ON is not supported for %s; skipping %s", table_type, fqn
-            )
+            logger.warning("COMMENT ON is not supported for %s; skipping %s", table_type, fqn)
             return []
 
         if table_type == "materialized_view":
@@ -151,9 +145,7 @@ class UCQueryBuilder:
 
         return queries
 
-    def _table_property_queries(
-        self, fqn: str, prop_diff: DictDiff, table_type: str
-    ) -> list[str]:
+    def _table_property_queries(self, fqn: str, prop_diff: DictDiff, table_type: str) -> list[str]:
         if not prop_diff.has_changes:
             return []
 
@@ -168,9 +160,7 @@ class UCQueryBuilder:
         queries: list[str] = []
 
         if prop_diff.updates:
-            props_str = ", ".join(
-                f"'{_esc(k)}'='{_esc(v)}'" for k, v in prop_diff.updates.items()
-            )
+            props_str = ", ".join(f"'{_esc(k)}'='{_esc(v)}'" for k, v in prop_diff.updates.items())
             query = _BASE_ALTER.format(
                 table_type="TABLE",
                 fqn=fqn,
@@ -183,8 +173,7 @@ class UCQueryBuilder:
             query = _BASE_ALTER.format(
                 table_type="TABLE",
                 fqn=fqn,
-                action=_UNSET_TBLPROPERTIES.format(
-                    props=_key_list(prop_diff.deletes)),
+                action=_UNSET_TBLPROPERTIES.format(props=_key_list(prop_diff.deletes)),
             )
             logger.debug("Generated: %s", query)
             queries.append(query)
@@ -201,10 +190,7 @@ class UCQueryBuilder:
                     )
                 )
             if col_diff.tags is not None and col_diff.tags.has_changes:
-                queries.extend(
-                    self._column_tag_queries(
-                        fqn, col_name, col_diff.tags, table_type)
-                )
+                queries.extend(self._column_tag_queries(fqn, col_name, col_diff.tags, table_type))
         return queries
 
     def _column_description_queries(
@@ -240,13 +226,11 @@ class UCQueryBuilder:
 
         if table_type == "view":
             for key in tag_diff.deletes:
-                query = _UNSET_TAG_ON.format(
-                    type="COLUMN", path=f"{fqn}.{col_name}", key=key)
+                query = _UNSET_TAG_ON.format(type="COLUMN", path=f"{fqn}.{col_name}", key=key)
                 logger.debug("Generated: %s", query)
                 queries.append(query)
             for key, value in tag_diff.updates.items():
-                unset = _UNSET_TAG_ON.format(
-                    type="COLUMN", path=f"{fqn}.{col_name}", key=key)
+                unset = _UNSET_TAG_ON.format(type="COLUMN", path=f"{fqn}.{col_name}", key=key)
                 logger.debug("Generated (pre-unset): %s", unset)
                 queries.append(unset)
                 query = _SET_TAG_ON.format(
@@ -279,8 +263,7 @@ class UCQueryBuilder:
                 fqn=fqn,
                 action=_ALTER_COLUMN.format(
                     col=col_name,
-                    action=_UNSET_TAGS.format(
-                        tags=_key_list(tag_diff.deletes)),
+                    action=_UNSET_TAGS.format(tags=_key_list(tag_diff.deletes)),
                 ),
             )
             logger.debug("Generated: %s", query)
@@ -306,8 +289,7 @@ class UCQueryBuilder:
         if cluster_by_auto:
             query = _CLUSTER_BY_AUTO.format(fqn=fqn)
         elif cluster_by_cols:
-            query = _CLUSTER_BY_COLS.format(
-                fqn=fqn, cols=", ".join(cluster_by_cols))
+            query = _CLUSTER_BY_COLS.format(fqn=fqn, cols=", ".join(cluster_by_cols))
         else:
             query = _CLUSTER_BY_NONE.format(fqn=fqn)
 
@@ -318,12 +300,6 @@ class UCQueryBuilder:
         self, fqn: str, pk_diff: ConstraintPKDiff, fk_diff: ConstraintFKDiff, table_type: str
     ) -> list[str]:
         queries: list[str] = []
-        if table_type in _NO_CONSTRAINT_TYPES:
-            logger.warning(
-                "Constraints not supported for %s tables; skipping constraint changes on %s",
-                table_type,
-                fqn,)
-            return queries
 
         if pk_diff.delete is not None:
             queries.extend(self._drop_constraint(fqn, pk_diff.delete.name))
@@ -340,6 +316,14 @@ class UCQueryBuilder:
             queries.extend(self._add_foreign_key(fqn, fk))
         for fk in fk_diff.create:
             queries.extend(self._add_foreign_key(fqn, fk))
+
+        if queries and table_type in _NO_CONSTRAINT_TYPES:
+            logger.warning(
+                "Constraints not supported for %s tables; skipping constraint changes on %s",
+                table_type,
+                fqn,
+            )
+            return []
 
         return queries
 

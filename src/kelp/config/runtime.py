@@ -1,19 +1,33 @@
+"""Runtime configuration loading and context assembly.
+
+This module coordinates the loading of project configuration, catalogs, and variables
+to create a complete RuntimeContext for execution. It uses target-aware configuration
+resolution to support multi-environment deployments.
+
+Key responsibilities:
+- Loading and merging YAML configuration files
+- Assembling catalogs from model definitions
+- Creating RuntimeContext with resolved configurations
+"""
+
+import logging
 from pathlib import Path
+
 from kelp.config.catalog import parse_catalog
 from kelp.config.project import load_project_config
-from kelp.config.vars import resolve_vars_with_target
 from kelp.models.runtime_context import RuntimeContext
-from kelp.utils.jinja_parser import load_yaml_with_jinja, _deep_merge_dicts
-from kelp.config.settings import create_settings_resolver
-import logging
-
+from kelp.utils.jinja_parser import _deep_merge_dicts, load_yaml_with_jinja
 
 logger = logging.getLogger(__name__)
 
 
-def load_config_files(project_root: str, file_paths: list[str], vars: dict) -> dict:
+def load_config_files(project_root: str, file_paths: str | list[str], vars: dict) -> dict:
     # Load and merge multiple YAML config files with jinja into a single dict.
     merged_config = {}
+    if not file_paths:
+        return merged_config
+    if isinstance(file_paths, str):
+        file_paths = [file_paths]
     for file_path in file_paths:
         full_path = Path(project_root).joinpath(file_path)
         if not full_path.exists():
@@ -55,7 +69,7 @@ def load_runtime_config(
     runtime_vars = project_config.runtime_vars
 
     # Load metadata files with resolved variables
-    raw_config = load_config_files(project_root, project_config.metadata_paths, runtime_vars)
+    raw_config = load_config_files(project_root, project_config.models_path, runtime_vars)
 
     # Parse catalog
     catalog = parse_catalog(

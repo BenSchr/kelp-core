@@ -1,14 +1,35 @@
+"""Variable resolution with target and environment support.
+
+This module handles the resolution of Jinja-renderable variables used in configuration.
+Variables are resolved with a clear priority: init_vars > target vars > overwrite vars > default vars.
+
+Each layer can reference variables from previous layers through Jinja templating.
+This enables flexible configuration composition while maintaining predictable overrides.
+"""
+
+import logging
 from pathlib import Path
+
 from kelp.utils.jinja_parser import load_yaml_with_jinja, render_obj_with_jinja
 from kelp.utils.yaml_parser import load_yaml
-import logging
 
 logger = logging.getLogger(__name__)
 
 
 def load_and_render_target_vars(
-    target_file_path: str | Path, target: str, render_vars: dict = {}
+    target_file_path: str | Path, target: str, render_vars: dict | None = None
 ) -> dict:
+    """Load and render target-specific variables from the target file.
+
+    Args:
+        target_file_path: Path to the target file.
+        target: Target name to load variables for.
+        render_vars: Jinja context for rendering. If None, empty dict is used.
+
+    Returns:
+        Rendered variables dictionary for the target.
+    """
+    render_vars = render_vars or {}
     target_file_path = Path(target_file_path)
     return (
         load_yaml_with_jinja(
@@ -37,8 +58,9 @@ def resolve_vars_with_target(
 
     Args:
         project_file_path: Path to the project file.
+        target_file_path: Path to the target file (optional).
         target: Target name to use from the targets section.
-        init_vars: Variables to override (highest priority).
+        init_vars: Variables to override (highest priority). If None, empty dict is used.
 
     Returns:
         Resolved variables dictionary suitable for rendering.
@@ -46,6 +68,7 @@ def resolve_vars_with_target(
     project_file_path = Path(project_file_path)
     root_dir = project_file_path.parent
     raw_project_data = load_yaml(project_file_path)
+    init_vars = init_vars or {}
 
     # Get default variables from 'vars' section
     default_vars = raw_project_data.get("vars", {})

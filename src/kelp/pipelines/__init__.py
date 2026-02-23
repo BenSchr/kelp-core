@@ -1,16 +1,16 @@
-from kelp.pipelines.streaming_tables import streaming_table, create_streaming_table
-from kelp.pipelines.api import target, params, params_cst, schema, schema_lite, ref, get_table
 from kelp.config import init
+from kelp.pipelines.api import get_table, params, params_cst, ref, schema, schema_lite, target
+from kelp.pipelines.streaming_tables import create_streaming_table, streaming_table
 
 __all__ = [
-    "streaming_table",
     "create_streaming_table",
-    "target",
+    "get_table",
+    "init",
     "params",
     "params_cst",
-    "init",
     "ref",
     "schema",
     "schema_lite",
-    "get_table",
+    "streaming_table",
+    "target",
 ]

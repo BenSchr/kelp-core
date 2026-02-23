@@ -1,7 +1,8 @@
 # from pathlib import Path
 
 import logging
-from pydantic import BaseModel, PrivateAttr, Field
+
+from pydantic import BaseModel, Field, PrivateAttr
 
 # from kelp.models.project_config import ProjectConfig
 from kelp.models.table import Table

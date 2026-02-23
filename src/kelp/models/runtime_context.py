@@ -1,6 +1,7 @@
+from pydantic import BaseModel
+
 from kelp.models.catalog import Catalog
 from kelp.models.project_config import ProjectConfig
-from pydantic import BaseModel
 
 
 class RuntimeContext(BaseModel):

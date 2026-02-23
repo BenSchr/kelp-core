@@ -1,7 +1,9 @@
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
+
 from kelp.models.project_config import ProjectConfig
 from kelp.models.table import Table
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Any
 
 
 class JsonSchemaModel(BaseModel):

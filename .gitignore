@@ -215,3 +215,4 @@ Makefile
 .devcontainer/
 .vscode/
 agents.md
+*/**/databricks.yml

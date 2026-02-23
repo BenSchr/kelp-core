@@ -1,11 +1,14 @@
-import typer
-from kelp.utils.databricks import get_table_from_dbx_sdk
-from kelp.service.pipeline_manager import PipelineManager
-from kelp.service.yaml_manager import YamlManager
-from kelp.config.lifecycle import get_context
-import yaml
+
 import logging
+
+import typer
+import yaml
 from dotenv import load_dotenv
+
+from kelp.config.lifecycle import get_context
+from kelp.service.pipeline_manager import PipelineManager
+from kelp.service.yaml_manager import ServicePathConfig, YamlManager
+from kelp.utils.databricks import get_table_from_dbx_sdk
 
 logger = logging.getLogger(__name__)
 
@@ -19,42 +22,30 @@ def generate_model_yaml(
     profile: str | None = typer.Option(
         None, "-p", "--profile", help="Databricks CLI profile to use"
     ),
-    exclude: list[str] = typer.Option(
-        default=["table_properties", "schema", "catalog"],
-        help="List of table attributes to exclude from the generated YAML",
-    ),
 ) -> None:
-    """Generate a sample kelp_project.yml file."""
+    """Generate a YAML model definition for a single table.
 
-    exclude = list(exclude)
-
-    if "schema" in exclude:
-        exclude.remove("schema")
-        exclude.append("schema_")
+    Fetches table metadata from Databricks and outputs a sample YAML model
+    definition suitable for including in a project's kelp_models.
+    """
 
     table = get_table_from_dbx_sdk(table_path, profile=profile)
-    model_content = table.model_dump(exclude=exclude, exclude_none=True, exclude_defaults=True)
-    # filter all nulls
-    model_content = {k: v for k, v in model_content.items() if v}
-
-    new_columns = []
-    for column in model_content["columns"]:
-        column = {k: v for k, v in column.items() if v}
-        # if column["data_type"].startswith("array"):
-        #     column["data_type"] = "array"
-        new_columns.append(column)
-    model_content["columns"] = new_columns
-
-    content = {"kelp_models": [model_content]}
+    
+    # Use unified model serialization (no hierarchy defaults for standalone output)
+    model_dict = YamlManager.table_to_model_dict(table, include_hierarchy_defaults=False)
+    content = {"kelp_models": [model_dict]}
+    
     yaml_content = typer.style(
-        yaml.dump(content, sort_keys=False), fg=typer.colors.GREEN, bold=True
+        yaml.dump(content, sort_keys=False),
+        fg=typer.colors.GREEN,
+        bold=True
     )
     typer.echo(yaml_content)
 
 
 @app.command()
 def sync_from_pipeline(
-    pipeline_id: str = typer.Argument(..., help="Databricks pipeline ID"),
+    pipeline_id: str = typer.Option(None, "--id", help="Databricks pipeline ID"),
     project_file_path: str | None = typer.Option(
         None,
         "-c",
@@ -79,6 +70,7 @@ def sync_from_pipeline(
 
     from kelp.config.lifecycle import init
 
+    load_dotenv()
     log_level = "DEBUG" if debug else None
     init(project_root=project_file_path, target=target, log_level=log_level)
 
@@ -93,16 +85,24 @@ def sync_from_pipeline(
     # Initialize managers
     pipeline_manager = PipelineManager(profile=profile)
 
+    if not pipeline_id:
+        pipeline_ids = pipeline_manager.detect_pipeline_ids(target=target)
+        if not pipeline_ids:
+            logger.error(f"No pipeline ID provided and auto-detection failed for target '{target}'")
+            raise typer.Exit(1)
+        typer.echo(f"Auto-detected pipeline IDs: {', '.join(pipeline_ids)}")
     # Fetch tables from pipeline
-    tables = pipeline_manager.fetch_pipeline_tables(
-        pipeline_id, quarantine_config=ctx.project_config.quarantine_config
-    )
+    tables = []
+    for pipeline_id in pipeline_ids:
+        p_tables = pipeline_manager.fetch_pipeline_tables(
+            pipeline_id, quarantine_config=ctx.project_config.quarantine_config
+        )
+        tables.extend(p_tables)
+        typer.echo(f"Fetched {len(p_tables)} tables from pipeline {pipeline_id}")
 
     if not tables:
         logger.warning("No tables found in pipeline.")
         raise typer.Exit(1)
-
-    typer.echo(f"Fetched {len(tables)} tables from pipeline {pipeline_id}")
 
     # Compare with catalog and sync
     catalog_index = ctx.catalog.index
@@ -112,11 +112,15 @@ def sync_from_pipeline(
     for table in tables:
         if table.name in catalog_index:
             existing_tables.append(table)
+            table.origin_file_path = catalog_index[table.name].origin_file_path
         else:
             new_tables.append(table)
 
     typer.echo(f"  - {len(existing_tables)} tables exist in catalog")
     typer.echo(f"  - {len(new_tables)} new tables not in catalog")
+
+    # Create central path configuration for all sync operations
+    path_config = ServicePathConfig.from_context()
 
     # Sync all tables
     synced_count = 0
@@ -127,7 +131,7 @@ def sync_from_pipeline(
 
     for table in tables:
         try:
-            report = YamlManager.patch_table_yaml(table)
+            report = YamlManager.patch_table_yaml(table, path_config=path_config)
             synced_count += 1
 
             # Determine status based on report
@@ -203,8 +207,8 @@ def generate_alter_statements(
 ):
     """Generate ALTER TABLE statements for tables in the catalog that are missing from the pipeline."""
     log_level = "DEBUG" if debug else None
-    from kelp.config.lifecycle import init
     from kelp.catalog.api import sync_catalog
+    from kelp.config.lifecycle import init
 
     load_dotenv()
     init(project_root=project_file_path, target=target, log_level=log_level)

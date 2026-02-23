@@ -9,7 +9,7 @@ We re-export a thin public API from :mod:`kelp.api` which delegates to
 internal runtime implementations.
 """
 
-from kelp.config import init, get_context
 from kelp import catalog
+from kelp.config import get_context, init
 
-__all__ = ["init", "get_context", "catalog"]
+__all__ = ["catalog", "get_context", "init"]

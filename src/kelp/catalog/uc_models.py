@@ -16,7 +16,6 @@ from kelp.models.table import (
     Table,
 )
 
-
 Constraint = PrimaryKeyConstraint | ForeignKeyConstraint
 
 _EXPORTED_MODELS = (Column, Table, RemoteCatalogConfig)

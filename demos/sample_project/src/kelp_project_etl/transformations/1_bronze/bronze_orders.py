@@ -3,7 +3,7 @@ from pyspark.sql import SparkSession
 from kelp import pipelines as kp
 
 spark = SparkSession.active()
-kp.init("../../kelp_metadata/kelp_project.yml")
+# kp.init("../../kelp_metadata/kelp_project.yml")
 
 
 @kp.streaming_table()  # exclude_params=["schema"]

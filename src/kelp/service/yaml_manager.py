@@ -1,16 +1,81 @@
 from __future__ import annotations
 
 import copy
+import logging
 from dataclasses import dataclass
 from pathlib import Path
+
 import yaml
 
 from kelp.config import get_context
 from kelp.models.table import Column, ForeignKeyConstraint, PrimaryKeyConstraint, Table
 from kelp.utils.dict_parser import apply_cfg_hierarchy_to_dict_recursive
-import logging
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ServicePathConfig:
+    """Central configuration for service file path resolution.
+
+    Encapsulates all path context needed by services (YamlManager, PipelineManager, etc)
+    so they don't need to call get_context() internally. This centralizes configuration
+    management and makes services more testable and reusable.
+
+    Args:
+        project_root: Absolute path to project root.
+        service_root: Service-specific base path (e.g., "kelp_metadata/models").
+                     Relative to project_root.
+        hierarchy_config: Hierarchy configuration dict from project config (e.g., models config).
+                         Used for resolving defaults and path mappings.
+
+    Example:
+        config = ServicePathConfig.from_context()
+        report = YamlManager.patch_table_yaml(table, path_config=config)
+    """
+
+    project_root: Path
+    service_root: Path
+    hierarchy_config: dict | None = None
+
+    @staticmethod
+    def from_context(service_root_key: str = "models_path") -> ServicePathConfig:
+        """Create ServicePathConfig from current runtime context.
+
+        Args:
+            service_root_key: Key in project_config for the service root path.
+                            Default: "models_path" for YamlManager.
+
+        Returns:
+            ServicePathConfig with paths from context.
+
+        Raises:
+            RuntimeError: If context is not initialized or required config is missing.
+        """
+        ctx = get_context()
+        if not ctx or not ctx.project_config:
+            raise RuntimeError("RuntimeContext required for ServicePathConfig.from_context()")
+
+        project_root = Path(ctx.project_root)
+        service_root = Path(getattr(ctx.project_config, service_root_key, ""))
+
+        if not service_root:
+            raise RuntimeError(
+                f"Project config missing '{service_root_key}' for service path resolution"
+            )
+
+        hierarchy_config = getattr(ctx.project_config, "models", None)
+
+        return ServicePathConfig(
+            project_root=project_root,
+            service_root=service_root,
+            hierarchy_config=hierarchy_config,
+        )
+
+    @property
+    def service_root_absolute(self) -> Path:
+        """Get absolute path to service root."""
+        return self.project_root / self.service_root
 
 
 @dataclass
@@ -34,32 +99,47 @@ class YamlManager:
         cls,
         source_table: Table,
         *,
-        file_path: str | Path | None = None,
+        path_config: ServicePathConfig | None = None,
+        relative_file_path: str | Path | None = None,
     ) -> YamlUpdateReport:
         """Patch or create a model YAML file with metadata from a source table.
 
-        If file_path is provided, uses that.
-        If table has origin_file_path, uses that (without resolving to absolute).
-        Otherwise, determines the correct folder from hierarchy config and creates a new file.
-
-        This updates only a constrained set of attributes:
-        - table: description, tags, constraints
-        - columns: add/remove, description, data_type, tags
+        This is the main entry point for patching table models. It handles:
+        - Loading existing YAML or creating new document
+        - Finding or creating model entry for the table
+        - Applying model patching (description, tags, constraints, columns)
+        - Detecting and writing changed files
 
         Args:
-                source_table: Table sourced from Databricks metadata.
-                file_path: Optional explicit path to the YAML file to patch/create.
+            source_table: Table sourced from Databricks metadata.
+            path_config: Service path configuration (project root, service root, hierarchy config).
+                        If not provided, auto-discovers from runtime context (requires context to be initialized).
+            relative_file_path: Optional explicit path override. If provided, uses this path directly.
 
         Returns:
-                YamlUpdateReport with details about changes made.
-        """
+            YamlUpdateReport with details about changes made.
 
-        resolved_file_path = cls._resolve_or_determine_file_path(source_table, file_path)
-        if file_path is None:
+        Example:
+            # With explicit config
+            config = ServicePathConfig.from_context()
+            report = YamlManager.patch_table_yaml(table, path_config=config)
+
+            # With auto-discovered config (requires context)
+            report = YamlManager.patch_table_yaml(table)
+        """
+        if path_config is None:
+            path_config = ServicePathConfig.from_context()
+
+        resolved_file_path = cls._resolve_or_determine_file_path(
+            source_table, path_config, relative_file_path
+        )
+        if relative_file_path is None:
             logger.debug(
                 f"Determined file path for table {source_table.name}: {resolved_file_path}"
             )
-        document = cls._load_yaml_document(resolved_file_path)
+
+        full_file_path = path_config.service_root_absolute / resolved_file_path
+        document = cls._load_yaml_document(full_file_path)
         models = document.get("kelp_models")
         if not isinstance(models, list):
             models = []
@@ -75,7 +155,7 @@ class YamlManager:
             # Keep a deep copy of original state for change detection
             original_model = copy.deepcopy(model)
 
-        defaults = cls._get_hierarchy_defaults(source_table, resolved_file_path)
+        defaults = cls._get_hierarchy_defaults(source_table, resolved_file_path, path_config)
         cls._patch_model_dict(model, source_table, defaults)
 
         # Detect changes
@@ -85,20 +165,66 @@ class YamlManager:
         # Only write if something changed
         if changes_made:
             document["kelp_models"] = models
-            logger.debug(
-                f"Writing updated YAML for table {source_table.name} to {resolved_file_path}"
-            )
-            cls._write_yaml_document(resolved_file_path, document)
+            logger.debug(f"Writing updated YAML for table {source_table.name} to {full_file_path}")
+            cls._write_yaml_document(full_file_path, document)
 
         return YamlUpdateReport(
             table_name=source_table.name,
-            file_path=resolved_file_path,
+            file_path=full_file_path,
             result_model=model,
             changes_made=changes_made,
             added_fields=added_fields,
             updated_fields=updated_fields,
             removed_fields=removed_fields,
         )
+
+    @classmethod
+    def table_to_model_dict(
+        cls,
+        source_table: Table,
+        include_hierarchy_defaults: bool = True,
+    ) -> dict:
+        """Convert a Table object to a YAML model dict.
+
+        Serializes a Table into a model dictionary suitable for YAML output in kelp_models.
+        Used by all model serialization use cases: CLI generation, file patching, etc.
+        Provides unified handling of model fields (description, tags, constraints, columns).
+
+        Args:
+            source_table: Table to convert to model dict.
+            include_hierarchy_defaults: If True, applies project config hierarchy defaults
+                to reduce redundant field values. Set to False for standalone display use
+                (e.g., CLI output without project context). Default: True
+
+        Returns:
+            Model dictionary with name and patchable fields. Empty values are excluded.
+
+        Example:
+            # For CLI generation (no context needed)
+            model = YamlManager.table_to_model_dict(table, include_hierarchy_defaults=False)
+            content = {"kelp_models": [model]}
+
+            # For file patching (with context)
+            model = YamlManager.table_to_model_dict(table, include_hierarchy_defaults=True)
+        """
+        model = {"name": source_table.name}
+
+        # Get hierarchy defaults if requested and available
+        defaults = {}
+        if include_hierarchy_defaults:
+            try:
+                if source_table.origin_file_path:
+                    defaults = cls._get_hierarchy_defaults(
+                        source_table, Path(source_table.origin_file_path)
+                    )
+            except Exception as e:
+                logger.debug(f"Could not load hierarchy defaults for {source_table.name}: {e}")
+                # Continue without defaults rather than failing
+
+        # Patch using standard logic (handles all patchable fields)
+        cls._patch_model_dict(model, source_table, defaults)
+
+        return model
 
     @classmethod
     def _patch_model_dict(cls, model: dict, source_table: Table, defaults: dict) -> None:
@@ -226,56 +352,58 @@ class YamlManager:
 
     @classmethod
     def _resolve_or_determine_file_path(
-        cls, source_table: Table, file_path: str | Path | None
+        cls, source_table: Table, path_config: ServicePathConfig, explicit_path: str | Path | None
     ) -> Path:
-        """Return the file path, using provided path, origin_file_path, or hierarchy determination."""
-        # If explicit file_path provided, use it
-        if file_path:
-            return Path(file_path)
+        """Return the file path, using provided path, origin_file_path, or hierarchy determination.
+
+        Args:
+            source_table: Table to resolve path for.
+            path_config: Service path configuration with project root and hierarchy info.
+            explicit_path: Optional explicit path override.
+
+        Returns:
+            Relative path to file within service_root.
+        """
+        # If explicit path provided, use it
+        if explicit_path:
+            return Path(explicit_path)
 
         # If table has origin_file_path, use it (don't resolve to absolute)
         if source_table.origin_file_path:
             return Path(source_table.origin_file_path)
 
         # Determine from hierarchy
-        return cls._determine_new_file_path(source_table)
+        return cls._determine_new_file_path(source_table, path_config)
 
     @classmethod
-    def _determine_new_file_path(cls, source_table: Table) -> Path:
-        """Determine the correct folder path for a new table based on hierarchy config."""
-        try:
-            ctx = get_context()
-        except Exception:
-            raise ValueError("Cannot determine file path without runtime context")
+    def _determine_new_file_path(cls, source_table: Table, path_config: ServicePathConfig) -> Path:
+        """Determine the correct folder path for a new table based on hierarchy config.
 
-        if not ctx.project_root or not ctx.project_config:
-            raise ValueError(
-                "Project root and config required to determine file path for new table"
-            )
+        Args:
+            source_table: Table to determine path for.
+            path_config: Service path configuration with hierarchy settings.
 
+        Returns:
+            Relative path to file within service_root.
+        """
         # Map the table's schema/catalog to the hierarchy folder
         folder_key = cls._find_hierarchy_folder_for_schema(
-            source_table.schema_, source_table.catalog, ctx.project_config.models
+            source_table.schema_, source_table.catalog, path_config.hierarchy_config or {}
         )
 
         if not folder_key:
             logger.debug(
                 f"Could not determine folder for table {source_table.name} "
                 f"(schema={source_table.schema_}, catalog={source_table.catalog}). "
-                f"Writing to root models path."
+                f"Writing to root service path."
             )
             folder_key = ""
 
-        # Construct the path: {project_root}/{metadata_paths[0]}/models/{folder_key}/{table_name}.yml
-        metadata_paths = ctx.project_config.metadata_paths
-        if not metadata_paths:
-            metadata_paths = ["kelp_models"]
-
-        base_path = Path(ctx.project_root) / metadata_paths[0]
+        # Construct relative path within service root (service_root/folder_key/table_name.yml)
         if folder_key:
-            file_path = base_path / folder_key / f"{source_table.name}.yml"
+            file_path = Path(folder_key) / f"{source_table.name}.yml"
         else:
-            file_path = base_path / f"{source_table.name}.yml"
+            file_path = Path(f"{source_table.name}.yml")
 
         return file_path
 
@@ -358,27 +486,28 @@ class YamlManager:
         return None
 
     @classmethod
-    def _get_hierarchy_defaults(cls, source_table: Table, file_path: Path) -> dict:
-        """Get defaults applied via project config hierarchy for a model path."""
-        try:
-            ctx = get_context()
-        except Exception:
+    def _get_hierarchy_defaults(
+        cls, source_table: Table, file_path: Path, path_config: ServicePathConfig
+    ) -> dict:
+        """Get defaults applied via project config hierarchy for a model path.
+
+        Args:
+            source_table: Table being processed.
+            file_path: File path (relative to service root).
+            path_config: Service path configuration with hierarchy config.
+
+        Returns:
+            Dictionary of hierarchy defaults for the file path.
+        """
+        if not path_config.hierarchy_config:
             return {}
 
-        models_cfg = ctx.project_config.models if ctx and ctx.project_config else None
-        if not models_cfg:
-            return {}
-
-        candidate = source_table.origin_file_path or str(file_path)
-        tpl_path = Path(candidate)
-        if ctx.project_root and tpl_path.is_absolute():
-            try:
-                tpl_path = tpl_path.relative_to(Path(ctx.project_root))
-            except ValueError:
-                pass
-
+        # Use the provided file_path (relative to service root) for hierarchy lookup
+        # This ensures correct hierarchy defaults based on folder structure
         defaults: dict = {}
-        return apply_cfg_hierarchy_to_dict_recursive(defaults, models_cfg, tpl_path=str(tpl_path))
+        return apply_cfg_hierarchy_to_dict_recursive(
+            defaults, path_config.hierarchy_config, tpl_path=str(file_path)
+        )
 
     @classmethod
     def _load_yaml_document(cls, file_path: Path) -> dict:

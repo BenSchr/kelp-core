@@ -1,5 +1,5 @@
-from pathlib import Path
 import copy
+from pathlib import Path
 
 
 def merge_defaults(target, defaults):
