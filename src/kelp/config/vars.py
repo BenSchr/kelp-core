@@ -17,7 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 def load_and_render_target_vars(
-    target_file_path: str | Path, target: str, render_vars: dict | None = None
+    target_file_path: str | Path,
+    target: str,
+    render_vars: dict | None = None,
 ) -> dict:
     """Load and render target-specific variables from the target file.
 
@@ -28,6 +30,7 @@ def load_and_render_target_vars(
 
     Returns:
         Rendered variables dictionary for the target.
+
     """
     render_vars = render_vars or {}
     target_file_path = Path(target_file_path)
@@ -48,8 +51,7 @@ def resolve_vars_with_target(
     target: str | None = None,
     init_vars: dict | None = None,
 ) -> dict:
-    """
-    Resolve variables using simple priority merging with target support.
+    """Resolve variables using simple priority merging with target support.
 
     Priority order (highest to lowest): init_vars > target vars > overwrite vars > default vars
 
@@ -64,6 +66,7 @@ def resolve_vars_with_target(
 
     Returns:
         Resolved variables dictionary suitable for rendering.
+
     """
     project_file_path = Path(project_file_path)
     root_dir = project_file_path.parent
@@ -80,7 +83,9 @@ def resolve_vars_with_target(
     target_vars = {}
     if target and target_file_path is not None:
         target_vars = load_and_render_target_vars(
-            target_file_path, target, render_vars=resolved_vars
+            target_file_path,
+            target,
+            render_vars=resolved_vars,
         )
         logger.debug("Loaded target vars for target '%s': %s", target, target_vars)
     elif target and target_file_path is None:
@@ -97,7 +102,7 @@ def resolve_vars_with_target(
             file_vars = overwrite_data.get("vars", {})
             overwrite_file_vars = render_obj_with_jinja(file_vars, jinja_context={**resolved_vars})
         except FileNotFoundError:
-            logger.debug(f"Overwrite vars file not found: {overwrite_vars_path}")
+            logger.debug("Overwrite vars file not found: %s", overwrite_vars_path)
 
     runtime_vars = {**resolved_vars, **target_vars, **overwrite_file_vars, **(init_vars or {})}
 

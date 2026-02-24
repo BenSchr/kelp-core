@@ -65,7 +65,7 @@ class ServicePathConfig:
 
         if not service_root:
             raise RuntimeError(
-                f"Project config missing '{service_root_key}' for service path resolution"
+                f"Project config missing '{service_root_key}' for service path resolution",
             )
 
         hierarchy_config = getattr(ctx.project_config, hierarchy_config_key, None)
@@ -120,7 +120,8 @@ class YamlManager:
         """
         if path_config is None:
             path_config = ServicePathConfig.from_context(
-                service_root_key="metrics_path", hierarchy_config_key="metric_views"
+                service_root_key="metrics_path",
+                hierarchy_config_key="metric_views",
             )
 
         resolved_file_path = cls._resolve_or_determine_path(
@@ -228,7 +229,9 @@ class YamlManager:
         )
         if relative_file_path is None:
             logger.debug(
-                f"Determined file path for table {source_table.name}: {resolved_file_path}"
+                "Determined file path for table %s: %s",
+                source_table.name,
+                resolved_file_path,
             )
 
         full_file_path = path_config.service_root_absolute / resolved_file_path
@@ -258,7 +261,11 @@ class YamlManager:
         # Only write if something changed and not in dry_run mode
         if changes_made and not dry_run:
             document["kelp_models"] = models
-            logger.debug(f"Writing updated YAML for table {source_table.name} to {full_file_path}")
+            logger.debug(
+                "Writing updated YAML for table %s to %s",
+                source_table.name,
+                full_file_path,
+            )
             cls._write_yaml_document(full_file_path, document)
 
         return YamlUpdateReport(
@@ -304,15 +311,11 @@ class YamlManager:
 
         # Get hierarchy defaults if requested and available
         defaults = {}
-        if include_hierarchy_defaults:
-            try:
-                if source_table.origin_file_path:
-                    defaults = cls._get_hierarchy_defaults(
-                        Path(source_table.origin_file_path), ServicePathConfig.from_context()
-                    )
-            except Exception as e:
-                logger.debug(f"Could not load hierarchy defaults for {source_table.name}: {e}")
-                # Continue without defaults rather than failing
+        if include_hierarchy_defaults and source_table.origin_file_path:
+            defaults = cls._get_hierarchy_defaults(
+                Path(source_table.origin_file_path),
+                ServicePathConfig.from_context(),
+            )
 
         # Patch using standard logic (handles all patchable fields)
         cls._patch_model_dict(model, source_table, defaults)
@@ -371,28 +374,26 @@ class YamlManager:
         model = {"name": source_metric_view.name}
 
         defaults = {}
-        if include_hierarchy_defaults:
-            try:
-                if source_metric_view.origin_file_path:
-                    path_config = ServicePathConfig.from_context(
-                        service_root_key="metrics_path", hierarchy_config_key="metric_views"
-                    )
-                    defaults = cls._get_hierarchy_defaults(
-                        Path(source_metric_view.origin_file_path), path_config
-                    )
-            except Exception as e:
-                logger.debug(
-                    "Could not load hierarchy defaults for %s: %s",
-                    source_metric_view.name,
-                    e,
-                )
+        if include_hierarchy_defaults and source_metric_view.origin_file_path:
+            path_config = ServicePathConfig.from_context(
+                service_root_key="metrics_path",
+                hierarchy_config_key="metric_views",
+            )
+
+            defaults = cls._get_hierarchy_defaults(
+                Path(source_metric_view.origin_file_path),
+                path_config,
+            )
 
         cls._patch_metric_view_dict(model, source_metric_view, defaults)
         return model
 
     @classmethod
     def _patch_metric_view_dict(
-        cls, model: dict, source_metric_view: MetricView, defaults: dict
+        cls,
+        model: dict,
+        source_metric_view: MetricView,
+        defaults: dict,
     ) -> None:
         """Patch a single metric view dict in-place.
 
@@ -441,7 +442,9 @@ class YamlManager:
 
     @classmethod
     def _patch_columns(
-        cls, existing_columns: list[dict], source_columns: list[Column]
+        cls,
+        existing_columns: list[dict],
+        source_columns: list[Column],
     ) -> list[dict]:
         """Patch columns to match the source list and update allowed fields."""
         existing_by_name = {
@@ -467,14 +470,15 @@ class YamlManager:
 
     @classmethod
     def _serialize_constraints(
-        cls, constraints: list[PrimaryKeyConstraint | ForeignKeyConstraint]
+        cls,
+        constraints: list[PrimaryKeyConstraint | ForeignKeyConstraint],
     ) -> list[dict]:
         """Serialize constraints to YAML-friendly dicts."""
         result: list[dict] = []
         for constraint in constraints:
             if isinstance(constraint, PrimaryKeyConstraint):
                 result.append(
-                    constraint.model_dump()
+                    constraint.model_dump(),
                     # {
                     #     "name": constraint.name,
                     #     "type": "primary_key",
@@ -483,7 +487,7 @@ class YamlManager:
                 )
             elif isinstance(constraint, ForeignKeyConstraint):
                 result.append(
-                    constraint.model_dump()
+                    constraint.model_dump(),
                     #     {
                     #         "name": constraint.name,
                     #         "type": "foreign_key",
@@ -496,7 +500,9 @@ class YamlManager:
 
     @classmethod
     def _detect_changes(
-        cls, original: dict | None, updated: dict
+        cls,
+        original: dict | None,
+        updated: dict,
     ) -> tuple[list[str], list[str], list[str]]:
         """Detect added, updated, and removed fields between original and updated models.
 
@@ -519,9 +525,7 @@ class YamlManager:
                 updated_list.append(key)
 
         # Find removed fields
-        for key in original:
-            if key not in updated:
-                removed.append(key)
+        removed = [key for key in original if key not in updated]
 
         return added, updated_list, removed
 
@@ -607,7 +611,9 @@ class YamlManager:
             Relative path to file within service_root.
         """
         folder_key = cls._find_hierarchy_folder_for_schema(
-            schema, catalog, path_config.hierarchy_config or {}
+            schema,
+            catalog,
+            path_config.hierarchy_config or {},
         )
 
         if not folder_key:
@@ -621,16 +627,16 @@ class YamlManager:
             )
             folder_key = ""
 
-        if folder_key:
-            file_path = Path(folder_key) / f"{name}.yml"
-        else:
-            file_path = Path(f"{name}.yml")
+        file_path = Path(folder_key) / f"{name}.yml" if folder_key else Path(f"{name}.yml")
 
         return file_path
 
     @classmethod
     def _find_hierarchy_folder_for_schema(
-        cls, schema: str | None, catalog: str | None, models_cfg: dict
+        cls,
+        schema: str | None,
+        catalog: str | None,
+        models_cfg: dict,
     ) -> str | None:
         """Find the folder path in models_cfg that applies this schema/catalog pair.
 
@@ -644,7 +650,12 @@ class YamlManager:
         top_level_schema = models_cfg.get("+schema")
         top_level_catalog = models_cfg.get("+catalog")
         return cls._search_hierarchy_recursive(
-            schema, catalog, models_cfg, "", top_level_schema, top_level_catalog
+            schema,
+            catalog,
+            models_cfg,
+            "",
+            top_level_schema,
+            top_level_catalog,
         )
 
     @classmethod
@@ -699,7 +710,12 @@ class YamlManager:
 
             # Recursively search nested folders, passing down effective defaults
             nested_path = cls._search_hierarchy_recursive(
-                schema, catalog, value, current_path, effective_schema, effective_catalog
+                schema,
+                catalog,
+                value,
+                current_path,
+                effective_schema,
+                effective_catalog,
             )
             if nested_path:
                 return nested_path
@@ -724,7 +740,9 @@ class YamlManager:
         # This ensures correct hierarchy defaults based on folder structure
         defaults: dict = {}
         return apply_cfg_hierarchy_to_dict_recursive(
-            defaults, path_config.hierarchy_config, tpl_path=str(file_path)
+            defaults,
+            path_config.hierarchy_config,
+            tpl_path=str(file_path),
         )
 
     @classmethod
@@ -750,11 +768,8 @@ class YamlManager:
         if file_path.is_absolute():
             return file_path
 
-        try:
-            ctx = get_context()
-            if ctx and ctx.project_root:
-                return Path(ctx.project_root).joinpath(file_path)
-        except Exception:
-            pass
+        ctx = get_context()
+        if ctx and ctx.project_root:
+            return Path(ctx.project_root).joinpath(file_path).resolve()
 
         return file_path.resolve()

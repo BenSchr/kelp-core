@@ -21,7 +21,7 @@ from kelp.utils.jinja_parser import _deep_merge_dicts, load_yaml_with_jinja
 logger = logging.getLogger(__name__)
 
 
-def load_config_files(project_root: str, file_paths: str | list[str], vars: dict) -> dict:
+def load_config_files(project_root: str, file_paths: str | list[str], context_vars: dict) -> dict:
     # Load and merge multiple YAML config files with jinja into a single dict.
     merged_config = {}
     if not file_paths:
@@ -32,7 +32,7 @@ def load_config_files(project_root: str, file_paths: str | list[str], vars: dict
         full_path = Path(project_root).joinpath(file_path)
         if not full_path.exists():
             raise FileNotFoundError(f"Config file not found: {full_path}")
-        config_data = load_yaml_with_jinja(full_path, jinja_context=vars)
+        config_data = load_yaml_with_jinja(full_path, jinja_context=context_vars)
         merged_config = _deep_merge_dicts(merged_config, config_data)
     return merged_config
 
@@ -42,8 +42,7 @@ def load_runtime_config(
     target: str | None = None,
     init_vars: dict | None = None,
 ) -> RuntimeContext:
-    """
-    Load runtime configuration using the new modular approach with target support.
+    """Load runtime configuration using the new modular approach with target support.
 
     Features:
     - Uses simple variable priority: init_vars > target_vars > default_vars
@@ -60,8 +59,8 @@ def load_runtime_config(
 
     Returns:
         RuntimeContext with resolved configuration.
-    """
 
+    """
     # Load project configuration with resolved variables
     project_config = load_project_config(project_file_path, target, init_vars)
 
@@ -75,7 +74,9 @@ def load_runtime_config(
     raw_metrics_config = {}
     if project_config.metrics_path:
         raw_metrics_config = load_config_files(
-            project_root, project_config.metrics_path, runtime_vars
+            project_root,
+            project_config.metrics_path,
+            runtime_vars,
         )
 
     # Parse catalog

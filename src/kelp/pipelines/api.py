@@ -8,12 +8,12 @@ def get_table(name: str) -> KelpSdpTable:
 
 ## Use SDPTable object for api
 def target(name: str) -> str:
-    """returns the target name for the table if quarantine or validation is enabled, else returns the main table name"""
+    """Returns the target name for the table if quarantine or validation is enabled, else returns the main table name"""
     return TableManager.build_sdp_table(name).target_table
 
 
 def ref(name: str) -> str:
-    """returns the source name for the table, which is always the main table name"""
+    """Returns the source name for the table, which is always the main table name"""
     return TableManager.build_sdp_table(name).fqn
 
 
@@ -25,9 +25,8 @@ def schema_lite(name: str) -> str | None:
     return TableManager.build_sdp_table(name).schema_lite
 
 
-def params(name: str, exclude: list[str] = []) -> dict[str, str]:
-    """
-    Returns the streaming table parameters as a dictionary.
+def params(name: str, exclude: list[str] | None = None) -> dict[str, str]:
+    """Returns the streaming table parameters as a dictionary.
 
     Args:
         name (str): Table name.
@@ -35,10 +34,13 @@ def params(name: str, exclude: list[str] = []) -> dict[str, str]:
 
     Returns:
         dict[str, str]: Dictionary of streaming table parameters.
+
     """
+    exclude = exclude or []
     return TableManager.build_sdp_table(name).params(exclude=exclude)
 
 
-def params_cst(name: str, exclude: list[str] = []) -> dict[str, str]:
-    """returns the create streaming table parameters as a dictionary"""
+def params_cst(name: str, exclude: list[str] | None = None) -> dict[str, str]:
+    """Returns the create streaming table parameters as a dictionary"""
+    exclude = exclude or []
     return TableManager.build_sdp_table(name).params_cst(exclude=exclude)

@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import typer
 import yaml
@@ -6,6 +7,7 @@ from dotenv import load_dotenv
 
 from kelp.config.lifecycle import get_context
 from kelp.service.pipeline_manager import PipelineManager
+from kelp.service.table_manager import TableManager
 from kelp.service.yaml_manager import ServicePathConfig, YamlManager
 from kelp.utils.databricks import get_table_from_dbx_sdk
 
@@ -17,12 +19,21 @@ app = typer.Typer()
 
 @app.command()
 def generate_model_yaml(
-    table_path=typer.Argument(..., help="Fully qualified table name, e.g. database.schema.table"),
+    table_path: str = typer.Argument(
+        ...,
+        help="Fully qualified table name, e.g. database.schema.table",
+    ),
     profile: str | None = typer.Option(
-        None, "-p", "--profile", help="Databricks CLI profile to use"
+        None,
+        "-p",
+        "--profile",
+        help="Databricks CLI profile to use",
     ),
     output_file: str | None = typer.Option(
-        None, "-o", "--output", help="Path to output file for YAML (optional)"
+        None,
+        "-o",
+        "--output",
+        help="Path to output file for YAML (optional)",
     ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview output without writing"),
 ) -> None:
@@ -44,7 +55,7 @@ def generate_model_yaml(
             typer.echo(yaml_content)
             typer.secho(f"• dry-run: skipped writing {output_file}", fg=typer.colors.YELLOW)
             return
-        with open(output_file, "w") as f:
+        with Path(output_file).open("w") as f:
             f.write(yaml_content)
         typer.secho(f"✓ YAML written to {output_file}", fg=typer.colors.GREEN)
         return
@@ -67,17 +78,27 @@ def sync_from_pipeline(
         help="Path to kelp_project.yml (optional, will auto-detect if not provided)",
     ),
     target: str = typer.Option(
-        "dev", "--target", help="Environment to use for variable resolution (default: dev)"
+        "dev",
+        "--target",
+        help="Environment to use for variable resolution (default: dev)",
     ),
     profile: str | None = typer.Option(
-        None, "-p", "--profile", help="Databricks CLI profile to use"
+        None,
+        "-p",
+        "--profile",
+        help="Databricks CLI profile to use",
     ),
     output_file: str | None = typer.Option(
-        None, "-o", "--output", help="Path to output file for sync log"
+        None,
+        "-o",
+        "--output",
+        help="Path to output file for sync log",
     ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview changes without writing"),
     debug: bool = typer.Option(
-        False, "--debug", help="Enable debug logging (overrides --log-level)"
+        False,
+        "--debug",
+        help="Enable debug logging (overrides --log-level)",
     ),
 ) -> None:
     """Sync table metadata from a Databricks pipeline to local YAML files.
@@ -95,8 +116,8 @@ def sync_from_pipeline(
     try:
         ctx = get_context()
     except Exception as e:
-        logger.error(f"{e}", exc_info=True)
-        raise typer.Exit(1)
+        logger.error("Failed to load project context: %s", e)
+        raise Exception(f"Failed to load project context: {e}") from e
 
     log_lines: list[str] = []
 
@@ -112,14 +133,18 @@ def sync_from_pipeline(
     if not pipeline_id:
         pipeline_ids = pipeline_manager.detect_pipeline_ids(target=target)
         if not pipeline_ids:
-            logger.error(f"No pipeline ID provided and auto-detection failed for target '{target}'")
+            logger.error(
+                "No pipeline ID provided and auto-detection failed for target '%s'",
+                target,
+            )
             raise typer.Exit(1)
         _log(f"Auto-detected pipeline IDs: {', '.join(pipeline_ids)}")
     # Fetch tables from pipeline
     tables = []
     for pipeline_id in pipeline_ids:
         p_tables = pipeline_manager.fetch_pipeline_tables(
-            pipeline_id, quarantine_config=ctx.project_config.quarantine_config
+            pipeline_id,
+            quarantine_config=ctx.project_config.quarantine_config,
         )
         tables.extend(p_tables)
         _log(f"Fetched {len(p_tables)} tables from pipeline {pipeline_id}")
@@ -157,13 +182,18 @@ def sync_from_pipeline(
     dry_run_skipped: list[str] = []
 
     with typer.progressbar(
-        tables, label="Syncing tables", length=len(tables), show_pos=True
+        tables,
+        label="Syncing tables",
+        length=len(tables),
+        show_pos=True,
     ) as progress:
         for table in progress:
             checked_count += 1
             try:
                 report = YamlManager.patch_table_yaml(
-                    table, path_config=path_config, dry_run=dry_run
+                    table,
+                    path_config=path_config,
+                    dry_run=dry_run,
                 )
                 synced_count += 1
 
@@ -196,10 +226,10 @@ def sync_from_pipeline(
                     if not dry_run:
                         _log(f"  • no change: {table.name}")
 
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 error_msg = f"Failed to sync {table.name}: {e}"
                 errors.append(error_msg)
-                logger.error(f"  ✗ {error_msg}")
+                logger.error("  ✗ %s", error_msg)
                 if dry_run:
                     dry_run_skipped.append(f"{table.name} (error: {e})")
                 continue
@@ -229,7 +259,7 @@ def sync_from_pipeline(
         raise typer.Exit(1)
 
     if output_file:
-        with open(output_file, "w") as f:
+        with Path(output_file).open("w") as f:
             for line in log_lines:
                 f.write(line + "\n")
         typer.secho(f"✓ Sync log written to {output_file}", fg=typer.colors.GREEN)
@@ -244,10 +274,15 @@ def generate_alter_statements(
         help="Path to kelp_project.yml (optional, will auto-detect if not provided)",
     ),
     target: str = typer.Option(
-        "dev", "--target", help="Environment to use for variable resolution (default: dev)"
+        "dev",
+        "--target",
+        help="Environment to use for variable resolution (default: dev)",
     ),
     profile: str | None = typer.Option(
-        None, "-p", "--profile", help="Databricks CLI profile to use"
+        None,
+        "-p",
+        "--profile",
+        help="Databricks CLI profile to use",
     ),
     output_file: str | None = typer.Option(
         None,
@@ -257,10 +292,14 @@ def generate_alter_statements(
     ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview output without writing"),
     silent: bool = typer.Option(
-        False, "--silent", help="Only output ALTER TABLE statements, suppressing other logs"
+        False,
+        "--silent",
+        help="Only output ALTER TABLE statements, suppressing other logs",
     ),
     debug: bool = typer.Option(
-        False, "--debug", help="Enable debug logging (overrides --log-level)"
+        False,
+        "--debug",
+        help="Enable debug logging (overrides --log-level)",
     ),
 ):
     """Generate ALTER TABLE statements for tables in the catalog that are missing from the pipeline."""
@@ -278,7 +317,7 @@ def generate_alter_statements(
         if dry_run:
             typer.secho(f"• dry-run: skipped writing {output_file}", fg=typer.colors.YELLOW)
             return
-        with open(output_file, "w") as f:
+        with Path(output_file).open("w") as f:
             for q in queries:
                 f.write(q + ";\n")
         typer.echo(f"\nALTER TABLE statements written to {output_file}")
@@ -294,7 +333,9 @@ def generate_ddl(
         help="Path to kelp_project.yml (optional, will auto-detect if not provided)",
     ),
     target: str = typer.Option(
-        "dev", "--target", help="Environment to use for variable resolution (default: dev)"
+        "dev",
+        "--target",
+        help="Environment to use for variable resolution (default: dev)",
     ),
     output_file: str | None = typer.Option(
         None,
@@ -329,7 +370,7 @@ def generate_ddl(
                 typer.echo(ddl + ";")
                 typer.secho(f"• dry-run: skipped writing {output_file}", fg=typer.colors.YELLOW)
                 return
-            with open(output_file, "w") as f:
+            with Path(output_file).open("w") as f:
                 f.write(ddl + ";\n")
             typer.secho(f"✓ DDL written to {output_file}", fg=typer.colors.GREEN)
         else:
@@ -341,13 +382,21 @@ def generate_ddl(
     # Try to find in tables
     try:
         table = ctx.catalog.get_table(name, soft_handle=False)
+        ddl = TableManager.get_spark_schema_ddl(table)
         typer.secho(f"Found table: {table.get_qualified_name()}", fg=typer.colors.YELLOW)
         typer.echo(f"  Type: {table.table_type}")
         typer.echo(f"  Catalog: {table.catalog}")
         typer.echo(f"  Schema: {table.schema_}")
         typer.echo(f"  Columns: {len(table.columns)}")
-        typer.echo("\nNote: CREATE TABLE DDL generation is not yet implemented.")
-        typer.echo("Use 'kelp catalog generate-model-yaml' for table metadata.")
+        typer.echo("\n-- DDL --")
+        typer.echo(ddl + ";")
+        if output_file:
+            if dry_run:
+                typer.secho(f"• dry-run: skipped writing {output_file}", fg=typer.colors.YELLOW)
+                return
+            with Path(output_file).open("w") as f:
+                f.write(ddl + ";\n")
+            typer.secho(f"✓ DDL written to {output_file}", fg=typer.colors.GREEN)
         return
     except KeyError:
         pass  # Not found in either

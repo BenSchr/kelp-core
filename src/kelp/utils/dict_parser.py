@@ -38,7 +38,9 @@ def merge_defaults(target, defaults):
 
 
 def apply_cfg_hierarchy_to_dict_recursive(
-    target: dict, cfg: dict, tpl_path: str | Path | None = None
+    target: dict,
+    cfg: dict,
+    tpl_path: str | Path | None = None,
 ) -> dict:
     """Apply a configuration hierarchy onto `target` (recursive folder +defaults)."""
     if not isinstance(target, dict):

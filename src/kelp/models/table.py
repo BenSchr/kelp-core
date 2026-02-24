@@ -69,7 +69,8 @@ class Column(BaseModel):
     data_type: str | None = Field(default=None)
     nullable: bool = Field(default=True)
     generated: GeneratedIdentityColumnConfig | GeneratedExpressionColumnConfig | None = Field(
-        default=None, discriminator="type"
+        default=None,
+        discriminator="type",
     )
     tags: dict[str, str] = Field(default_factory=dict)
 

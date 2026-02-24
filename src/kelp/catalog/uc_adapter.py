@@ -25,6 +25,7 @@ class UnityCatalogAdapter:
             omitted, the adapter loads configuration from the runtime context.
         query_builder: SQL generator. A default instance is created when not
             supplied.
+
     """
 
     def __init__(
@@ -41,6 +42,7 @@ class UnityCatalogAdapter:
 
         Returns:
             RemoteCatalogConfig instance mapped from project settings.
+
         """
         ctx_config = get_context().project_config.remote_catalog_config
         return ctx_config.model_copy(deep=True)
@@ -53,6 +55,7 @@ class UnityCatalogAdapter:
 
         Returns:
             Converted Table or None if missing.
+
         """
         return get_table_from_dbx_sdk(fqn)
 
@@ -68,6 +71,7 @@ class UnityCatalogAdapter:
 
         Returns:
             Ordered list of SQL statements to execute.
+
         """
         fqn = self._get_fqn(table)
         remote = self._fetch_remote_table(fqn)
@@ -90,6 +94,7 @@ class UnityCatalogAdapter:
 
         Returns:
             Concatenated list of SQL statements for every table.
+
         """
         queries: list[str] = []
         for table in tables:
@@ -105,6 +110,7 @@ class UnityCatalogAdapter:
 
         Returns:
             Ordered list of SQL statements to execute.
+
         """
         catalog_tables = tables or get_context().catalog.get_tables()
         return self.sync_tables(catalog_tables)
@@ -120,13 +126,14 @@ class UnityCatalogAdapter:
 
         Returns:
             Ordered list of SQL statements to execute.
+
         """
         from kelp.utils.databricks import get_metric_view_from_dbx_sdk
 
         fqn = metric_view.get_qualified_name()
         try:
             remote = get_metric_view_from_dbx_sdk(fqn)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(
                 "Metric view '%s' not found in Unity Catalog; skipping sync. Error: %s",
                 fqn,
@@ -140,20 +147,21 @@ class UnityCatalogAdapter:
         def _normalize_for_comparison(definition: dict) -> dict:
             """Remove comment and tags fields from definition for comparison."""
             import copy
+
             normalized = copy.deepcopy(definition)
             normalized.pop("comment", None)
-            
+
             # Remove tags from dimensions and measures
             if isinstance(normalized.get("dimensions"), list):
                 for dim in normalized["dimensions"]:
                     if isinstance(dim, dict):
                         dim.pop("tags", None)
-            
+
             if isinstance(normalized.get("measures"), list):
                 for measure in normalized["measures"]:
                     if isinstance(measure, dict):
                         measure.pop("tags", None)
-            
+
             return normalized
 
         local_def_normalized = _normalize_for_comparison(metric_view.definition)
@@ -173,16 +181,22 @@ class UnityCatalogAdapter:
 
         # Check column tags (dimensions and measures)
         from kelp.catalog.metric_view_ddl import generate_alter_metric_view_column_tags_ddl
-        
+
         column_tag_statements = generate_alter_metric_view_column_tags_ddl(
-            metric_view, metric_view.definition, remote.definition
+            metric_view,
+            metric_view.definition,
+            remote.definition,
         )
         if column_tag_statements:
             statements.extend(column_tag_statements)
-            logger.info("Column tags changed for metric view '%s': %d statements", fqn, len(column_tag_statements))
+            logger.info(
+                "Column tags changed for metric view '%s': %d statements",
+                fqn,
+                len(column_tag_statements),
+            )
 
         # Check tags diff using existing differ logic
-        tag_diff = self._differ._diff_dicts(
+        tag_diff = self._differ.diff_dicts(
             metric_view.tags,
             remote.tags,
             self._config.managed_table_tags,
@@ -191,10 +205,15 @@ class UnityCatalogAdapter:
 
         if tag_diff.has_changes:
             # Generate ALTER VIEW statements for tags
-            for tag_key, tag_value in tag_diff.updates.items():
-                statements.append(f"ALTER VIEW {fqn} SET TAGS ('{tag_key}' = '{tag_value}')")
-            for tag_key in tag_diff.deletes:
-                statements.append(f"ALTER VIEW {fqn} UNSET TAGS ('{tag_key}')")
+            statements.extend(
+                [
+                    f"ALTER VIEW {fqn} SET TAGS ('{tag_key}' = '{tag_value}')"
+                    for tag_key, tag_value in tag_diff.updates.items()
+                ],
+            )
+            statements.extend(
+                [f"ALTER VIEW {fqn} UNSET TAGS ('{tag_key}')" for tag_key in tag_diff.deletes],
+            )
             logger.info(
                 "Tags changed for metric view '%s': +%d / -%d",
                 fqn,
@@ -212,6 +231,7 @@ class UnityCatalogAdapter:
 
         Returns:
             Concatenated list of SQL statements for every metric view.
+
         """
         queries: list[str] = []
         for metric_view in metric_views:
@@ -227,6 +247,7 @@ class UnityCatalogAdapter:
 
         Returns:
             Ordered list of SQL statements to execute.
+
         """
         catalog_metrics = metric_views or get_context().catalog.get_metric_views()
         return self.sync_metric_views(catalog_metrics)
@@ -239,6 +260,7 @@ class UnityCatalogAdapter:
 
         Returns:
             SQL DDL statement to create the metric view.
+
         """
         return generate_create_metric_view_ddl(metric_view)
 
@@ -250,13 +272,14 @@ class UnityCatalogAdapter:
 
         Returns:
             List of SQL DDL statements for every metric view.
+
         """
         statements: list[str] = []
         for metric_view in metric_views:
             try:
                 stmt = self.create_metric_view(metric_view)
                 statements.append(stmt)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(
                     "Failed to generate DDL for metric view '%s': %s",
                     metric_view.name,
@@ -265,7 +288,8 @@ class UnityCatalogAdapter:
         return statements
 
     def create_all_metric_views(
-        self, metric_views: list[KelpMetricView] | None = None
+        self,
+        metric_views: list[KelpMetricView] | None = None,
     ) -> list[str]:
         """Create all metric views from the current project context.
 
@@ -275,6 +299,7 @@ class UnityCatalogAdapter:
 
         Returns:
             List of SQL DDL statements to execute.
+
         """
         catalog_metrics = metric_views or get_context().catalog.get_metric_views()
         return self.create_metric_views(catalog_metrics)

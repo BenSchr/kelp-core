@@ -40,6 +40,7 @@ class DictDiff:
     Attributes:
         updates: Keys whose values must be created or changed.
         deletes: Keys that must be removed from the remote.
+
     """
 
     updates: dict[str, str] = field(default_factory=dict)
@@ -58,6 +59,7 @@ class ColumnDiff:
     Attributes:
         description: New description value, or None if unchanged.
         tags: Tag diff, or None if unchanged.
+
     """
 
     description: str | None = None
@@ -66,9 +68,7 @@ class ColumnDiff:
     @property
     def has_changes(self) -> bool:
         """Return True when at least one field needs updating."""
-        return self.description is not None or (
-            self.tags is not None and self.tags.has_changes
-        )
+        return self.description is not None or (self.tags is not None and self.tags.has_changes)
 
 
 @dataclass
@@ -79,6 +79,7 @@ class ConstraintPKDiff:
         create: Constraint to add (did not exist remotely).
         update: Constraint whose columns changed (drop-then-recreate).
         delete: Constraint to remove (no longer exists locally).
+
     """
 
     create: Constraint | None = None
@@ -94,6 +95,7 @@ class ConstraintFKDiff:
         create: New constraints to add.
         update: Constraints whose definition changed (drop-then-recreate).
         delete: Constraints to remove.
+
     """
 
     create: list[Constraint] = field(default_factory=list)
@@ -115,6 +117,7 @@ class TableDiff:
         cluster_by_changed: True if clustering configuration changed.
         cluster_by_cols: New clustering columns (when changed).
         cluster_by_auto: New clustering auto flag (when changed).
+
     """
 
     table_description: str | None = None

@@ -13,7 +13,10 @@ def render_string_with_jinja(s, jinja_context=None, jinja_env=None):
         return s
     # Create a minimal env for simple string rendering; keep StrictUndefined
     local_env = jinja_env or Environment(
-        undefined=StrictUndefined, variable_start_string="${", variable_end_string="}"
+        undefined=StrictUndefined,
+        variable_start_string="${",
+        variable_end_string="}",
+        autoescape=True,
     )
 
     try:
@@ -66,6 +69,7 @@ def load_yaml_with_jinja(
         undefined=StrictUndefined,
         variable_start_string="${",
         variable_end_string="}",
+        autoescape=True,
     )
     files: list[Path]
     if path.is_file():
@@ -90,7 +94,9 @@ def load_yaml_with_jinja(
         try:
             parsed_yaml = yaml.safe_load(rendered_content) or {}
         except Exception as e:
-            raise ValueError(f"Failed to parse YAML from rendered template {relative_path}: {e}")
+            raise ValueError(
+                f"Failed to parse YAML from rendered template {relative_path}: {e}",
+            ) from e
         return _attach_file_path(parsed_yaml, relative_path)
 
     result: dict = {}

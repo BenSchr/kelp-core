@@ -6,7 +6,7 @@ def require_optional(pkg: str, extra: str | None = None) -> None:
     if find_spec(pkg) is None:
         hint = f"[{extra}]" if extra else ""
         raise ImportError(
-            f"Optional dependency '{pkg}' is not installed.\nInstall through {__package__}{hint}\n"
+            f"Optional dependency '{pkg}' is not installed.\nInstall through {__package__}{hint}\n",
         )
 
 
@@ -35,6 +35,7 @@ def find_path_by_name(
     Example:
         >>> find_path_by_name(".", "kelp_project.yml", search_strategy="both")
         Path('/path/to/kelp_project.yml')
+
     """
     start_path = Path(start_path).resolve()
 

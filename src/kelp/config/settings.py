@@ -1,5 +1,4 @@
-"""
-Modular settings resolution with configurable priority order.
+"""Modular settings resolution with configurable priority order.
 
 For project-level settings (not variables - those use simple dict merging).
 
@@ -26,7 +25,7 @@ def _get_spark_session():
         from pyspark.sql import SparkSession
 
         return SparkSession.getActiveSession()
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -78,8 +77,8 @@ class SparkSource(SourceResolver):
             # Try to get from Spark conf
             value = self.spark.conf.get(f"kelp.{key}")
             return value if value is not None else default
-        except Exception as e:
-            logger.debug(f"Failed to resolve from Spark conf for key '{key}': {e}")
+        except Exception as e:  # noqa: BLE001
+            logger.debug("Failed to resolve from Spark conf for key '%s': %s", key, e)
             return default
 
 
@@ -104,39 +103,36 @@ class DefaultSource(SourceResolver):
 
 
 class SettingsResolver:
-    """
-    Resolves project settings with configurable priority order.
+    """Resolves project settings with configurable priority order.
 
     For project-level settings (not variables - use simple dict merging for those).
     """
 
     def __init__(self, sources: list[SourceResolver]):
-        """
-        Initialize resolver with ordered sources (highest to lowest priority).
+        """Initialize resolver with ordered sources (highest to lowest priority).
 
         Args:
             sources: List of SourceResolver instances in priority order.
+
         """
         self.sources = sources
 
     def resolve(self, key: str, default: Any = None) -> Any:
-        """
-        Resolve a key by checking sources in priority order.
+        """Resolve a key by checking sources in priority order.
 
         Returns the first non-None value found, or the default.
         """
         for source in self.sources:
             value = source.resolve(key, None)
             if value is not None:
-                logger.debug(f"Resolved '{key}' from {source.__class__.__name__}")
+                logger.debug("Resolved '%s' from %s", key, source.__class__.__name__)
                 return value
 
-        logger.debug(f"Key '{key}' not found in any source, using default: {default}")
+        logger.debug("Key '%s' not found in any source, using default: %s", key, default)
         return default
 
-    def resolve_dict(self, keys: list[str], defaults: dict = None) -> dict:
-        """
-        Resolve multiple keys into a dictionary.
+    def resolve_dict(self, keys: list[str], defaults: dict | None = None) -> dict:
+        """Resolve multiple keys into a dictionary.
 
         Args:
             keys: List of keys to resolve.
@@ -144,6 +140,7 @@ class SettingsResolver:
 
         Returns:
             Dictionary with resolved values.
+
         """
         defaults = defaults or {}
         result = {}
@@ -158,8 +155,7 @@ def create_settings_resolver(
     default_settings: dict | None = None,
     env_prefix: str = KELP_ENV_PREFIX,
 ) -> SettingsResolver:
-    """
-    Create a SettingsResolver with standard priority order for project settings.
+    """Create a SettingsResolver with standard priority order for project settings.
 
     Priority: init_settings > spark > os env > target_settings > default_settings
 
@@ -173,6 +169,7 @@ def create_settings_resolver(
 
     Returns:
         SettingsResolver instance with sources in priority order.
+
     """
     sources = [
         InitSource(init_settings or {}),

@@ -29,7 +29,9 @@ def parse_catalog(
         logger.debug("Processing model from file: %s", origin_file_path)
         # apply project-level and folder-level defaults using recursive helper
         model_data = apply_cfg_hierarchy_to_dict_recursive(
-            model_data, project_models_config, tpl_path=origin_file_path
+            model_data,
+            project_models_config,
+            tpl_path=origin_file_path,
         )
         table_dict.update(model_data)
         if "name" not in table_dict or table_dict.get("name") in (None, ""):
@@ -56,7 +58,9 @@ def parse_catalog(
             logger.debug("Processing metric view from file: %s", origin_file_path)
             # apply project-level and folder-level defaults using recursive helper
             metric_data = apply_cfg_hierarchy_to_dict_recursive(
-                metric_data, project_metrics_config, tpl_path=origin_file_path
+                metric_data,
+                project_metrics_config,
+                tpl_path=origin_file_path,
             )
             metric_dict.update(metric_data)
             if "name" not in metric_dict or metric_dict.get("name") in (None, ""):

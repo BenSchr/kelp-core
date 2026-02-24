@@ -36,6 +36,7 @@ def resolve_project_root_dir() -> str:
 
     Raises:
         FileNotFoundError: If project file is not found in the search path.
+
     """
     project_filename = KELP_PROJECT_FILENAME
     project_path = find_path_by_name(
@@ -48,7 +49,7 @@ def resolve_project_root_dir() -> str:
 
     if project_path is None:
         raise FileNotFoundError(
-            f"Project root with '{project_filename}' not found in current, child and parent directories."
+            f"Project root with '{project_filename}' not found in current, child and parent directories.",
         )
 
     return str(project_path.parent if project_path.is_file() else project_path)
@@ -64,13 +65,12 @@ def load_project_yaml(
 
 
 def resolve_project_file_path() -> str:
-    """
-    Resolve project file path using priority: spark > os > folder search.
+    """Resolve project file path using priority: spark > os > folder search.
 
     Returns:
         Resolved absolute path to kelp_project.yml file.
-    """
 
+    """
     # Create resolver for project file discovery
     resolver = create_settings_resolver()
     # Try to resolve from spark/os
@@ -103,6 +103,7 @@ def load_target_yaml(
 
     Returns:
         Loaded and filtered target configuration.
+
     """
     runtime_vars = runtime_vars or {}
     if target_file_path is None or target is None:
@@ -122,22 +123,21 @@ def resolve_target_file_path(project_file_path: str, target: str) -> str:
     raw_project_data = load_yaml(project_file_path)
     if raw_project_data.get("targets", {}).get(target):
         return project_file_path
-    elif raw_project_data.get("targets_path"):
+    if raw_project_data.get("targets_path"):
         targets_path = Path(project_root).joinpath(raw_project_data["targets_path"])
-        try:
-            if targets_path.is_file():
-                return str(targets_path)
-            elif targets_path.is_dir():
-                for yaml_file in targets_path.glob("*.yml"):
-                    file_data = load_yaml(yaml_file)
-                    if file_data.get("targets", {}).get(target):
-                        return str(yaml_file)
-                for yaml_file in targets_path.glob("*.yaml"):
-                    file_data = load_yaml(yaml_file)
-                    if file_data.get("targets", {}).get(target):
-                        return str(yaml_file)
-        except Exception as e:
-            logger.debug(f"Failed to resolve target file path from {targets_path}: {e}")
+
+        if targets_path.is_file():
+            return str(targets_path)
+        if targets_path.is_dir():
+            for yaml_file in targets_path.glob("*.yml"):
+                file_data = load_yaml(yaml_file)
+                if file_data.get("targets", {}).get(target):
+                    return str(yaml_file)
+            for yaml_file in targets_path.glob("*.yaml"):
+                file_data = load_yaml(yaml_file)
+                if file_data.get("targets", {}).get(target):
+                    return str(yaml_file)
+
     raise ValueError(f"Target '{target}' not found in project file or targets_path.")
 
 
@@ -183,8 +183,10 @@ def load_project_config_data(
 def load_project_config(
     project_file_path: str,
     target: str | None = None,
-    init_vars: dict[str, Any] = {},
+    init_vars: dict[str, Any] | None = None,
 ) -> ProjectConfig:
+
+    init_vars = init_vars or {}
 
     # Deep merge target data into project data with target taking precedence
     project_data = load_project_config_data(

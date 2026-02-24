@@ -34,13 +34,15 @@ def json_schema(
         ),
     ] = Path("kelp_json_schema.json"),
     dry_run: Annotated[
-        bool, typer.Option("--dry-run", help="Preview output without writing")
+        bool,
+        typer.Option("--dry-run", help="Preview output without writing"),
     ] = False,
 ) -> None:
     """Generate JSON schema for kelp_project.yml configuration.
 
     Args:
         output: Path where the JSON schema will be saved.
+
     """
     json_schema = generate_json_schema()
     if dry_run:
@@ -48,7 +50,7 @@ def json_schema(
         typer.secho(f"• dry-run: skipped writing {output}", fg=typer.colors.YELLOW)
         return
 
-    with open(output, "w") as f:
+    with output.open("w") as f:
         json.dump(json_schema, f, indent=2)
 
     typer.secho(f"✓ JSON schema created: {output}", fg=typer.colors.GREEN)
@@ -56,7 +58,10 @@ def json_schema(
 
 @app.command()
 def validate(
-    config_path: Annotated[str, typer.Option("-c", help="Path to the kelp_project.yml")] = None,
+    config_path: Annotated[
+        str | None,
+        typer.Option("-c", help="Path to the kelp_project.yml"),
+    ] = None,
     target: Annotated[str, typer.Option(help="Environment to validate against")] = "dev",
     debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
 ) -> None:
@@ -66,7 +71,7 @@ def validate(
     log_level = "DEBUG" if debug else None
 
     run_ctx = init(config_path, target, log_level=log_level)
-    validated = True if run_ctx else False
+    validated = bool(run_ctx)
     if validated:
         typer.secho("✓ Configuration is valid!", fg=typer.colors.GREEN)
     else:
@@ -90,7 +95,10 @@ def sync_local_catalog(
         str | None,
         typer.Argument(help="Table or metric view name/FQN to sync"),
     ] = None,
-    config_path: Annotated[str, typer.Option("-c", help="Path to the kelp_project.yml")] = None,
+    config_path: Annotated[
+        str | None,
+        typer.Option("-c", help="Path to the kelp_project.yml"),
+    ] = None,
     target: Annotated[str, typer.Option(help="Environment to sync against")] = "dev",
     profile: Annotated[str | None, typer.Option("-p", help="Databricks CLI profile to use")] = None,
     output_file: Annotated[
@@ -98,7 +106,8 @@ def sync_local_catalog(
         typer.Option("-o", "--output", help="Path to output file for sync log"),
     ] = None,
     dry_run: Annotated[
-        bool, typer.Option("--dry-run", help="Preview changes without writing")
+        bool,
+        typer.Option("--dry-run", help="Preview changes without writing"),
     ] = False,
     debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
 ) -> None:
@@ -153,7 +162,8 @@ def sync_local_catalog(
     metric_path_config = None
     if ctx.project_config.metrics_path:
         metric_path_config = ServicePathConfig.from_context(
-            service_root_key="metrics_path", hierarchy_config_key="metric_views"
+            service_root_key="metrics_path",
+            hierarchy_config_key="metric_views",
         )
 
     log_lines: list[str] = []
@@ -169,14 +179,17 @@ def sync_local_catalog(
     metric_views_checked = 0
 
     with typer.progressbar(
-        tables, label="Syncing tables", length=len(tables), show_pos=True
+        tables,
+        label="Syncing tables",
+        length=len(tables),
+        show_pos=True,
     ) as progress:
         for table in progress:
             tables_checked += 1
             fqn = table.get_qualified_name()
             try:
                 remote = get_table_from_dbx_sdk(fqn, profile=profile)
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 _log(f"• skipped (not in remote): {fqn} ({exc})")
                 if dry_run:
                     dry_run_skipped.append(f"{fqn} (not in remote)")
@@ -184,7 +197,9 @@ def sync_local_catalog(
             remote.origin_file_path = table.origin_file_path
 
             report = YamlManager.patch_table_yaml(
-                remote, path_config=table_path_config, dry_run=dry_run
+                remote,
+                path_config=table_path_config,
+                dry_run=dry_run,
             )
             if report.changes_made:
                 if dry_run:
@@ -199,14 +214,17 @@ def sync_local_catalog(
         raise typer.Exit(code=1)
 
     with typer.progressbar(
-        metric_views, label="Syncing metric views", length=len(metric_views), show_pos=True
+        metric_views,
+        label="Syncing metric views",
+        length=len(metric_views),
+        show_pos=True,
     ) as progress:
         for metric_view in progress:
             metric_views_checked += 1
             fqn = metric_view.get_qualified_name()
             try:
                 remote = get_metric_view_from_dbx_sdk(fqn, profile=profile)
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 _log(f"• skipped (not in remote): {fqn} ({exc})")
                 if dry_run:
                     dry_run_skipped.append(f"{fqn} (not in remote)")
@@ -214,7 +232,9 @@ def sync_local_catalog(
             remote.origin_file_path = metric_view.origin_file_path
 
             report = YamlManager.patch_metric_view_yaml(
-                remote, path_config=metric_path_config, dry_run=dry_run
+                remote,
+                path_config=metric_path_config,
+                dry_run=dry_run,
             )
             if report.changes_made:
                 if dry_run:
@@ -240,7 +260,7 @@ def sync_local_catalog(
             _log(f"  Metric views checked: {metric_views_checked}")
 
     if output_file:
-        with open(output_file, "w") as f:
+        with Path(output_file).open("w") as f:
             for line in log_lines:
                 f.write(line + "\n")
         typer.secho(f"✓ Sync log written to {output_file}", fg=typer.colors.GREEN)

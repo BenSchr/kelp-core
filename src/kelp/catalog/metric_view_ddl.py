@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 def _normalize_metric_definition(
-    definition: dict[str, Any], description: str | None
+    definition: dict[str, Any],
+    description: str | None,
 ) -> dict[str, Any]:
     """Normalize a metric view definition for YAML output.
 
@@ -34,6 +35,7 @@ def _normalize_metric_definition(
         - Maps legacy ``table`` to ``source`` when ``source`` is missing.
         - Maps legacy ``metrics`` to ``measures`` and ``expression`` to ``expr``.
         - Removes unsupported ``type`` fields from dimensions and measures.
+
     """
     payload = copy.deepcopy(definition)
 
@@ -95,6 +97,7 @@ def generate_create_metric_view_ddl(metric_view: MetricView) -> str:
           "metrics": [...],
           "table": "catalog.schema.table_name"
         }
+
     """
     if not metric_view.name:
         raise ValueError("Metric view name is required")
@@ -112,7 +115,8 @@ def generate_create_metric_view_ddl(metric_view: MetricView) -> str:
         raise ValueError(f"Metric view '{fqn}' must have a definition")
 
     definition_payload = _normalize_metric_definition(
-        metric_view.definition, metric_view.description
+        metric_view.definition,
+        metric_view.description,
     )
     yaml_body = yaml.safe_dump(definition_payload, sort_keys=False).rstrip()
 
@@ -132,6 +136,7 @@ def generate_drop_metric_view_ddl(metric_view: MetricView) -> str:
 
     Returns:
         SQL DDL statement as a string.
+
     """
     fqn = metric_view.get_qualified_name()
     return f"DROP VIEW IF EXISTS {fqn}"
@@ -146,6 +151,7 @@ def generate_alter_metric_view_tags_ddl(metric_view: MetricView, tags: dict[str,
 
     Returns:
         List of SQL DDL statements.
+
     """
     if not tags:
         return []
@@ -175,6 +181,7 @@ def generate_alter_metric_view_definition_ddl(metric_view: MetricView) -> str:
 
     Raises:
         ValueError: If required fields are missing.
+
     """
     if not metric_view.name:
         raise ValueError("Metric view name is required")
@@ -186,7 +193,8 @@ def generate_alter_metric_view_definition_ddl(metric_view: MetricView) -> str:
 
     # Normalize the definition
     definition_payload = _normalize_metric_definition(
-        metric_view.definition, metric_view.description
+        metric_view.definition,
+        metric_view.description,
     )
     yaml_body = yaml.safe_dump(definition_payload, sort_keys=False).rstrip()
 
@@ -200,7 +208,9 @@ def generate_alter_metric_view_definition_ddl(metric_view: MetricView) -> str:
 
 
 def generate_alter_metric_view_column_tags_ddl(
-    metric_view: MetricView, local_def: dict, remote_def: dict
+    metric_view: MetricView,
+    local_def: dict,
+    remote_def: dict,
 ) -> list[str]:
     """Generate ALTER VIEW statements for metric view column tags (dimensions/measures).
 
@@ -213,6 +223,7 @@ def generate_alter_metric_view_column_tags_ddl(
 
     Returns:
         List of SQL SET TAG ON / UNSET TAG ON statements for view columns.
+
     """
     statements = []
     fqn = metric_view.get_qualified_name()
@@ -231,7 +242,7 @@ def generate_alter_metric_view_column_tags_ddl(
     for dim_name in set(local_dims.keys()) | set(remote_dims.keys()):
         tag_diff = _create_tag_diff(local_dims.get(dim_name, {}), remote_dims.get(dim_name, {}))
         if tag_diff.has_changes:
-            statements.extend(builder._column_tag_queries(fqn, dim_name, tag_diff, "view"))
+            statements.extend(builder._column_tag_queries(fqn, dim_name, tag_diff, "view"))  # noqa: SLF001
 
     # Process measures
     local_measures = {
@@ -243,10 +254,11 @@ def generate_alter_metric_view_column_tags_ddl(
 
     for measure_name in set(local_measures.keys()) | set(remote_measures.keys()):
         tag_diff = _create_tag_diff(
-            local_measures.get(measure_name, {}), remote_measures.get(measure_name, {})
+            local_measures.get(measure_name, {}),
+            remote_measures.get(measure_name, {}),
         )
         if tag_diff.has_changes:
-            statements.extend(builder._column_tag_queries(fqn, measure_name, tag_diff, "view"))
+            statements.extend(builder._column_tag_queries(fqn, measure_name, tag_diff, "view"))  # noqa: SLF001
 
     return statements
 
@@ -260,16 +272,9 @@ def _create_tag_diff(local_tags: dict[str, str], remote_tags: dict[str, str]) ->
 
     Returns:
         DictDiff with updates and deletes.
+
     """
-    updates = {}
-    deletes = []
-
-    for key, value in local_tags.items():
-        if remote_tags.get(key) != value:
-            updates[key] = value
-
-    for key in remote_tags:
-        if key not in local_tags:
-            deletes.append(key)
+    updates = {key: value for key, value in local_tags.items() if remote_tags.get(key) != value}
+    deletes = [key for key in remote_tags if key not in local_tags]
 
     return DictDiff(updates=updates, deletes=deletes)

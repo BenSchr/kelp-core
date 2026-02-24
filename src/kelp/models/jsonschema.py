@@ -12,13 +12,16 @@ class JsonSchemaModel(BaseModel):
     model_config = ConfigDict(title="Kelp", extra="forbid")
 
     kelp_project: ProjectConfig | None = Field(
-        default=None, description="Project-level configuration for the Kelp project."
+        default=None,
+        description="Project-level configuration for the Kelp project.",
     )
     kelp_models: list[Table] | None = Field(
-        default=None, description="List of table models defined in the configuration."
+        default=None,
+        description="List of table models defined in the configuration.",
     )
     vars: dict[str, Any] | None = Field(
-        default=None, description="Dictionary of variables that can be used in the configuration."
+        default=None,
+        description="Dictionary of variables that can be used in the configuration.",
     )
     vars_overwrite: str | None = Field(
         default=None,
@@ -26,7 +29,8 @@ class JsonSchemaModel(BaseModel):
         "May be added to .gitignore to set individual developer vars like schema names.",
     )
     targets: dict[str, Any] | None = Field(
-        default=None, description="List of target configurations for deployment or other purposes."
+        default=None,
+        description="List of target configurations for deployment or other purposes.",
     )
     targets_path: str | None = Field(
         default=None,

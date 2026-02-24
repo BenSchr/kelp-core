@@ -30,7 +30,6 @@ def _apply_expectations(
     expect_all_or_fail: dict[str, str] | None = None,
 ) -> Callable[..., DataFrame]:
     """Apply expectation decorators based on quality configuration."""
-
     if expect_all:
         func = dp.expect_all(expect_all)(func)
     if expect_all_or_drop:
@@ -71,11 +70,9 @@ def streaming_table(
     # Future extension point
     **kwargs,
 ) -> Callable[[Callable[..., DataFrame]], None] | None:
-    """
-    Drop-in replacement for @dp.table geared for streaming tables with
+    """Drop-in replacement for @dp.table geared for streaming tables with
     built-in data quality quarantine support.
     """
-
     # Build a dict of explicit overwrites provided at callsite.
     spark = SparkSession.active()
     params_passed = dict(
@@ -123,11 +120,11 @@ def streaming_table(
         if dqx_obj:
             try:
                 from databricks.labs.dqx.engine import DQEngine
-            except ImportError:
+            except ImportError as e:
                 raise ImportError(
                     "DQX is required for using DQX checks in @streaming_table. Please install databricks-labs-dqx."
-                    "For more information check https://databrickslabs.github.io/dqx/"
-                )
+                    "For more information check https://databrickslabs.github.io/dqx/",
+                ) from e
 
             from databricks.sdk import WorkspaceClient
 
@@ -153,7 +150,10 @@ def streaming_table(
                     expect_all_or_drop = {"dqx_error": "_errors IS NULL"}
 
             validty_func = _apply_expectations(
-                _apply_dqx_checks, expect_all, expect_all_or_drop, expect_all_or_fail
+                _apply_dqx_checks,
+                expect_all,
+                expect_all_or_drop,
+                expect_all_or_fail,
             )
 
             if dqx_obj.sdp_quarantine:
@@ -189,7 +189,10 @@ def streaming_table(
             expect_all.update({"quarantine_col": f"{quarantine_col} = false"})
 
             validty_func = _apply_expectations(
-                validity_wrapper, expect_all, expect_all_or_drop, expect_all_or_fail
+                validity_wrapper,
+                expect_all,
+                expect_all_or_drop,
+                expect_all_or_fail,
             )
 
             dp.table(
@@ -224,15 +227,14 @@ def streaming_table(
 
         else:
             dp.table(**params)(
-                _apply_expectations(decorated, expect_all, expect_all_or_drop, expect_all_or_fail)
+                _apply_expectations(decorated, expect_all, expect_all_or_drop, expect_all_or_fail),
             )
 
     # Support both @decorator and @decorator(...) forms, like @dp.table.
     if query_function is not None and callable(query_function):
         outer(query_function)
         return None
-    else:
-        return outer
+    return outer
 
 
 def create_streaming_table(

@@ -37,7 +37,8 @@ class ProjectConfig(BaseModel):
     models: dict = Field(default_factory=dict)
     metrics_path: str | None = Field(default=None, description="Path to metric views definitions")
     metric_views: dict = Field(
-        default_factory=dict, description="Metric views configuration hierarchy"
+        default_factory=dict,
+        description="Metric views configuration hierarchy",
     )
     quarantine_config: QuarantineConfig = Field(default_factory=QuarantineConfig)
     remote_catalog_config: RemoteCatalogConfig = Field(default_factory=RemoteCatalogConfig)

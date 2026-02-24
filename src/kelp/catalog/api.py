@@ -7,7 +7,9 @@ logger = logging.getLogger(f"{__name__}")
 
 
 def sync_catalog(
-    create_metric_views: bool = True, sync_metric_views: bool = True, sync_tables: bool = True
+    create_metric_views: bool = True,
+    sync_metric_views: bool = True,
+    sync_tables: bool = True,
 ) -> list[str]:
     tables = get_context().catalog.get_tables()
     uc_adapter = UnityCatalogAdapter()

@@ -1,6 +1,12 @@
+from typing import Any
+
+
 def merge_params(
-    params: dict[str, any], meta_params: dict[str, any], kwargs: dict[str, any] = {}
+    params: dict[str, Any],
+    meta_params: dict[str, Any],
+    kwargs: dict[str, Any] | None = None,
 ) -> dict[str, any]:
+    kwargs = kwargs or {}
     """Cleans up params by removing None values and merging with meta_params and kwargs."""
     if meta_params.get("name"):
         params["name"] = meta_params["name"]

@@ -26,6 +26,7 @@ class TableDiffCalculator:
         config: Sync configuration controlling which fields are managed and
             whether the sync mode is "replace" or "merge" ("append" is
             treated as "merge" to align with project config values).
+
     """
 
     def __init__(self, config: RemoteCatalogConfig) -> None:
@@ -40,28 +41,27 @@ class TableDiffCalculator:
 
         Returns:
             A populated TableDiff instance.
+
         """
         diff = TableDiff()
 
         diff.table_description = self._diff_description(local, remote)
-        diff.table_tags = self._diff_dicts(
+        diff.table_tags = self.diff_dicts(
             local.tags,
             remote.tags,
             self._config.managed_table_tags,
             self._config.table_tag_mode,
         )
-        diff.table_properties = self._diff_dicts(
+        diff.table_properties = self.diff_dicts(
             local.table_properties,
             remote.table_properties,
             self._config.managed_table_properties,
             self._config.table_property_mode,
         )
         diff.columns = self._diff_columns(local, remote)
-        diff.constraint_pk, diff.constraint_fk = self._diff_constraints(
-            local, remote)
+        diff.constraint_pk, diff.constraint_fk = self._diff_constraints(local, remote)
         diff.cluster_by_changed = (
-            local.cluster_by != remote.cluster_by
-            or local.cluster_by_auto != remote.cluster_by_auto
+            local.cluster_by != remote.cluster_by or local.cluster_by_auto != remote.cluster_by_auto
         )
         diff.cluster_by_cols = local.cluster_by
         diff.cluster_by_auto = local.cluster_by_auto
@@ -82,10 +82,11 @@ class TableDiffCalculator:
         Args:
             key: The tag/property key to check.
             managed: Allowlist of keys the adapter can manage.
+
         """
         return (not managed) or (key in managed)
 
-    def _diff_dicts(
+    def diff_dicts(
         self,
         local: dict[str, str],
         remote: dict[str, str],
@@ -102,6 +103,7 @@ class TableDiffCalculator:
 
         Returns:
             DictDiff with updates and deletes populated.
+
         """
         normalized_mode = "replace" if mode == "replace" else "merge"
 
@@ -116,9 +118,9 @@ class TableDiffCalculator:
                 updates[key] = local[key]
 
         if normalized_mode == "replace":
-            for key in remote_keys - local_keys:
-                if self._in_scope(key, managed):
-                    deletes.append(key)
+            deletes.extend(
+                [key for key in remote_keys - local_keys if self._in_scope(key, managed)],
+            )
 
         return DictDiff(updates=updates, deletes=deletes)
 
@@ -133,6 +135,7 @@ class TableDiffCalculator:
 
         Returns:
             Mapping of column name to ColumnDiff.
+
         """
         local_map: dict[str, Column] = {c.name: c for c in local.columns}
         result: dict[str, ColumnDiff] = {}
@@ -147,7 +150,7 @@ class TableDiffCalculator:
             if rc.description != lc.description:
                 col_diff.description = lc.description
 
-            tag_diff = self._diff_dicts(
+            tag_diff = self.diff_dicts(
                 lc.tags,
                 rc.tags,
                 self._config.managed_column_tags,
@@ -162,7 +165,9 @@ class TableDiffCalculator:
         return result
 
     def _diff_constraints(
-        self, local: Table, remote: Table
+        self,
+        local: Table,
+        remote: Table,
     ) -> tuple[ConstraintPKDiff, ConstraintFKDiff]:
         """Compute primary-key and foreign-key constraint diffs.
 
@@ -172,14 +177,13 @@ class TableDiffCalculator:
 
         Returns:
             Tuple of (ConstraintPKDiff, ConstraintFKDiff).
+
         """
         pk_diff = ConstraintPKDiff()
         fk_diff = ConstraintFKDiff()
 
-        local_map: dict[str, Constraint] = {
-            c.name: c for c in local.constraints}
-        remote_map: dict[str, Constraint] = {
-            c.name: c for c in remote.constraints}
+        local_map: dict[str, Constraint] = {c.name: c for c in local.constraints}
+        remote_map: dict[str, Constraint] = {c.name: c for c in remote.constraints}
 
         fk_update_names: set[str] = set()
 

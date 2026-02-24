@@ -56,7 +56,8 @@ class Catalog(BaseModel):
             if name in index:
                 # duplicate found — log and keep the first occurrence
                 logger.warning(
-                    "Duplicate metric view name encountered: %s (kept first occurrence)", name
+                    "Duplicate metric view name encountered: %s (kept first occurrence)",
+                    name,
                 )
                 continue
             index[name] = metric
@@ -90,7 +91,8 @@ class Catalog(BaseModel):
             raise KeyError(f"Table not found in catalog: {name}")
         if not table and soft_handle:
             logger.warning(
-                f"Table not found in catalog: {name}. Returning placeholder table since soft_handle=True."
+                "Table not found in catalog: %s. Returning placeholder table since soft_handle=True.",
+                name,
             )
             table = Table(name=name)
         return table
@@ -102,7 +104,8 @@ class Catalog(BaseModel):
             raise KeyError(f"Metric view not found in catalog: {name}")
         if not metric and soft_handle:
             logger.warning(
-                f"Metric view not found in catalog: {name}. Returning placeholder metric since soft_handle=True."
+                "Metric view not found in catalog: %s. Returning placeholder metric since soft_handle=True.",
+                name,
             )
             metric = MetricView(name=name)
         return metric

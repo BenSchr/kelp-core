@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 import logging
 
 from databricks.sdk import WorkspaceClient
@@ -34,13 +35,14 @@ class PipelineManager:
 
         Returns:
             List of Table objects from the pipeline
+
         """
-        logger.info(f"Fetching tables from pipeline {pipeline_id}")
+        logger.info("Fetching tables from pipeline %s", pipeline_id)
 
         # Get pipeline updates
         updates = self._fetch_updates(pipeline_id)
         if not updates:
-            logger.warning(f"No updates found for pipeline {pipeline_id}")
+            logger.warning("No updates found for pipeline %s", pipeline_id)
             return []
 
         # Fetch events for the updates
@@ -48,14 +50,14 @@ class PipelineManager:
 
         # Extract dataset names
         dataset_names = self._extract_dataset_names(updates, event_map)
-        logger.info(f"Found {len(dataset_names)} datasets in pipeline")
+        logger.info("Found %s datasets in pipeline", len(dataset_names))
 
         # Filter relevant datasets
         if quarantine_config:
             dataset_names = [
                 name for name in dataset_names if self._is_relevant_dataset(name, quarantine_config)
             ]
-            logger.info(f"Filtered to {len(dataset_names)} relevant datasets")
+            logger.info("Filtered to %s relevant datasets", len(dataset_names))
 
         # Fetch table metadata from Databricks
         tables = []
@@ -63,12 +65,12 @@ class PipelineManager:
             try:
                 table = get_table_from_dbx_sdk(dataset_name, w=self.w)
                 tables.append(table)
-                logger.debug(f"Fetched metadata for {dataset_name}")
-            except Exception as e:
-                logger.warning(f"Failed to fetch table {dataset_name}: {e}")
+                logger.debug("Fetched metadata for %s", dataset_name)
+            except Exception as e:  # noqa: BLE001
+                logger.warning("Failed to fetch table %s: %s", dataset_name, e)
                 continue
 
-        logger.info(f"Successfully fetched {len(tables)} tables")
+        logger.info("Successfully fetched %s tables", len(tables))
         return tables
 
     def _fetch_updates(self, pipeline_id: str) -> list[sp.UpdateInfo]:
@@ -92,16 +94,16 @@ class PipelineManager:
         if len(updates) > 1:
             end_iso = self._to_iso_ts(updates[1].creation_time)
 
-        logger.debug(f"Fetching events for window [{start_iso}, {end_iso})")
+        logger.debug("Fetching events for window [%s, %s)", start_iso, end_iso)
         event_filter = f"timestamp <= '{start_iso}'"
         if end_iso:
             event_filter += f" AND timestamp >= '{end_iso}'"
 
         events = list(
-            self.w.pipelines.list_pipeline_events(pipeline_id=pipeline_id, filter=event_filter)
+            self.w.pipelines.list_pipeline_events(pipeline_id=pipeline_id, filter=event_filter),
         )
 
-        update_event_map = {k: [] for k in set(u.update_id for u in updates)}
+        update_event_map = {k: [] for k in {u.update_id for u in updates}}
         for event in events:
             if event.origin.update_id in update_event_map:
                 update_event_map[event.origin.update_id].append(event)
@@ -109,14 +111,17 @@ class PipelineManager:
         return update_event_map
 
     def _extract_dataset_names(
-        self, updates: list[sp.UpdateInfo], event_map: dict[str, list[sp.PipelineEvent]]
+        self,
+        updates: list[sp.UpdateInfo],
+        event_map: dict[str, list[sp.PipelineEvent]],
     ) -> list[str]:
         """Extract unique dataset names from pipeline events."""
         names: set[str] = set()
         for update in updates:
-            for event in event_map.get(update.update_id, []):
-                if event.event_type == "dataset_definition":
-                    names.add(event.origin.dataset_name)
+            if update.update_id in event_map:
+                for event in event_map.get(update.update_id, []):
+                    if event.event_type == "dataset_definition":
+                        names.add(event.origin.dataset_name)
             if self._is_full_update(update):
                 break  # stop once we hit a full update
 
@@ -134,21 +139,21 @@ class PipelineManager:
         """Check if a dataset is relevant (not quarantine/validation table)."""
         fqn_parts = fqn.split(".")
         if len(fqn_parts) < 3:
-            logger.debug(f"Invalid dataset name {fqn}, expected catalog.schema.table")
+            logger.debug("Invalid dataset name %s, expected catalog.schema.table", fqn)
             return False
 
         dataset_name = fqn_parts[-1]
 
         if dataset_name.startswith(q_conf.quarantine_prefix) and dataset_name.endswith(
-            q_conf.quarantine_suffix
+            q_conf.quarantine_suffix,
         ):
-            logger.debug(f"Skipping quarantined dataset {dataset_name}")
+            logger.debug("Skipping quarantined dataset %s", dataset_name)
             return False
 
         if dataset_name.startswith(q_conf.validation_prefix) and dataset_name.endswith(
-            q_conf.validation_suffix
+            q_conf.validation_suffix,
         ):
-            logger.debug(f"Skipping validation dataset {dataset_name}")
+            logger.debug("Skipping validation dataset %s", dataset_name)
             return False
 
         return True
@@ -160,7 +165,7 @@ class PipelineManager:
         return ts.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
     @classmethod
-    def detect_pipeline_ids(self, target) -> list[str]:
+    def detect_pipeline_ids(cls, target) -> list[str]:
         """Detect pipeline IDs in local files"""
         # search for .databricks/bundle/<target> folder
         # look for resources.json and extract pipeline_id from there
@@ -169,30 +174,31 @@ class PipelineManager:
         # Find .databricks/bundle/<target>/**/*.json files search childs and parents two times both
         folder = find_path_by_name(".", ".databricks")
         if not folder:
-            logger.warning(f"No .databricks/bundle/{target} folder found for pipeline detection")
+            logger.warning(
+                "No .databricks/bundle/%s folder found for pipeline detection",
+                target,
+            )
             return []
         target_folder = folder / "bundle" / target
         if not target_folder.exists():
-            logger.warning(f"No .databricks/bundle/{target} folder found for pipeline detection")
+            logger.warning(
+                "No .databricks/bundle/%s folder found for pipeline detection",
+                target,
+            )
             return []
         resource_path = target_folder / "resources.json"
         if not resource_path.exists() or not resource_path.is_file():
-            logger.warning(f"No resources.json found in {folder} for pipeline detection")
-            return []
-        try:
-            import json
-
-            with open(resource_path) as f:
-                resources = json.load(f)
-            pipeline_ids = set()
-            for res, data in resources["state"].items():
-                if res.startswith("resources.pipelines"):
-                    id = data.get("__id__")
-                    if id:
-                        pipeline_ids.add(id)
-        except Exception as e:
-            logger.warning(f"Failed to read resources.json for pipeline detection: {e}")
+            logger.warning("No resources.json found in %s for pipeline detection", folder)
             return []
 
-        logger.debug(f"Detected pipeline IDs: {pipeline_ids}")
+        with resource_path.open() as f:
+            resources = json.load(f)
+        pipeline_ids = set()
+        for res, data in resources["state"].items():
+            if res.startswith("resources.pipelines"):
+                pipeline_id = data.get("__id__")
+                if pipeline_id:
+                    pipeline_ids.add(id)
+
+        logger.debug("Detected pipeline IDs: %s", pipeline_ids)
         return list(pipeline_ids)

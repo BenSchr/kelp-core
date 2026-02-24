@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 from kelp.config import get_context
 from kelp.models.runtime_context import RuntimeContext
@@ -51,7 +52,9 @@ class KelpTable:
         mapped_type = _UC_TYPE.get(self.table_type.lower(), "TABLE") if self.table_type else "TABLE"
         return (
             TableManager.get_spark_schema_ddl(
-                self.root_table, table_type=mapped_type, if_not_exists=if_not_exists
+                self.root_table,
+                table_type=mapped_type,
+                if_not_exists=if_not_exists,
             )
             if self.root_table
             else None
@@ -67,7 +70,8 @@ class KelpSdpTable(KelpTable):
     expect_all_or_drop: dict | None = None
     expect_all_or_quarantine: dict | None = None
 
-    def params(self, exclude: list[str] = []) -> dict[str, str]:
+    def params(self, exclude: list[str] | None = None) -> dict[str, str]:
+        exclude = exclude or []
         default_exclude = [
             "expect_all",
             "expect_all_or_drop",
@@ -77,21 +81,23 @@ class KelpSdpTable(KelpTable):
         exclude = list(set(exclude) | set(default_exclude))
         return self.get_sdp_params(exclude=exclude)
 
-    def params_raw(self, exclude: list[str] = []) -> dict[str, str]:
+    def params_raw(self, exclude: list[str] | None = None) -> dict[str, str]:
         """Get the raw parameters without excluding any quality parameters, for use in cases like cloning where we want to preserve the original quality config."""
+        exclude = exclude or []
         return self.get_sdp_params(exclude=exclude)
 
-    def params_cst(self, exclude: list[str] = []) -> dict[str, str]:
+    def params_cst(self, exclude: list[str] | None = None) -> dict[str, str]:
         """Params for create_streaming_table api"""
+        exclude = exclude or []
         default_exclude = [
             "expect_all_or_quarantine",
         ]
         exclude = list(set(exclude) | set(default_exclude))
         return self.get_sdp_params(exclude=exclude)
 
-    def get_sdp_params(self, exclude: list[str] = []) -> dict[str, str]:
+    def get_sdp_params(self, exclude: list[str] | None = None) -> dict[str, Any]:
         """Get the streaming table parameters as a dictionary for use with @dp.table."""
-
+        exclude = exclude or []
         params = {
             "name": self.fqn,
             "comment": self.comment,
@@ -101,7 +107,7 @@ class KelpSdpTable(KelpTable):
             "partition_cols": self.partition_cols,
             "cluster_by_auto": self.cluster_by_auto,
             "cluster_by": self.cluster_by,
-            "schema": self.schema if self.schema else None,
+            "schema": self.schema or None,
             "row_filter": self.row_filter,
             "expect_all": self.expect_all,
             "expect_all_or_drop": self.expect_all_or_drop,
@@ -129,7 +135,10 @@ class KelpSdpTable(KelpTable):
 class TableManager:
     @classmethod
     def get_spark_schema(
-        cls, table: Table, include_constraints: bool = False, add_generated: bool = False
+        cls,
+        table: Table,
+        include_constraints: bool = False,
+        add_generated: bool = False,
     ) -> str:
         """Get the raw Spark schema without any modifications or additions."""
         builder = SparkSchemaBuilder(table).add_columns(add_generated=add_generated)
@@ -147,10 +156,12 @@ class TableManager:
     ) -> str | None:
         builder = SparkSchemaBuilder(table)
         builder.add_columns(
-            add_generated=True
+            add_generated=True,
         ).add_constraints().add_clustering().add_table_properties()
         return builder.build_ddl(
-            table_type=table_type, if_not_exists=if_not_exists, or_refresh=or_refresh
+            table_type=table_type,
+            if_not_exists=if_not_exists,
+            or_refresh=or_refresh,
         )
 
     @classmethod
@@ -200,7 +211,10 @@ class TableManager:
 
     @classmethod
     def get_qualified_tablename_from_table(
-        cls, table: Table, catalog: str | None = None, schema: str | None = None
+        cls,
+        table: Table,
+        catalog: str | None = None,
+        schema: str | None = None,
     ) -> str:
         """Get the fully qualified table name including database/schema if applicable."""
         parts = []
@@ -215,7 +229,10 @@ class TableManager:
 
     @classmethod
     def build_sdp_table(
-        cls, table_name: str, table: Table | None = None, ctx: RuntimeContext | None = None
+        cls,
+        table_name: str,
+        table: Table | None = None,
+        ctx: RuntimeContext | None = None,
     ) -> KelpSdpTable:
         ctx = ctx or get_context()
         table = table or ctx.catalog.get_table(table_name)
@@ -231,7 +248,9 @@ class TableManager:
         sdp_table.fqn = cls.get_qualified_tablename_from_table(table)
         sdp_table.schema = cls.get_spark_schema(table, include_constraints=True, add_generated=True)
         sdp_table.schema_lite = cls.get_spark_schema(
-            table, include_constraints=False, add_generated=False
+            table,
+            include_constraints=False,
+            add_generated=False,
         )
 
         if table.quality and isinstance(table.quality, SDPQuality):
@@ -243,10 +262,16 @@ class TableManager:
             sdp_table.dqx_checks = table.quality.checks
 
         sdp_table.validation_table = cls.build_validation_table_name(
-            ctx, table.name, table.schema_, table.catalog
+            ctx,
+            table.name,
+            table.schema_,
+            table.catalog,
         )
         sdp_table.quarantine_table = cls.build_quarantine_table_name(
-            ctx, table.name, table.schema_, table.catalog
+            ctx,
+            table.name,
+            table.schema_,
+            table.catalog,
         )
         sdp_table.target_table = (
             sdp_table.validation_table if sdp_table.expect_all_or_quarantine else sdp_table.fqn
@@ -257,7 +282,10 @@ class TableManager:
 
     @classmethod
     def build_table(
-        cls, table_name: str, table: Table | None = None, ctx: RuntimeContext | None = None
+        cls,
+        table_name: str,
+        table: Table | None = None,
+        ctx: RuntimeContext | None = None,
     ) -> KelpTable:
         ctx = ctx or get_context()
         table = table or ctx.catalog.get_table(table_name)
@@ -272,10 +300,14 @@ class TableManager:
         kelp_table.row_filter = table.row_filter
         kelp_table.fqn = cls.get_qualified_tablename_from_table(table)
         kelp_table.schema = cls.get_spark_schema(
-            table, include_constraints=True, add_generated=True
+            table,
+            include_constraints=True,
+            add_generated=True,
         )
         kelp_table.schema_lite = cls.get_spark_schema(
-            table, include_constraints=False, add_generated=False
+            table,
+            include_constraints=False,
+            add_generated=False,
         )
 
         if table.quality and isinstance(table.quality, DQXQuality):
@@ -316,7 +348,7 @@ class SparkSchemaBuilder:
             elif constraint.type == "foreign_key":
                 cols = ", ".join(constraint.columns)
                 self.table_parts.append(
-                    f"CONSTRAINT {constraint.name} FOREIGN KEY ({cols}) REFERENCES {constraint.reference_table} ({', '.join(constraint.reference_columns)})"
+                    f"CONSTRAINT {constraint.name} FOREIGN KEY ({cols}) REFERENCES {constraint.reference_table} ({', '.join(constraint.reference_columns)})",
                 )
         return self
 
@@ -340,7 +372,10 @@ class SparkSchemaBuilder:
         return ", ".join(self.table_parts)
 
     def build_ddl(
-        self, table_type: str = "Table", if_not_exists: bool = False, or_refresh=False
+        self,
+        table_type: str = "Table",
+        if_not_exists: bool = False,
+        or_refresh=False,
     ) -> str:
         """Build the Spark schema in full DDL format, including column definitions and constraints."""
         table_schema = ",\n".join(self.table_parts)

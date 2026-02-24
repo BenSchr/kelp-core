@@ -52,11 +52,12 @@ class ContextStore:
 
         Raises:
             ContextExistsError: If context exists and overwrite=False.
+
         """
         with cls._lock:
             if cls._state is not None and not overwrite:
                 raise ContextExistsError(
-                    "A global context already exists. Use overwrite=True to replace it."
+                    "A global context already exists. Use overwrite=True to replace it.",
                 )
             cls._state = ctx
 
@@ -89,6 +90,7 @@ class ContextStore:
 
         Returns:
             RuntimeContext instance (either stored or newly created).
+
         """
         with cls._lock:
             if cls._state is not None and not refresh:
@@ -144,6 +146,7 @@ def init(
     Raises:
         ContextExistsError: If a global context already exists
             and refresh is False.
+
     """
     if log_level:
         configure_logging(log_level)
@@ -167,11 +170,9 @@ def get_context(init: bool = True) -> RuntimeContext:
 
     Raises:
         ContextMissingError: If no context is set and init=False, or after initialization if still missing.
+
     """
-    if init:
-        ctx = ContextStore.get_or_create()
-    else:
-        ctx = ContextStore.get()
+    ctx = ContextStore.get_or_create() if init else ContextStore.get()
     if ctx is None:
         raise ContextMissingError("No global context is set. Please initialize one first.")
     return ctx

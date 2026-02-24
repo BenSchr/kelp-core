@@ -31,6 +31,7 @@ class MetricView(BaseModel):
         tags: Optional tags for the metric view.
         origin_file_path: Path to the source YAML file (internal use).
         raw_config: Preserve original, unparsed config (including placeholder vars).
+
     """
 
     origin_file_path: SkipJsonSchema[str] | None = Field(default=None)

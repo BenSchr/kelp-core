@@ -84,6 +84,7 @@ class UCQueryBuilder:
 
         Returns:
             Ordered list of SQL strings to execute.
+
         """
         queries: list[str] = []
 
@@ -93,7 +94,7 @@ class UCQueryBuilder:
         queries.extend(self._column_queries(fqn, diff, table_type))
         queries.extend(self._cluster_by_queries(fqn, diff, table_type))
         queries.extend(
-            self._constraint_queries(fqn, diff.constraint_pk, diff.constraint_fk, table_type)
+            self._constraint_queries(fqn, diff.constraint_pk, diff.constraint_fk, table_type),
         )
 
         return queries
@@ -186,15 +187,22 @@ class UCQueryBuilder:
             if col_diff.description is not None:
                 queries.extend(
                     self._column_description_queries(
-                        fqn, col_name, col_diff.description, table_type
-                    )
+                        fqn,
+                        col_name,
+                        col_diff.description,
+                        table_type,
+                    ),
                 )
             if col_diff.tags is not None and col_diff.tags.has_changes:
                 queries.extend(self._column_tag_queries(fqn, col_name, col_diff.tags, table_type))
         return queries
 
     def _column_description_queries(
-        self, fqn: str, col_name: str, description: str, table_type: str
+        self,
+        fqn: str,
+        col_name: str,
+        description: str,
+        table_type: str,
     ) -> list[str]:
         if table_type == "streaming_table":
             query = _BASE_ALTER.format(
@@ -215,7 +223,11 @@ class UCQueryBuilder:
         return [query]
 
     def _column_tag_queries(
-        self, fqn: str, col_name: str, tag_diff: DictDiff, table_type: str
+        self,
+        fqn: str,
+        col_name: str,
+        tag_diff: DictDiff,
+        table_type: str,
     ) -> list[str]:
         """Generate column tag SQL.
 
@@ -297,7 +309,11 @@ class UCQueryBuilder:
         return [query]
 
     def _constraint_queries(
-        self, fqn: str, pk_diff: ConstraintPKDiff, fk_diff: ConstraintFKDiff, table_type: str
+        self,
+        fqn: str,
+        pk_diff: ConstraintPKDiff,
+        fk_diff: ConstraintFKDiff,
+        table_type: str,
     ) -> list[str]:
         queries: list[str] = []
 
