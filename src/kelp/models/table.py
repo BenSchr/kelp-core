@@ -40,7 +40,7 @@ class Table(BaseModel):
     constraints: list[PrimaryKeyConstraint | ForeignKeyConstraint] = Field(default_factory=list)
     tags: dict[str, str] = Field(default_factory=dict)
     # Preserve original, unparsed table config (including placeholder vars)
-    raw_config: dict = Field(default_factory=dict)
+    raw_config: SkipJsonSchema[dict] = Field(default_factory=dict)
 
     # Model Config
     model_config = ConfigDict(

@@ -7,6 +7,6 @@ Public surface:
 - Orchestrator: ``UnityCatalogAdapter``
 """
 
-from kelp.catalog.api import sync_catalog, sync_table
+from kelp.catalog.api import sync_catalog, sync_tables, sync_metric_views, create_metric_views
 
-__all__ = ["sync_catalog", "sync_table"]
+__all__ = ["sync_catalog", "create_metric_views", "sync_metric_views", "sync_tables"]

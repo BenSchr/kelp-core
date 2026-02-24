@@ -71,10 +71,19 @@ def load_runtime_config(
     # Load metadata files with resolved variables
     raw_config = load_config_files(project_root, project_config.models_path, runtime_vars)
 
+    # Load metrics files with resolved variables
+    raw_metrics_config = {}
+    if project_config.metrics_path:
+        raw_metrics_config = load_config_files(
+            project_root, project_config.metrics_path, runtime_vars
+        )
+
     # Parse catalog
     catalog = parse_catalog(
         raw_config.get("kelp_models", []),
         project_config.models,
+        raw_metrics_config.get("kelp_metric_views", []),
+        project_config.metric_views,
     )
 
     return RuntimeContext(

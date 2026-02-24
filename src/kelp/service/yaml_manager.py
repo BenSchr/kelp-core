@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 
 from kelp.config import get_context
+from kelp.models.metric_view import MetricView
 from kelp.models.table import Column, ForeignKeyConstraint, PrimaryKeyConstraint, Table
 from kelp.utils.dict_parser import apply_cfg_hierarchy_to_dict_recursive
 
@@ -39,7 +40,10 @@ class ServicePathConfig:
     hierarchy_config: dict | None = None
 
     @staticmethod
-    def from_context(service_root_key: str = "models_path") -> ServicePathConfig:
+    def from_context(
+        service_root_key: str = "models_path",
+        hierarchy_config_key: str = "models",
+    ) -> ServicePathConfig:
         """Create ServicePathConfig from current runtime context.
 
         Args:
@@ -64,7 +68,7 @@ class ServicePathConfig:
                 f"Project config missing '{service_root_key}' for service path resolution"
             )
 
-        hierarchy_config = getattr(ctx.project_config, "models", None)
+        hierarchy_config = getattr(ctx.project_config, hierarchy_config_key, None)
 
         return ServicePathConfig(
             project_root=project_root,
@@ -95,12 +99,95 @@ class YamlManager:
     """Service for writing and patching table YAML files."""
 
     @classmethod
+    def patch_metric_view_yaml(
+        cls,
+        source_metric_view: MetricView,
+        *,
+        path_config: ServicePathConfig | None = None,
+        relative_file_path: str | Path | None = None,
+        dry_run: bool = False,
+    ) -> YamlUpdateReport:
+        """Patch or create a metric view YAML file with metadata from a source metric view.
+
+        Args:
+            source_metric_view: Metric view sourced from Databricks metadata.
+            path_config: Service path configuration (project root, service root, hierarchy config).
+                If not provided, auto-discovers from runtime context (requires context to be initialized).
+            relative_file_path: Optional explicit path override. If provided, uses this path directly.
+
+        Returns:
+            YamlUpdateReport with details about changes made.
+        """
+        if path_config is None:
+            path_config = ServicePathConfig.from_context(
+                service_root_key="metrics_path", hierarchy_config_key="metric_views"
+            )
+
+        resolved_file_path = cls._resolve_or_determine_path(
+            name=source_metric_view.name,
+            origin_file_path=source_metric_view.origin_file_path,
+            schema=source_metric_view.schema_,
+            catalog=source_metric_view.catalog,
+            path_config=path_config,
+            explicit_path=relative_file_path,
+            kind="metric view",
+        )
+        if relative_file_path is None:
+            logger.debug(
+                "Determined file path for metric view %s: %s",
+                source_metric_view.name,
+                resolved_file_path,
+            )
+
+        full_file_path = path_config.service_root_absolute / resolved_file_path
+        document = cls._load_yaml_document(full_file_path)
+        models = document.get("kelp_metric_views")
+        if not isinstance(models, list):
+            models = []
+
+        model_name = source_metric_view.name
+        model_index = cls._find_model_index(models, model_name)
+        if model_index is None:
+            model = {"name": model_name}
+            models.append(model)
+            original_model = None
+        else:
+            model = models[model_index]
+            original_model = copy.deepcopy(model)
+
+        defaults = cls._get_hierarchy_defaults(resolved_file_path, path_config)
+        cls._patch_metric_view_dict(model, source_metric_view, defaults)
+
+        changes_made = original_model is None or model != original_model
+        added_fields, updated_fields, removed_fields = cls._detect_changes(original_model, model)
+
+        if changes_made and not dry_run:
+            document["kelp_metric_views"] = models
+            logger.debug(
+                "Writing updated YAML for metric view %s to %s",
+                source_metric_view.name,
+                full_file_path,
+            )
+            cls._write_yaml_document(full_file_path, document)
+
+        return YamlUpdateReport(
+            table_name=source_metric_view.name,
+            file_path=full_file_path,
+            result_model=model,
+            changes_made=changes_made,
+            added_fields=added_fields,
+            updated_fields=updated_fields,
+            removed_fields=removed_fields,
+        )
+
+    @classmethod
     def patch_table_yaml(
         cls,
         source_table: Table,
         *,
         path_config: ServicePathConfig | None = None,
         relative_file_path: str | Path | None = None,
+        dry_run: bool = False,
     ) -> YamlUpdateReport:
         """Patch or create a model YAML file with metadata from a source table.
 
@@ -130,8 +217,14 @@ class YamlManager:
         if path_config is None:
             path_config = ServicePathConfig.from_context()
 
-        resolved_file_path = cls._resolve_or_determine_file_path(
-            source_table, path_config, relative_file_path
+        resolved_file_path = cls._resolve_or_determine_path(
+            name=source_table.name,
+            origin_file_path=source_table.origin_file_path,
+            schema=source_table.schema_,
+            catalog=source_table.catalog,
+            path_config=path_config,
+            explicit_path=relative_file_path,
+            kind="table",
         )
         if relative_file_path is None:
             logger.debug(
@@ -155,15 +248,15 @@ class YamlManager:
             # Keep a deep copy of original state for change detection
             original_model = copy.deepcopy(model)
 
-        defaults = cls._get_hierarchy_defaults(source_table, resolved_file_path, path_config)
+        defaults = cls._get_hierarchy_defaults(resolved_file_path, path_config)
         cls._patch_model_dict(model, source_table, defaults)
 
         # Detect changes
         changes_made = original_model is None or model != original_model
         added_fields, updated_fields, removed_fields = cls._detect_changes(original_model, model)
 
-        # Only write if something changed
-        if changes_made:
+        # Only write if something changed and not in dry_run mode
+        if changes_made and not dry_run:
             document["kelp_models"] = models
             logger.debug(f"Writing updated YAML for table {source_table.name} to {full_file_path}")
             cls._write_yaml_document(full_file_path, document)
@@ -194,7 +287,7 @@ class YamlManager:
             source_table: Table to convert to model dict.
             include_hierarchy_defaults: If True, applies project config hierarchy defaults
                 to reduce redundant field values. Set to False for standalone display use
-                (e.g., CLI output without project context). Default: True
+            if changes_made and not dry_run:
 
         Returns:
             Model dictionary with name and patchable fields. Empty values are excluded.
@@ -215,7 +308,7 @@ class YamlManager:
             try:
                 if source_table.origin_file_path:
                     defaults = cls._get_hierarchy_defaults(
-                        source_table, Path(source_table.origin_file_path)
+                        Path(source_table.origin_file_path), ServicePathConfig.from_context()
                     )
             except Exception as e:
                 logger.debug(f"Could not load hierarchy defaults for {source_table.name}: {e}")
@@ -228,22 +321,123 @@ class YamlManager:
 
     @classmethod
     def _patch_model_dict(cls, model: dict, source_table: Table, defaults: dict) -> None:
-        """Patch a single model dict in-place."""
-        if "description" not in defaults:
+        """Patch a single model dict in-place.
+
+        Always updates fields from source. When a field has a default value in hierarchy config,
+        only writes it to YAML if it differs from the default (to avoid redundancy).
+        """
+        # Only write description if it differs from default
+        default_description = defaults.get("description")
+        if source_table.description != default_description:
             cls._set_or_remove(model, "description", source_table.description)
-        if "tags" not in defaults:
-            filtered_tags = cls._filter_tags(source_table.tags, defaults.get("tags"))
-            cls._set_or_remove(model, "tags", filtered_tags)
-        if "constraints" not in defaults:
-            cls._set_or_remove(
-                model, "constraints", cls._serialize_constraints(source_table.constraints)
-            )
+        elif "description" in model:
+            # Remove if matches default (no need to write it)
+            model.pop("description", None)
+
+        # Filter tags to exclude those matching defaults
+        filtered_tags = cls._filter_tags(source_table.tags, defaults.get("tags"))
+        cls._set_or_remove(model, "tags", filtered_tags)
+
+        # Only write constraints if no default or differs from default
+        default_constraints = defaults.get("constraints")
+        serialized_constraints = cls._serialize_constraints(source_table.constraints)
+        if serialized_constraints != default_constraints:
+            cls._set_or_remove(model, "constraints", serialized_constraints)
+        elif "constraints" in model:
+            model.pop("constraints", None)
 
         existing_columns = model.get("columns")
         if not isinstance(existing_columns, list):
             existing_columns = []
 
         model["columns"] = cls._patch_columns(existing_columns, source_table.columns)
+
+    @classmethod
+    def metric_view_to_model_dict(
+        cls,
+        source_metric_view: MetricView,
+        include_hierarchy_defaults: bool = True,
+    ) -> dict:
+        """Convert a MetricView object to a YAML model dict.
+
+        Args:
+            source_metric_view: Metric view to convert to model dict.
+            include_hierarchy_defaults: If True, applies project config hierarchy defaults
+                to reduce redundant field values.
+
+        Returns:
+            Model dictionary with name and patchable fields. Empty values are excluded.
+        """
+        model = {"name": source_metric_view.name}
+
+        defaults = {}
+        if include_hierarchy_defaults:
+            try:
+                if source_metric_view.origin_file_path:
+                    path_config = ServicePathConfig.from_context(
+                        service_root_key="metrics_path", hierarchy_config_key="metric_views"
+                    )
+                    defaults = cls._get_hierarchy_defaults(
+                        Path(source_metric_view.origin_file_path), path_config
+                    )
+            except Exception as e:
+                logger.debug(
+                    "Could not load hierarchy defaults for %s: %s",
+                    source_metric_view.name,
+                    e,
+                )
+
+        cls._patch_metric_view_dict(model, source_metric_view, defaults)
+        return model
+
+    @classmethod
+    def _patch_metric_view_dict(
+        cls, model: dict, source_metric_view: MetricView, defaults: dict
+    ) -> None:
+        """Patch a single metric view dict in-place.
+
+        Always updates fields from source. When a field has a default value in hierarchy config,
+        only writes it to YAML if it differs from the default (to avoid redundancy).
+        """
+        # Only write catalog if it differs from default
+        default_catalog = defaults.get("catalog")
+        if source_metric_view.catalog != default_catalog:
+            cls._set_or_remove(model, "catalog", source_metric_view.catalog)
+        elif "catalog" in model:
+            model.pop("catalog", None)
+
+        # Only write schema if it differs from default
+        default_schema = defaults.get("schema")
+        if source_metric_view.schema_ != default_schema:
+            cls._set_or_remove(model, "schema", source_metric_view.schema_)
+        elif "schema" in model:
+            model.pop("schema", None)
+
+        # Only write description if it differs from default
+        default_description = defaults.get("description")
+        if source_metric_view.description != default_description:
+            cls._set_or_remove(model, "description", source_metric_view.description)
+        elif "description" in model:
+            model.pop("description", None)
+
+        # Filter tags to exclude those matching defaults
+        filtered_tags = cls._filter_tags(source_metric_view.tags, defaults.get("tags"))
+        cls._set_or_remove(model, "tags", filtered_tags)
+
+        # Inject description as comment into definition if description exists
+        definition = source_metric_view.definition.copy() if source_metric_view.definition else {}
+        if source_metric_view.description and definition:
+            definition = {"comment": source_metric_view.description, **definition}
+
+        # Preserve existing source field from local model if present
+        # (local source may contain variables like ${catalog}.${schema}.table)
+        existing_definition = model.get("definition")
+        if isinstance(existing_definition, dict) and "source" in existing_definition:
+            # Keep the local source field, don't overwrite with remote rendered value
+            definition["source"] = existing_definition["source"]
+
+        # Definition is always written (no default handling)
+        cls._set_or_remove(model, "definition", definition)
 
     @classmethod
     def _patch_columns(
@@ -351,59 +545,86 @@ class YamlManager:
         return None
 
     @classmethod
-    def _resolve_or_determine_file_path(
-        cls, source_table: Table, path_config: ServicePathConfig, explicit_path: str | Path | None
+    def _resolve_or_determine_path(
+        cls,
+        *,
+        name: str,
+        origin_file_path: str | None,
+        schema: str | None,
+        catalog: str | None,
+        path_config: ServicePathConfig,
+        explicit_path: str | Path | None,
+        kind: str,
     ) -> Path:
-        """Return the file path, using provided path, origin_file_path, or hierarchy determination.
+        """Return the file path, using provided path, origin file, or hierarchy defaults.
 
         Args:
-            source_table: Table to resolve path for.
-            path_config: Service path configuration with project root and hierarchy info.
+            name: Object name (table or metric view).
+            origin_file_path: Origin file path if available.
+            schema: Schema of the object.
+            catalog: Catalog of the object.
+            path_config: Service path configuration with hierarchy settings.
             explicit_path: Optional explicit path override.
+            kind: Human-readable object kind for logging.
 
         Returns:
             Relative path to file within service_root.
         """
-        # If explicit path provided, use it
         if explicit_path:
             return Path(explicit_path)
 
-        # If table has origin_file_path, use it (don't resolve to absolute)
-        if source_table.origin_file_path:
-            return Path(source_table.origin_file_path)
+        if origin_file_path:
+            return Path(origin_file_path)
 
-        # Determine from hierarchy
-        return cls._determine_new_file_path(source_table, path_config)
+        return cls._determine_new_file_path_common(
+            name=name,
+            schema=schema,
+            catalog=catalog,
+            path_config=path_config,
+            kind=kind,
+        )
 
     @classmethod
-    def _determine_new_file_path(cls, source_table: Table, path_config: ServicePathConfig) -> Path:
-        """Determine the correct folder path for a new table based on hierarchy config.
+    def _determine_new_file_path_common(
+        cls,
+        *,
+        name: str,
+        schema: str | None,
+        catalog: str | None,
+        path_config: ServicePathConfig,
+        kind: str,
+    ) -> Path:
+        """Determine the correct folder path for a new object based on hierarchy config.
 
         Args:
-            source_table: Table to determine path for.
+            name: Object name (table or metric view).
+            schema: Schema of the object.
+            catalog: Catalog of the object.
             path_config: Service path configuration with hierarchy settings.
+            kind: Human-readable object kind for logging.
 
         Returns:
             Relative path to file within service_root.
         """
-        # Map the table's schema/catalog to the hierarchy folder
         folder_key = cls._find_hierarchy_folder_for_schema(
-            source_table.schema_, source_table.catalog, path_config.hierarchy_config or {}
+            schema, catalog, path_config.hierarchy_config or {}
         )
 
         if not folder_key:
             logger.debug(
-                f"Could not determine folder for table {source_table.name} "
-                f"(schema={source_table.schema_}, catalog={source_table.catalog}). "
-                f"Writing to root service path."
+                "Could not determine folder for %s %s (schema=%s, catalog=%s). "
+                "Writing to root service path.",
+                kind,
+                name,
+                schema,
+                catalog,
             )
             folder_key = ""
 
-        # Construct relative path within service root (service_root/folder_key/table_name.yml)
         if folder_key:
-            file_path = Path(folder_key) / f"{source_table.name}.yml"
+            file_path = Path(folder_key) / f"{name}.yml"
         else:
-            file_path = Path(f"{source_table.name}.yml")
+            file_path = Path(f"{name}.yml")
 
         return file_path
 
@@ -486,13 +707,10 @@ class YamlManager:
         return None
 
     @classmethod
-    def _get_hierarchy_defaults(
-        cls, source_table: Table, file_path: Path, path_config: ServicePathConfig
-    ) -> dict:
+    def _get_hierarchy_defaults(cls, file_path: Path, path_config: ServicePathConfig) -> dict:
         """Get defaults applied via project config hierarchy for a model path.
 
         Args:
-            source_table: Table being processed.
             file_path: File path (relative to service root).
             path_config: Service path configuration with hierarchy config.
 

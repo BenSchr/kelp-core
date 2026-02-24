@@ -1,49 +1,49 @@
 kelp_models:
-- table_type: streaming_table
-  name: bronze_orders
-  description: This is the orders model
-  tags:
-    domain: orders
-    stage: bronze
-  columns:
-  - name: order_id
-    description: Unique identifier for each order
-    data_type: string
+  - table_type: streaming_table
+    name: bronze_orders
+    description: This is the orders model
     tags:
-      business: key
-  - name: order_state
-    data_type: string
-    description: State of the order lifecycle (Pending, Shipped, etc.).
-  - name: price
-    data_type: double
-    description: Unit price for the order line.
-    tags:
-      sensitivity: low
-  - name: product
-    data_type: string
-    description: Product name or identifier.
-  - name: quantity
-    data_type: bigint
-    description: Quantity ordered for the product.
-  - name: store
-    data_type: string
-    description: Store identifier where the order was placed.
-  - name: user_id
-    data_type: string
-    description: Identifier for the user who placed the order; can link to customers.
-  - name: _rescued_data
-    data_type: string
-  - name: _errors
-    data_type: array<struct<name:string,message:string,columns:array<string>,filter:string,function:string,run_time:timestamp,run_id:string,user_metadata:map<string,string>>>
-    description: Structured errors captured by the ingestion/validation engine.
-  - name: _warnings
-    data_type: array<struct<name:string,message:string,columns:array<string>,filter:string,function:string,run_time:timestamp,run_id:string,user_metadata:map<string,string>>>
-    description: Structured warnings captured by the ingestion/validation engine.
-  quality:
-    engine: dqx
-    sdp_expect_level: fail
-    checks:
-    - check:
-        function: is_null
-        arguments:
-          column: _rescued_data
+      domain: orders
+      stage: bronze
+    columns:
+      - name: order_id
+        description: Unique identifier for each order
+        data_type: string
+        tags:
+          business: key
+      - name: order_state
+        data_type: string
+        description: State of the order lifecycle (Pending, Shipped, etc.).
+      - name: price
+        data_type: double
+        description: Unit price for the order line.
+        tags:
+          sensitivity: low
+      - name: product
+        data_type: string
+        description: Product name or identifier.
+      - name: quantity
+        data_type: bigint
+        description: Quantity ordered for the product.
+      - name: store
+        data_type: string
+        description: Store identifier where the order was placed.
+      - name: user_id
+        data_type: string
+        description: Identifier for the user who placed the order; can link to customers.
+      - name: _rescued_data
+        data_type: string
+      - name: _errors
+        data_type: array<struct<name:string,message:string,columns:array<string>,filter:string,function:string,run_time:timestamp,run_id:string,user_metadata:map<string,string>>>
+        description: Structured errors captured by the ingestion/validation engine.
+      - name: _warnings
+        data_type: array<struct<name:string,message:string,columns:array<string>,filter:string,function:string,run_time:timestamp,run_id:string,user_metadata:map<string,string>>>
+        description: Structured warnings captured by the ingestion/validation engine.
+    quality:
+      engine: dqx
+      sdp_expect_level: fail
+      checks:
+        - check:
+            function: is_null
+            arguments:
+              column: _rescued_data

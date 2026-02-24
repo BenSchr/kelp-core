@@ -3,14 +3,22 @@ kelp_project:
   models_path: "./kelp_metadata/models"
   models:
     +catalog: ${ catalog }
-    +tags:
-      kelp_managed: ""
     bronze:
       +schema: kelp_bronze
     silver:
       +schema: kelp_silver
     gold:
       +schema: kelp_gold
+    +tags:
+      kelp_managed: ""
+
+  # Metric Views configuration
+  metrics_path: "./kelp_metadata/metrics"
+  metric_views:
+    +catalog: ${ catalog }
+    +schema: kelp_gold
+    +tags:
+      kelp_managed: ""
 
 vars:
   catalog: kelp_catalog

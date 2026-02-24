@@ -5,6 +5,7 @@ import logging
 from pydantic import BaseModel, Field, PrivateAttr
 
 # from kelp.models.project_config import ProjectConfig
+from kelp.models.metric_view import MetricView
 from kelp.models.table import Table
 
 # from kelp.utils.dict_parser import apply_cfg_hierarchy_to_dict_recursive
@@ -15,13 +16,15 @@ logger = logging.getLogger(f"{__name__}")
 
 
 class Catalog(BaseModel):
-    """Catalog of tables defined in the kelp project."""
+    """Catalog of tables and metric views defined in the kelp project."""
 
     models: list[Table] = Field(default_factory=list)
-    _index_cache: dict[str, Table] | None = PrivateAttr(default=None)
+    metric_views: list[MetricView] = Field(default_factory=list)
+    _table_index_cache: dict[str, Table] | None = PrivateAttr(default=None)
+    _metrics_index_cache: dict[str, MetricView] | None = PrivateAttr(default=None)
 
     # --- Index helpers -------------------------------------------------
-    def _build_index(self) -> None:
+    def _build_table_index(self) -> None:
         """Build name -> Table index and record duplicates.
 
         Policy: keep-first for duplicate names and log a warning when a
@@ -38,18 +41,51 @@ class Catalog(BaseModel):
             index[name] = tbl
 
         # Cache on the instance using the private field
-        self._index_cache = index
+        self._table_index_cache = index
+
+    def _build_metrics_index(self) -> None:
+        """Build name -> MetricView index and record duplicates.
+
+        Policy: keep-first for duplicate names and log a warning when a
+        duplicate name is encountered.
+        """
+        index: dict[str, MetricView] = {}
+
+        for metric in self.metric_views:
+            name = getattr(metric, "name", None) or "<unknown>"
+            if name in index:
+                # duplicate found — log and keep the first occurrence
+                logger.warning(
+                    "Duplicate metric view name encountered: %s (kept first occurrence)", name
+                )
+                continue
+            index[name] = metric
+
+        # Cache on the instance using the private field
+        self._metrics_index_cache = index
+
+    @property
+    def table_index(self) -> dict[str, Table]:
+        """Return a mapping name -> Table (keeps first occurrence on dupes)."""
+        if self._table_index_cache is None:
+            self._build_table_index()
+        return self._table_index_cache
+
+    @property
+    def metrics_index(self) -> dict[str, MetricView]:
+        """Return a mapping name -> MetricView (keeps first occurrence on dupes)."""
+        if self._metrics_index_cache is None:
+            self._build_metrics_index()
+        return self._metrics_index_cache
 
     @property
     def index(self) -> dict[str, Table]:
-        """Return a mapping name -> Table (keeps first occurrence on dupes)."""
-        if self._index_cache is None:
-            self._build_index()
-        return self._index_cache
+        """Return a mapping name -> Table (backward compatibility)."""
+        return self.table_index
 
     def get_table(self, name: str, soft_handle: bool = False) -> Table:
         """Return the first Table matching `name` or None if not found."""
-        table = self.index.get(name)
+        table = self.table_index.get(name)
         if not table and not soft_handle:
             raise KeyError(f"Table not found in catalog: {name}")
         if not table and soft_handle:
@@ -59,14 +95,32 @@ class Catalog(BaseModel):
             table = Table(name=name)
         return table
 
+    def get_metric_view(self, name: str, soft_handle: bool = False) -> MetricView:
+        """Return the first MetricView matching `name` or None if not found."""
+        metric = self.metrics_index.get(name)
+        if not metric and not soft_handle:
+            raise KeyError(f"Metric view not found in catalog: {name}")
+        if not metric and soft_handle:
+            logger.warning(
+                f"Metric view not found in catalog: {name}. Returning placeholder metric since soft_handle=True."
+            )
+            metric = MetricView(name=name)
+        return metric
+
     def get_tables(self) -> list[Table]:
         """Return all Tables in the catalog as a list."""
         return self.models
 
-    def refresh_index(self) -> None:
-        """Rebuild the internal index from `self.models`.
+    def get_metric_views(self) -> list[MetricView]:
+        """Return all MetricViews in the catalog as a list."""
+        return self.metric_views
 
-        Call this if `self.models` has been modified after construction.
+    def refresh_index(self) -> None:
+        """Rebuild the internal indices from `self.models` and `self.metric_views`.
+
+        Call this if `self.models` or `self.metric_views` has been modified after construction.
         """
-        self._index_cache = None
-        self._build_index()
+        self._table_index_cache = None
+        self._metrics_index_cache = None
+        self._build_table_index()
+        self._build_metrics_index()

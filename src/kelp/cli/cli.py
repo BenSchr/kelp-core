@@ -33,6 +33,9 @@ def json_schema(
             help="Output path for the JSON schema file",
         ),
     ] = Path("kelp_json_schema.json"),
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Preview output without writing")
+    ] = False,
 ) -> None:
     """Generate JSON schema for kelp_project.yml configuration.
 
@@ -40,6 +43,11 @@ def json_schema(
         output: Path where the JSON schema will be saved.
     """
     json_schema = generate_json_schema()
+    if dry_run:
+        typer.echo(json.dumps(json_schema, indent=2))
+        typer.secho(f"• dry-run: skipped writing {output}", fg=typer.colors.YELLOW)
+        return
+
     with open(output, "w") as f:
         json.dump(json_schema, f, indent=2)
 
@@ -69,6 +77,173 @@ def validate(
     typer.echo(f"Runtime variables: {run_ctx.runtime_vars}")
     typer.echo(f"Relative models path: {run_ctx.project_config.models_path}")
     typer.echo(f"Models found: {len(run_ctx.catalog.index)}")
+
+    # Show metrics info if metrics are configured
+    if run_ctx.project_config.metrics_path:
+        typer.echo(f"Relative metrics path: {run_ctx.project_config.metrics_path}")
+        typer.echo(f"Metric views found: {len(run_ctx.catalog.metrics_index)}")
+
+
+@app.command()
+def sync_local_catalog(
+    name: Annotated[
+        str | None,
+        typer.Argument(help="Table or metric view name/FQN to sync"),
+    ] = None,
+    config_path: Annotated[str, typer.Option("-c", help="Path to the kelp_project.yml")] = None,
+    target: Annotated[str, typer.Option(help="Environment to sync against")] = "dev",
+    profile: Annotated[str | None, typer.Option("-p", help="Databricks CLI profile to use")] = None,
+    output_file: Annotated[
+        str | None,
+        typer.Option("-o", "--output", help="Path to output file for sync log"),
+    ] = None,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Preview changes without writing")
+    ] = False,
+    debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
+) -> None:
+    """Sync local YAML files with remote Unity Catalog tables and metric views.
+
+    If a name or FQN is provided, only that object is synced. Otherwise, all
+    cataloged objects are synced.
+    """
+    load_dotenv()
+    from kelp.config.lifecycle import get_context, init
+    from kelp.service.yaml_manager import ServicePathConfig, YamlManager
+    from kelp.utils.databricks import get_metric_view_from_dbx_sdk, get_table_from_dbx_sdk
+
+    log_level = "DEBUG" if debug else None
+    init(config_path, target, log_level=log_level)
+    ctx = get_context()
+
+    tables: list = []
+    metric_views: list = []
+
+    if name:
+        table_match = ctx.catalog.table_index.get(name)
+        metric_match = ctx.catalog.metrics_index.get(name)
+
+        if not table_match and not metric_match:
+            for table in ctx.catalog.get_tables():
+                if table.get_qualified_name() == name:
+                    table_match = table
+                    break
+            if not metric_match:
+                for metric_view in ctx.catalog.get_metric_views():
+                    if metric_view.get_qualified_name() == name:
+                        metric_match = metric_view
+                        break
+
+        if table_match:
+            tables = [table_match]
+        if metric_match:
+            metric_views = [metric_match]
+
+        if not tables and not metric_views:
+            typer.secho(
+                f"✗ '{name}' not found in local catalog (tables or metric views)",
+                fg=typer.colors.RED,
+            )
+            raise typer.Exit(code=1)
+    else:
+        tables = ctx.catalog.get_tables()
+        metric_views = ctx.catalog.get_metric_views()
+
+    table_path_config = ServicePathConfig.from_context()
+    metric_path_config = None
+    if ctx.project_config.metrics_path:
+        metric_path_config = ServicePathConfig.from_context(
+            service_root_key="metrics_path", hierarchy_config_key="metric_views"
+        )
+
+    log_lines: list[str] = []
+
+    def _log(message: str, *, err: bool = False) -> None:
+        log_lines.append(message)
+        typer.echo(message, err=err)
+
+    dry_run_updates: list[str] = []
+    dry_run_skipped: list[str] = []
+    unchanged_count = 0
+    tables_checked = 0
+    metric_views_checked = 0
+
+    with typer.progressbar(
+        tables, label="Syncing tables", length=len(tables), show_pos=True
+    ) as progress:
+        for table in progress:
+            tables_checked += 1
+            fqn = table.get_qualified_name()
+            try:
+                remote = get_table_from_dbx_sdk(fqn, profile=profile)
+            except Exception as exc:
+                _log(f"• skipped (not in remote): {fqn} ({exc})")
+                if dry_run:
+                    dry_run_skipped.append(f"{fqn} (not in remote)")
+                continue
+            remote.origin_file_path = table.origin_file_path
+
+            report = YamlManager.patch_table_yaml(
+                remote, path_config=table_path_config, dry_run=dry_run
+            )
+            if report.changes_made:
+                if dry_run:
+                    dry_run_updates.append(f"{table.name} -> {report.file_path}")
+                else:
+                    _log(f"✓ updated: {table.name} at {report.file_path}")
+            else:
+                unchanged_count += 1
+
+    if metric_views and not metric_path_config:
+        _log("✗ metrics_path is not configured in kelp_project.yml", err=True)
+        raise typer.Exit(code=1)
+
+    with typer.progressbar(
+        metric_views, label="Syncing metric views", length=len(metric_views), show_pos=True
+    ) as progress:
+        for metric_view in progress:
+            metric_views_checked += 1
+            fqn = metric_view.get_qualified_name()
+            try:
+                remote = get_metric_view_from_dbx_sdk(fqn, profile=profile)
+            except Exception as exc:
+                _log(f"• skipped (not in remote): {fqn} ({exc})")
+                if dry_run:
+                    dry_run_skipped.append(f"{fqn} (not in remote)")
+                continue
+            remote.origin_file_path = metric_view.origin_file_path
+
+            report = YamlManager.patch_metric_view_yaml(
+                remote, path_config=metric_path_config, dry_run=dry_run
+            )
+            if report.changes_made:
+                if dry_run:
+                    dry_run_updates.append(f"{metric_view.name} -> {report.file_path}")
+                else:
+                    _log(f"✓ updated: {metric_view.name} at {report.file_path}")
+            else:
+                unchanged_count += 1
+
+    if dry_run:
+        _log("\nDry-run report:")
+        if dry_run_updates:
+            _log("  Would update:")
+            for line in dry_run_updates:
+                _log(f"    - {line}")
+        if dry_run_skipped:
+            _log("  Skipped:")
+            for line in dry_run_skipped:
+                _log(f"    - {line}")
+        _log(f"  Unchanged: {unchanged_count}")
+        _log(f"  Tables checked: {tables_checked}")
+        if metric_views:
+            _log(f"  Metric views checked: {metric_views_checked}")
+
+    if output_file:
+        with open(output_file, "w") as f:
+            for line in log_lines:
+                f.write(line + "\n")
+        typer.secho(f"✓ Sync log written to {output_file}", fg=typer.colors.GREEN)
 
 
 def main() -> None:

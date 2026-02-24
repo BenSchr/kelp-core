@@ -35,6 +35,10 @@ class ProjectConfig(BaseModel):
     # metadata_paths: list[str] = Field(default_factory=lambda: ["kelp_models"])
     models_path: str | None = Field(default=None)
     models: dict = Field(default_factory=dict)
+    metrics_path: str | None = Field(default=None, description="Path to metric views definitions")
+    metric_views: dict = Field(
+        default_factory=dict, description="Metric views configuration hierarchy"
+    )
     quarantine_config: QuarantineConfig = Field(default_factory=QuarantineConfig)
     remote_catalog_config: RemoteCatalogConfig = Field(default_factory=RemoteCatalogConfig)
     runtime_vars: SkipJsonSchema[dict] = Field(default_factory=dict)
