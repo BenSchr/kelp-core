@@ -2,7 +2,7 @@ from kelp.service.table_manager import KelpSdpTable, TableManager
 
 
 def get_table(name: str) -> KelpSdpTable:
-    """Get the SDP table object for a given table name.
+    """Get the KelpSdpTable object for a given table name.
 
     Retrieves a KelpSdpTable instance with all computed properties including
     fully qualified name, schema, quality checks, and partition information.

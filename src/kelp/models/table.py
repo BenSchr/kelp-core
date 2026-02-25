@@ -337,7 +337,7 @@ class SDPQuality(Quality):
 
 
 class DQXQuality(Quality):
-    """DQX (Databricks Quality X) quality configuration.
+    """Databricks DQX quality checks configuration.
 
     Attributes:
         engine: Quality engine type (always "dqx").

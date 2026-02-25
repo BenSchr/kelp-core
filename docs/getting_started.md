@@ -61,7 +61,11 @@ kelp_metadata/
 If you use Databricks SDP you can run following command to sync tables from pipelines to metadata:
 
 ```bash
-kelp sync-from-pipeliens <pipeline_id>
+kelp sync-from-pipeline <pipeline_id>
 ```
 
-If you omit `<pipeline_id>`, Kelp tries to detect the pipeline ID from your asset bundle and syncs tables from that pipeline.
+If you omit `<pipeline_id>`, Kelp tries to detect the pipeline IDs from your databricks asset bundle (if it exists) and syncs tables from those pipelines.
+
+```
+kelp sync-from-pipeline
+```

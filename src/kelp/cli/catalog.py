@@ -32,7 +32,7 @@ def _resolve_target(target: str | None) -> str | None:
 
 
 @app.command()
-def generate_model_yaml(
+def sync_from_catalog(
     table_path: str = typer.Argument(
         ...,
         help="Fully qualified table name, e.g. database.schema.table",
@@ -51,7 +51,7 @@ def generate_model_yaml(
     ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview output without writing"),
 ) -> None:
-    """Generate a YAML model definition for a single table.
+    """Sync specified table metadata from the Databricks catalog to a YAML model definition.
 
     Fetches table metadata from Databricks and outputs a sample YAML model
     definition suitable for including in a project's kelp_models.
@@ -126,13 +126,9 @@ def sync_from_pipeline(
     load_dotenv()
     log_level = "DEBUG" if debug else None
     resolved_target = _resolve_target(target)
-    init(project_root=project_file_path, target=resolved_target, log_level=log_level)
 
-    try:
-        ctx = get_context()
-    except Exception as e:
-        logger.error("Failed to load project context: %s", e)
-        raise Exception(f"Failed to load project context: {e}") from e
+    # Initial setup - init with current target (may be None)
+    init(project_root=project_file_path, target=resolved_target, log_level=log_level)
 
     log_lines: list[str] = []
 
@@ -140,20 +136,41 @@ def sync_from_pipeline(
         log_lines.append(message)
         typer.echo(message, err=err)
 
-    _log(f"Fetching tables from pipeline {pipeline_id}...")
-
     # Initialize managers
     pipeline_manager = PipelineManager(profile=profile)
 
     if not pipeline_id:
-        pipeline_ids = pipeline_manager.detect_pipeline_ids(target=resolved_target)
-        if not pipeline_ids:
+        pipelines = pipeline_manager.detect_pipelines(target=resolved_target)
+        if not pipelines:
             logger.error(
                 "No pipeline ID provided and auto-detection failed for target '%s'",
                 resolved_target,
             )
             raise typer.Exit(1)
-        _log(f"Auto-detected pipeline IDs: {', '.join(pipeline_ids)}")
+
+        # If no target was originally resolved, use the detected target and reinit
+        if not resolved_target:
+            detected_target = pipelines[0].target
+            _log(f"Using target: {detected_target}")
+            init(project_root=project_file_path, target=detected_target, log_level=log_level)
+            resolved_target = detected_target
+
+        pipeline_ids = [p.id for p in pipelines]
+        pipeline_info_str = ", ".join(f"{p.name} ({p.target})" for p in pipelines)
+        _log(f"Auto-detected pipelines: {pipeline_info_str}")
+    else:
+        pipeline_ids = [pipeline_id]
+
+    _log(
+        f"Fetching tables from pipeline {pipeline_ids[0] if len(pipeline_ids) == 1 else 'multiple'}..."
+    )
+
+    # Get context after pipelines detected and target resolved
+    try:
+        ctx = get_context()
+    except Exception as e:
+        logger.error("Failed to load project context: %s", e)
+        raise Exception(f"Failed to load project context: {e}") from e
     # Fetch tables from pipeline
     tables = []
     for pipeline_id in pipeline_ids:
@@ -195,12 +212,12 @@ def sync_from_pipeline(
     errors = []
     dry_run_updates: list[str] = []
     dry_run_skipped: list[str] = []
+    result_messages: list[str] = []
 
     with typer.progressbar(
         tables,
         label="Syncing tables",
         length=len(tables),
-        show_pos=True,
     ) as progress:
         for table in progress:
             checked_count += 1
@@ -235,26 +252,31 @@ def sync_from_pipeline(
                     if dry_run:
                         dry_run_updates.append(f"{table.name} -> {report.file_path}{details}")
                     else:
-                        _log(f"  ✓ {status}: {table.name}{details} at {report.file_path}")
+                        msg = f"✓ {status}: {table.name}{details} at {report.file_path}"
+                        result_messages.append(msg)
+                        logger.debug(msg)
                 else:
                     no_change_count += 1
-                    if not dry_run:
-                        _log(f"  • no change: {table.name}")
+                    logger.debug("• no change: %s", table.name)
 
             except Exception as e:  # noqa: BLE001
                 error_msg = f"Failed to sync {table.name}: {e}"
                 errors.append(error_msg)
-                logger.error("  ✗ %s", error_msg)
+                logger.error(error_msg)
                 if dry_run:
                     dry_run_skipped.append(f"{table.name} (error: {e})")
                 continue
 
-    # Summary
-    _log(f"\nSync complete: {synced_count}/{len(tables)} tables synced")
+    # Print result summary
+    typer.echo()
+    if result_messages:
+        for msg in result_messages:
+            _log(msg)
+        _log("")
+    _log(f"✓ Sync complete: {synced_count}/{len(tables)} tables synced")
     _log(f"  - {created_count} created")
     _log(f"  - {updated_count} updated")
-    _log(f"  - {no_change_count} no changes")
-    _log(f"  - {checked_count} checked")
+    _log(f"  - {no_change_count} unchanged")
     if dry_run:
         _log("\nDry-run report:")
         if dry_run_updates:
@@ -317,7 +339,7 @@ def generate_alter_statements(
         help="Enable debug logging (overrides --log-level)",
     ),
 ):
-    """Generate ALTER TABLE statements for tables in the catalog that are missing from the pipeline."""
+    """Generate ALTER TABLE statements for tables and metric views in the catalog that are different from the Databricks catalog."""
     log_level = "DEBUG" if debug else None
     from kelp.catalog.api import sync_catalog
     from kelp.config.lifecycle import init

@@ -99,11 +99,11 @@ class KelpTable:
 
 @dataclass
 class KelpSdpTable(KelpTable):
-    """Databricks SDP (Spark Data Pruning) table with quality expectations configuration.
+    """KelpSdpTable object with quality expectations configuration.
 
     Extends KelpTable with SDP-specific quality expectations that control row-level
     data quality enforcement. Provides multiple parameter extraction methods for
-    different use cases (standard SDP, create_streaming_table, raw cloning).
+    different use cases (Sdp table decorator, create_streaming_table, raw).
 
     Attributes:
         expect_all: Dictionary of SQL expressions that must all pass.

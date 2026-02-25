@@ -6,16 +6,30 @@ import typer
 from dotenv import load_dotenv
 
 from kelp.cli.catalog import app as catalog_app
+from kelp.cli.init import app as init_app
 from kelp.config.settings import resolve_setting
 from kelp.models.jsonschema import generate_json_schema
 
+kelp_banner = """
+⌜                                 ⌝
+  ██╗  ██╗███████╗██╗     ██████╗  
+  ██║ ██╔╝██╔════╝██║     ██╔══██╗ 
+  █████╔╝ █████╗  ██║     ██████╔╝ 
+  ██╔═██╗ ██╔══╝  ██║     ██╔═══╝  
+  ██║  ██╗███████╗███████╗██║      
+  ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝      
+⌞                                 ⌟
+Metadata Toolkit for Databricks Spark and Declarative Pipelines
+"""
+
 app = typer.Typer(
     name="kelp",
-    help="🌿 Kelp - A tool for managing your data projects with ease.",
+    help="🌿 Kelp - Metadata Toolkit for Databricks Spark and Declarative Pipelines",
     no_args_is_help=True,
 )
 
 app.add_typer(catalog_app)
+app.add_typer(init_app)
 
 
 def _resolve_target(target: str | None) -> str | None:
@@ -34,6 +48,7 @@ def _resolve_target(target: str | None) -> str | None:
 @app.command()
 def version() -> None:
     """Display the current version of Kelp."""
+    typer.echo(kelp_banner)
     typer.echo("Kelp version: 0.0.0")
 
 
@@ -79,6 +94,7 @@ def validate(
     target: Annotated[str | None, typer.Option(help="Environment to validate against")] = None,
     debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
 ) -> None:
+    """Validate the Kelp project configuration and catalog."""
     load_dotenv()
     from kelp.config.lifecycle import init
 
@@ -199,7 +215,6 @@ def sync_local_catalog(
         tables,
         label="Syncing tables",
         length=len(tables),
-        show_pos=True,
     ) as progress:
         for table in progress:
             tables_checked += 1
@@ -234,7 +249,6 @@ def sync_local_catalog(
         metric_views,
         label="Syncing metric views",
         length=len(metric_views),
-        show_pos=True,
     ) as progress:
         for metric_view in progress:
             metric_views_checked += 1

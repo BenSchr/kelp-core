@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import logging
+from dataclasses import dataclass
 
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service import pipelines as sp
@@ -13,6 +14,25 @@ from kelp.utils.common import find_path_by_name
 from kelp.utils.databricks import get_table_from_dbx_sdk
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class PipelineInfo:
+    """Information about a detected pipeline.
+
+    Attributes:
+        target: Target environment name (e.g., 'dev', 'prod')
+        name: Pipeline name
+        id: Pipeline ID
+    """
+
+    target: str
+    name: str
+    id: str
+
+    def __str__(self) -> str:
+        """Format for display."""
+        return f"{self.name} (target: {self.target})"
 
 
 class PipelineManager:
@@ -174,40 +194,177 @@ class PipelineManager:
         return ts.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
     @classmethod
-    def detect_pipeline_ids(cls, target) -> list[str]:
-        """Detect pipeline IDs in local files"""
-        # search for .databricks/bundle/<target> folder
-        # look for resources.json and extract pipeline_id from there
-        # return list of unique pipeline_ids found
+    def _extract_pipelines_from_target(cls, target_folder, target_name: str) -> list[PipelineInfo]:
+        """Extract pipeline information from a target folder.
 
-        # Find .databricks/bundle/<target>/**/*.json files search childs and parents two times both
+        Tries resources.json first, then falls back to terraform.tfstate or .backup variant.
+
+        Args:
+            target_folder: Path to the target folder
+            target_name: Name of the target
+
+        Returns:
+            List of PipelineInfo found, empty list if none found
+        """
+        # Try resources.json first
+        resource_path = target_folder / "resources.json"
+        if resource_path.exists() and resource_path.is_file():
+            try:
+                with resource_path.open() as f:
+                    resources = json.load(f)
+                pipelines = []
+                for res, data in resources.get("state", {}).items():
+                    if res.startswith("resources.pipelines"):
+                        pipeline_id = data.get("__id__")
+                        pipeline_name = data.get("state", {}).get("name", "unknown")
+                        if pipeline_id:
+                            pipelines.append(
+                                PipelineInfo(
+                                    target=target_name,
+                                    name=pipeline_name,
+                                    id=pipeline_id,
+                                )
+                            )
+                if pipelines:
+                    logger.debug("Detected pipelines from resources.json: %s", pipelines)
+                    return pipelines
+            except Exception as e:  # noqa: BLE001
+                logger.warning("Failed to parse resources.json: %s", e)
+
+        # Fall back to terraform.tfstate
+        terraform_state_path = target_folder / "terraform" / "terraform.tfstate"
+        if not terraform_state_path.exists():
+            # Try .backup variant
+            terraform_state_path = target_folder / "terraform" / "terraform.tfstate.backup"
+
+        if terraform_state_path.exists() and terraform_state_path.is_file():
+            try:
+                with terraform_state_path.open() as f:
+                    tf_state = json.load(f)
+                pipelines = []
+                for resource in tf_state.get("resources", []):
+                    if resource.get("type") == "databricks_pipeline":
+                        for instance in resource.get("instances", []):
+                            attributes = instance.get("attributes", {})
+                            pipeline_id = attributes.get("id")
+                            pipeline_name = attributes.get("name", "unknown")
+                            if pipeline_id:
+                                pipelines.append(
+                                    PipelineInfo(
+                                        target=target_name,
+                                        name=pipeline_name,
+                                        id=pipeline_id,
+                                    )
+                                )
+                if pipelines:
+                    logger.debug("Detected pipelines from terraform.tfstate: %s", pipelines)
+                    return pipelines
+            except Exception as e:  # noqa: BLE001
+                logger.warning("Failed to parse terraform.tfstate: %s", e)
+
+        return []
+
+    @classmethod
+    def detect_pipelines(cls, target: str | None = None) -> list[PipelineInfo]:
+        """Detect pipelines in local files.
+
+        Searches for pipelines from:
+        1. .databricks/bundle/<target>/resources.json
+        2. .databricks/bundle/<target>/terraform/terraform.tfstate
+
+        If target is not specified, searches all available target folders.
+        If multiple targets have pipelines, prompts user to select one.
+
+        Args:
+            target: Optional target name. If None, searches all targets.
+
+        Returns:
+            List of detected PipelineInfo.
+        """
         folder = find_path_by_name(".", ".databricks")
         if not folder:
             logger.warning(
-                "No .databricks/bundle/%s folder found for pipeline detection",
-                target,
+                "No .databricks folder found for pipeline detection",
             )
             return []
-        target_folder = folder / "bundle" / target
-        if not target_folder.exists():
+
+        bundle_folder = folder / "bundle"
+        if not bundle_folder.exists():
             logger.warning(
-                "No .databricks/bundle/%s folder found for pipeline detection",
-                target,
+                "No .databricks/bundle folder found for pipeline detection",
             )
             return []
-        resource_path = target_folder / "resources.json"
-        if not resource_path.exists() or not resource_path.is_file():
-            logger.warning("No resources.json found in %s for pipeline detection", folder)
+
+        # If target is specified, search only that target
+        if target:
+            target_folder = bundle_folder / target
+            if not target_folder.exists():
+                logger.warning(
+                    "No .databricks/bundle/%s folder found for pipeline detection",
+                    target,
+                )
+                return []
+            return cls._extract_pipelines_from_target(target_folder, target)
+
+        # If target is not specified, search all available target folders
+        logger.debug("No target specified, searching all available targets for pipelines")
+        if not bundle_folder.is_dir():
+            logger.warning(".databricks/bundle is not a directory")
             return []
 
-        with resource_path.open() as f:
-            resources = json.load(f)
-        pipeline_ids = set()
-        for res, data in resources["state"].items():
-            if res.startswith("resources.pipelines"):
-                pipeline_id = data.get("__id__")
-                if pipeline_id:
-                    pipeline_ids.add(pipeline_id)
+        all_pipelines_by_target: dict[str, list[PipelineInfo]] = {}
+        for target_dir in sorted(bundle_folder.iterdir()):
+            if not target_dir.is_dir():
+                continue
+            target_name = target_dir.name
+            logger.debug("Checking target folder: %s", target_name)
+            pipelines = cls._extract_pipelines_from_target(target_dir, target_name)
+            if pipelines:
+                all_pipelines_by_target[target_name] = pipelines
+                logger.info(
+                    "Found %d pipeline(s) in target '%s'",
+                    len(pipelines),
+                    target_name,
+                )
 
-        logger.debug("Detected pipeline IDs: %s", pipeline_ids)
-        return list(pipeline_ids)
+        if not all_pipelines_by_target:
+            logger.warning(
+                "No resources.json or terraform.tfstate found in any target folder",
+            )
+            return []
+
+        # If only one target has pipelines, return them
+        if len(all_pipelines_by_target) == 1:
+            return next(iter(all_pipelines_by_target.values()))
+
+        # Multiple targets have pipelines - prompt user to select
+        import typer
+
+        typer.echo("\nMultiple targets with pipelines found:")
+        targets_list = sorted(all_pipelines_by_target.keys())
+        for i, target_name in enumerate(targets_list, 1):
+            pipelines = all_pipelines_by_target[target_name]
+            pipeline_names = ", ".join(p.name for p in pipelines)
+            typer.echo(f"  {i}. {target_name}: {pipeline_names}")
+
+        choice = typer.prompt("Select target", type=int)
+        if 1 <= choice <= len(targets_list):
+            selected_target = targets_list[choice - 1]
+            logger.info("User selected target: %s", selected_target)
+            return all_pipelines_by_target[selected_target]
+
+        typer.secho("Invalid selection", fg=typer.colors.RED)
+        raise typer.Exit(1)
+
+    @classmethod
+    def detect_pipeline_ids(cls, target: str | None = None) -> list[str]:
+        """Detect pipeline IDs (deprecated - use detect_pipelines instead).
+
+        Args:
+            target: Optional target name.
+
+        Returns:
+            List of detected pipeline IDs.
+        """
+        pipelines = cls.detect_pipelines(target=target)
+        return [p.id for p in pipelines]

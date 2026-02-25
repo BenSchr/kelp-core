@@ -36,11 +36,16 @@ repo_url: https://github.com/BenSchr/kelp
 plugins:
   - search
   - offline
+  - autorefs
   - mkdocstrings:
       handlers:
         python:
           paths: [src]
           options:
+            extensions:
+              - dataclasses
+              - griffe_pydantic:
+                  schema: true
             show_if_no_docstring: true
             filters:
               - "!^_"
@@ -62,6 +67,7 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.tabbed
   - attr_list
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
