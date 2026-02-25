@@ -20,8 +20,10 @@ class Catalog(BaseModel):
 
     models: list[Table] = Field(default_factory=list)
     metric_views: list[MetricView] = Field(default_factory=list)
-    _table_index_cache: dict[str, Table] | None = PrivateAttr(default=None)
-    _metrics_index_cache: dict[str, MetricView] | None = PrivateAttr(default=None)
+    _table_index_cache: dict[str, Table] = PrivateAttr(default_factory=dict)
+    _metrics_index_cache: dict[str, MetricView] = PrivateAttr(default_factory=dict)
+    _table_index_built: bool = PrivateAttr(default=False)
+    _metrics_index_built: bool = PrivateAttr(default=False)
 
     # --- Index helpers -------------------------------------------------
     def _build_table_index(self) -> None:
@@ -42,6 +44,7 @@ class Catalog(BaseModel):
 
         # Cache on the instance using the private field
         self._table_index_cache = index
+        self._table_index_built = True
 
     def _build_metrics_index(self) -> None:
         """Build name -> MetricView index and record duplicates.
@@ -64,18 +67,19 @@ class Catalog(BaseModel):
 
         # Cache on the instance using the private field
         self._metrics_index_cache = index
+        self._metrics_index_built = True
 
     @property
     def table_index(self) -> dict[str, Table]:
         """Return a mapping name -> Table (keeps first occurrence on dupes)."""
-        if self._table_index_cache is None:
+        if not self._table_index_built:
             self._build_table_index()
         return self._table_index_cache
 
     @property
     def metrics_index(self) -> dict[str, MetricView]:
         """Return a mapping name -> MetricView (keeps first occurrence on dupes)."""
-        if self._metrics_index_cache is None:
+        if not self._metrics_index_built:
             self._build_metrics_index()
         return self._metrics_index_cache
 
@@ -95,6 +99,8 @@ class Catalog(BaseModel):
                 name,
             )
             table = Table(name=name)
+        if table is None:
+            raise KeyError(f"Table not found in catalog: {name}")
         return table
 
     def get_metric_view(self, name: str, soft_handle: bool = False) -> MetricView:
@@ -108,6 +114,8 @@ class Catalog(BaseModel):
                 name,
             )
             metric = MetricView(name=name)
+        if metric is None:
+            raise KeyError(f"Metric view not found in catalog: {name}")
         return metric
 
     def get_tables(self) -> list[Table]:
@@ -123,7 +131,9 @@ class Catalog(BaseModel):
 
         Call this if `self.models` or `self.metric_views` has been modified after construction.
         """
-        self._table_index_cache = None
-        self._metrics_index_cache = None
+        self._table_index_cache = {}
+        self._metrics_index_cache = {}
+        self._table_index_built = False
+        self._metrics_index_built = False
         self._build_table_index()
         self._build_metrics_index()

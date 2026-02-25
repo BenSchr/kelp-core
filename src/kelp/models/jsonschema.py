@@ -2,6 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from kelp.models import MetricView
 from kelp.models.project_config import ProjectConfig
 from kelp.models.table import Table
 
@@ -18,6 +19,10 @@ class JsonSchemaModel(BaseModel):
     kelp_models: list[Table] | None = Field(
         default=None,
         description="List of table models defined in the configuration.",
+    )
+    kelp_metric_views: list[MetricView] | None = Field(
+        default=None,
+        description="List of metric views defined in the configuration.",
     )
     vars: dict[str, Any] | None = Field(
         default=None,

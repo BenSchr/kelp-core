@@ -89,9 +89,11 @@ class PipelineManager:
         if not updates:
             return {}
 
+        if updates[0].creation_time is None:
+            return {}
         start_iso = self._to_iso_ts(updates[0].creation_time)
         end_iso = None
-        if len(updates) > 1:
+        if len(updates) > 1 and updates[1].creation_time is not None:
             end_iso = self._to_iso_ts(updates[1].creation_time)
 
         logger.debug("Fetching events for window [%s, %s)", start_iso, end_iso)
@@ -103,9 +105,12 @@ class PipelineManager:
             self.w.pipelines.list_pipeline_events(pipeline_id=pipeline_id, filter=event_filter),
         )
 
-        update_event_map = {k: [] for k in {u.update_id for u in updates}}
+        update_ids = [u.update_id for u in updates if u.update_id]
+        update_event_map: dict[str, list[sp.PipelineEvent]] = {
+            update_id: [] for update_id in update_ids
+        }
         for event in events:
-            if event.origin.update_id in update_event_map:
+            if event.origin and event.origin.update_id in update_event_map:
                 update_event_map[event.origin.update_id].append(event)
 
         return update_event_map
@@ -118,9 +123,13 @@ class PipelineManager:
         """Extract unique dataset names from pipeline events."""
         names: set[str] = set()
         for update in updates:
-            if update.update_id in event_map:
+            if update.update_id and update.update_id in event_map:
                 for event in event_map.get(update.update_id, []):
-                    if event.event_type == "dataset_definition":
+                    if (
+                        event.event_type == "dataset_definition"
+                        and event.origin
+                        and event.origin.dataset_name
+                    ):
                         names.add(event.origin.dataset_name)
             if self._is_full_update(update):
                 break  # stop once we hit a full update
@@ -198,7 +207,7 @@ class PipelineManager:
             if res.startswith("resources.pipelines"):
                 pipeline_id = data.get("__id__")
                 if pipeline_id:
-                    pipeline_ids.add(id)
+                    pipeline_ids.add(pipeline_id)
 
         logger.debug("Detected pipeline IDs: %s", pipeline_ids)
         return list(pipeline_ids)

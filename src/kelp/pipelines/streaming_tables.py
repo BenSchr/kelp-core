@@ -30,12 +30,15 @@ def _apply_expectations(
     expect_all_or_fail: dict[str, str] | None = None,
 ) -> Callable[..., DataFrame]:
     """Apply expectation decorators based on quality configuration."""
-    if expect_all:
-        func = dp.expect_all(expect_all)(func)
-    if expect_all_or_drop:
-        func = dp.expect_all_or_drop(expect_all_or_drop)(func)
-    if expect_all_or_fail:
-        func = dp.expect_all_or_fail(expect_all_or_fail)(func)
+    expect_all_func: Any = getattr(dp, "expect_all", None)
+    expect_all_or_drop_func: Any = getattr(dp, "expect_all_or_drop", None)
+    expect_all_or_fail_func: Any = getattr(dp, "expect_all_or_fail", None)
+    if expect_all and expect_all_func:
+        func = expect_all_func(expect_all)(func)
+    if expect_all_or_drop and expect_all_or_drop_func:
+        func = expect_all_or_drop_func(expect_all_or_drop)(func)
+    if expect_all_or_fail and expect_all_or_fail_func:
+        func = expect_all_or_fail_func(expect_all_or_fail)(func)
 
     return func
 
@@ -96,7 +99,7 @@ def streaming_table(
 
     def outer(decorated: Callable[..., DataFrame]) -> None:
 
-        table_name = name or decorated.__name__
+        table_name = name or getattr(decorated, "__name__", "unknown")
         sdp_table = TableManager.build_sdp_table(table_name)
         # table_def = TableManager(table_name, soft_handle=True)
         # meta_params = table_def.get_sdp_table_params_as_dict(exclude=exclude_params or [])
@@ -104,7 +107,7 @@ def streaming_table(
 
         params = merge_params(params_passed, meta_params, passed_kwargs)
 
-        fqn = params.get("name", table_name)
+        fqn = str(params.get("name") or table_name)
         expect_all = params.pop("expect_all", None)
         expect_all_or_drop = params.pop("expect_all_or_drop", None)
         expect_all_or_fail = params.pop("expect_all_or_fail", None)
@@ -114,6 +117,8 @@ def streaming_table(
         # quarantine_table_name = table_def.get_quarantine_table_name()
         validation_table_name = sdp_table.validation_table
         quarantine_table_name = sdp_table.quarantine_table
+        if validation_table_name is None or quarantine_table_name is None:
+            raise ValueError("Validation or quarantine table name is missing.")
 
         dqx_obj = sdp_table.get_dqx_check_obj()
 
@@ -160,7 +165,7 @@ def streaming_table(
                 dp.table(
                     name=validation_table_name,
                     private=True,
-                )(validty_func)
+                )(validty_func)  # ty:ignore[no-matching-overload]
 
                 @dp.table(**params)
                 def valid_table():
@@ -199,7 +204,7 @@ def streaming_table(
                 name=validation_table_name,
                 private=True,
                 partition_cols=[quarantine_col],
-            )(validty_func)
+            )(validty_func)  # ty:ignore[no-matching-overload]
 
             # Create two table one quarantined and one valid rows only.
             # Original table now only has valid rows.
@@ -239,7 +244,7 @@ def streaming_table(
 
 def create_streaming_table(
     *,
-    name: str | None = None,
+    name: str,
     comment: str | None = None,
     spark_conf: dict[str, str] | None = None,
     table_properties: dict[str, str] | None = None,
@@ -257,8 +262,9 @@ def create_streaming_table(
     exclude_params: list[str] | None = None,
     # Future extension point
     **kwargs,
-) -> Callable[[Callable[..., DataFrame]], None]:
+) -> None:
     """Drop-in replacement for dp.create_streaming_table."""
+
     params = dict(
         name=name,
         comment=comment,
@@ -274,9 +280,7 @@ def create_streaming_table(
         expect_all_or_drop=expect_all_or_drop,
         expect_all_or_fail=expect_all_or_fail,
     )
-    # meta_params = TableManager(name).get_sdp_table_params_as_dict(
-    #     exclude=["expect_all_or_quarantine"].extend(exclude_params or [])
-    # )
+
     meta_params = TableManager.build_sdp_table(name).params_cst(exclude=exclude_params or [])
 
     params = merge_params(params, meta_params, kwargs)

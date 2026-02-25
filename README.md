@@ -7,3 +7,13 @@ Kelp is a catalog-based toolkit for Databricks Spark Declarative Pipelines (SDP)
 - Data quality: Kelp provides the ability to define SDP expectations and DQX checks  
 - Catalog management: Kelp provides a simple api for managing your catalog, including syncing it with your Spark metastore and refreshing it when needed. It also provides a simple way to define and manage your catalog in a yaml file. This includes descriptions, tags and table properties and other metadata that can be used for documentation and data discovery.
 - Minimal invasive: Kelp is designed to be minimally invasive, allowing you to easily integrate it into your existing Spark projects without requiring significant changes to your codebase. To keep the project maintainable against the pace of new features and syntax changes in the platform.
+
+
+## TODOs
+
+[ ] Add pytest and integration tests
+[ ] Add coverage
+[ ] Add init command for project scaffolding
+[ ] Improve documentation with getting started and examples
+[ ] Improve docstrings of user facing functions and classes
+[ ] Add transformations for "apply_schema" and "apply_dqx"

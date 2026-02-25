@@ -44,7 +44,7 @@ def sync_metric_views(view_names: list[str] | None = None) -> list[str]:
 
 def sync_tables(table_names: list[str] | None = None) -> list[str]:
     table_names = table_names or []
-    table = [t for t in get_context().catalog.get_tables() if t.name in table_names]
+    tables = [t for t in get_context().catalog.get_tables() if t.name in table_names]
     uc_adapter = UnityCatalogAdapter()
-    queries = uc_adapter.sync_table(table)
+    queries = uc_adapter.sync_tables(tables)
     return queries

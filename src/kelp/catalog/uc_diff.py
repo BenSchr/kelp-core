@@ -15,6 +15,7 @@ from kelp.catalog.uc_models import (
     Table,
     TableDiff,
 )
+from kelp.models.table import ForeignKeyConstraint, PrimaryKeyConstraint
 
 logger = logging.getLogger(__name__)
 
@@ -191,9 +192,9 @@ class TableDiffCalculator:
             lc = local_map.get(rc_name)
 
             if lc is None:
-                if rc.type == "primary_key":
+                if isinstance(rc, PrimaryKeyConstraint):
                     pk_diff.delete = rc
-                elif rc.type == "foreign_key":
+                elif isinstance(rc, ForeignKeyConstraint):
                     fk_diff.delete.append(rc)
                 continue
 
@@ -207,10 +208,10 @@ class TableDiffCalculator:
                 )
                 continue
 
-            if lc.type == "primary_key":
+            if isinstance(lc, PrimaryKeyConstraint) and isinstance(rc, PrimaryKeyConstraint):
                 if lc.columns != rc.columns:
                     pk_diff.update = lc
-            elif lc.type == "foreign_key":
+            elif isinstance(lc, ForeignKeyConstraint) and isinstance(rc, ForeignKeyConstraint):
                 definition_changed = (
                     lc.columns != rc.columns
                     or lc.reference_table != rc.reference_table
@@ -222,9 +223,9 @@ class TableDiffCalculator:
 
         for lc_name, lc in local_map.items():
             if remote_map.get(lc_name) is None:
-                if lc.type == "primary_key":
+                if isinstance(lc, PrimaryKeyConstraint):
                     pk_diff.create = lc
-                elif lc.type == "foreign_key":
+                elif isinstance(lc, ForeignKeyConstraint):
                     fk_diff.create.append(lc)
 
         return pk_diff, fk_diff

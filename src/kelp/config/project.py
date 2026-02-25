@@ -14,7 +14,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from kelp.config.settings import create_settings_resolver
+from kelp.config.settings import resolve_setting
 from kelp.config.vars import resolve_vars_with_target
 from kelp.constants import KELP_PROJECT_FILENAME, KELP_PROJECT_HEADER
 from kelp.models.project_config import ProjectConfig
@@ -72,9 +72,8 @@ def resolve_project_file_path() -> str:
 
     """
     # Create resolver for project file discovery
-    resolver = create_settings_resolver()
     # Try to resolve from spark/os
-    resolved_file = resolver.resolve("project_file", default=None)
+    resolved_file = resolve_setting("project_file", default=None)
 
     if resolved_file:
         file_path = Path(resolved_file)
@@ -88,7 +87,7 @@ def resolve_project_file_path() -> str:
 
 
 def load_target_yaml(
-    target_file_path: str | Path,
+    target_file_path: str | Path | None,
     project_header: str,
     target: str | None = None,
     runtime_vars: dict[str, Any] | None = None,
@@ -142,7 +141,7 @@ def resolve_target_file_path(project_file_path: str, target: str) -> str:
 
 
 def load_project_config_data(
-    project_file_path: str,
+    project_file_path: str | None,
     target: str | None = None,
     init_vars: dict | None = None,
     project_header: str = KELP_PROJECT_HEADER,
@@ -151,7 +150,7 @@ def load_project_config_data(
         project_file_path = resolve_project_file_path()
     if not target:
         # Try to resolve target from settings (spark/os env)
-        target = create_settings_resolver().resolve("target", default=None)
+        target = resolve_setting("target", default=None)
 
     target_file_path = None
     if target:
@@ -181,7 +180,7 @@ def load_project_config_data(
 
 
 def load_project_config(
-    project_file_path: str,
+    project_file_path: str | None,
     target: str | None = None,
     init_vars: dict[str, Any] | None = None,
 ) -> ProjectConfig:

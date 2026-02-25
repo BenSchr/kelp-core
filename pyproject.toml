@@ -79,3 +79,5 @@ allow-dict-calls-with-keyword-arguments = true
 [tool.ruff.format]
 docstring-code-format = true
 
+[tool.ty.src]
+include = ["src", "tests"]

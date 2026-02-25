@@ -6,8 +6,10 @@ from kelp.models.runtime_context import RuntimeContext
 from kelp.models.table import (
     Column,
     DQXQuality,
+    ForeignKeyConstraint,
     GeneratedExpressionColumnConfig,
     GeneratedIdentityColumnConfig,
+    PrimaryKeyConstraint,
     SDPQuality,
     Table,
 )
@@ -43,7 +45,7 @@ class KelpTable:
 
     def get_dqx_check_obj(self) -> DQXQuality | None:
         """Get the DQX quality object if defined."""
-        if self.root_table.quality and isinstance(self.root_table.quality, DQXQuality):
+        if self.root_table and isinstance(self.root_table.quality, DQXQuality):
             return self.root_table.quality
         return None
 
@@ -342,10 +344,10 @@ class SparkSchemaBuilder:
 
     def add_constraints(self):
         for constraint in self.table.constraints:
-            if constraint.type == "primary_key":
+            if isinstance(constraint, PrimaryKeyConstraint):
                 cols = ", ".join(constraint.columns)
                 self.table_parts.append(f"CONSTRAINT {constraint.name} PRIMARY KEY ({cols})")
-            elif constraint.type == "foreign_key":
+            elif isinstance(constraint, ForeignKeyConstraint):
                 cols = ", ".join(constraint.columns)
                 self.table_parts.append(
                     f"CONSTRAINT {constraint.name} FOREIGN KEY ({cols}) REFERENCES {constraint.reference_table} ({', '.join(constraint.reference_columns)})",

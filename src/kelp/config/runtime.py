@@ -21,15 +21,20 @@ from kelp.utils.jinja_parser import _deep_merge_dicts, load_yaml_with_jinja
 logger = logging.getLogger(__name__)
 
 
-def load_config_files(project_root: str, file_paths: str | list[str], context_vars: dict) -> dict:
+def load_config_files(
+    project_root: str | Path,
+    file_paths: str | list[str] | None,
+    context_vars: dict,
+) -> dict:
     # Load and merge multiple YAML config files with jinja into a single dict.
     merged_config = {}
     if not file_paths:
         return merged_config
     if isinstance(file_paths, str):
         file_paths = [file_paths]
+    project_root = Path(project_root)
     for file_path in file_paths:
-        full_path = Path(project_root).joinpath(file_path)
+        full_path = project_root.joinpath(file_path)
         if not full_path.exists():
             raise FileNotFoundError(f"Config file not found: {full_path}")
         config_data = load_yaml_with_jinja(full_path, jinja_context=context_vars)

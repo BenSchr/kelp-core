@@ -14,7 +14,7 @@ kelp_metric_views:
           expr: order_state
           comment: order_state indicates the lifecycle state of an order (e.g., 'completed')
           tags:
-            hello: not
+            hello: abcd
         - name: store
           expr: store
           comment: Store is the storefront identifier (remote metadata preserved)2
@@ -47,7 +47,7 @@ kelp_metric_views:
       owner: analytics-team
       purpose: inventory-management
     definition:
-      version: 1.0
+      version: 1.1
       source: ${ catalog }.kelp_gold.gold_orders_customers
       dimensions:
         - name: product
@@ -56,6 +56,8 @@ kelp_metric_views:
         - name: store
           expr: store
           comment: Store identifier for per-store analysis
+          tags:
+            a: b
       measures:
         - name: units_sold
           expr: SUM(quantity)

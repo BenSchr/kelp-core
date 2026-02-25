@@ -6,6 +6,7 @@ import yaml
 from dotenv import load_dotenv
 
 from kelp.config.lifecycle import get_context
+from kelp.config.settings import resolve_setting
 from kelp.service.pipeline_manager import PipelineManager
 from kelp.service.table_manager import TableManager
 from kelp.service.yaml_manager import ServicePathConfig, YamlManager
@@ -15,6 +16,19 @@ logger = logging.getLogger(__name__)
 
 
 app = typer.Typer()
+
+
+def _resolve_target(target: str | None) -> str | None:
+    """Resolve a target from settings when not provided.
+
+    Args:
+        target: Explicit target value, if provided.
+
+    Returns:
+        Resolved target or None if not set anywhere.
+
+    """
+    return target or resolve_setting("target", default=None)
 
 
 @app.command()
@@ -77,10 +91,10 @@ def sync_from_pipeline(
         "--config",
         help="Path to kelp_project.yml (optional, will auto-detect if not provided)",
     ),
-    target: str = typer.Option(
-        "dev",
+    target: str | None = typer.Option(
+        None,
         "--target",
-        help="Environment to use for variable resolution (default: dev)",
+        help="Environment to use for variable resolution",
     ),
     profile: str | None = typer.Option(
         None,
@@ -111,7 +125,8 @@ def sync_from_pipeline(
 
     load_dotenv()
     log_level = "DEBUG" if debug else None
-    init(project_root=project_file_path, target=target, log_level=log_level)
+    resolved_target = _resolve_target(target)
+    init(project_root=project_file_path, target=resolved_target, log_level=log_level)
 
     try:
         ctx = get_context()
@@ -131,11 +146,11 @@ def sync_from_pipeline(
     pipeline_manager = PipelineManager(profile=profile)
 
     if not pipeline_id:
-        pipeline_ids = pipeline_manager.detect_pipeline_ids(target=target)
+        pipeline_ids = pipeline_manager.detect_pipeline_ids(target=resolved_target)
         if not pipeline_ids:
             logger.error(
                 "No pipeline ID provided and auto-detection failed for target '%s'",
-                target,
+                resolved_target,
             )
             raise typer.Exit(1)
         _log(f"Auto-detected pipeline IDs: {', '.join(pipeline_ids)}")
@@ -273,10 +288,10 @@ def generate_alter_statements(
         "--config",
         help="Path to kelp_project.yml (optional, will auto-detect if not provided)",
     ),
-    target: str = typer.Option(
-        "dev",
+    target: str | None = typer.Option(
+        None,
         "--target",
-        help="Environment to use for variable resolution (default: dev)",
+        help="Environment to use for variable resolution",
     ),
     profile: str | None = typer.Option(
         None,
@@ -308,8 +323,9 @@ def generate_alter_statements(
     from kelp.config.lifecycle import init
 
     load_dotenv()
-    init(project_root=project_file_path, target=target, log_level=log_level)
-    queries = sync_catalog(create_metric_views=False)
+    resolved_target = _resolve_target(target)
+    init(project_root=project_file_path, target=resolved_target, log_level=log_level)
+    queries = sync_catalog()
     if not silent:
         for q in queries:
             typer.echo(q + ";")
@@ -332,10 +348,10 @@ def generate_ddl(
         "--config",
         help="Path to kelp_project.yml (optional, will auto-detect if not provided)",
     ),
-    target: str = typer.Option(
-        "dev",
+    target: str | None = typer.Option(
+        None,
         "--target",
-        help="Environment to use for variable resolution (default: dev)",
+        help="Environment to use for variable resolution",
     ),
     output_file: str | None = typer.Option(
         None,
@@ -356,7 +372,8 @@ def generate_ddl(
     from kelp.config.lifecycle import init
 
     load_dotenv()
-    init(project_root=project_file_path, target=target, log_level=log_level)
+    resolved_target = _resolve_target(target)
+    init(project_root=project_file_path, target=resolved_target, log_level=log_level)
 
     ctx = get_context()
 
@@ -383,6 +400,12 @@ def generate_ddl(
     try:
         table = ctx.catalog.get_table(name, soft_handle=False)
         ddl = TableManager.get_spark_schema_ddl(table)
+        if ddl is None:
+            typer.secho(
+                f"✗ Failed to generate DDL for table '{name}'",
+                fg=typer.colors.RED,
+            )
+            raise typer.Exit(code=1)
         typer.secho(f"Found table: {table.get_qualified_name()}", fg=typer.colors.YELLOW)
         typer.echo(f"  Type: {table.table_type}")
         typer.echo(f"  Catalog: {table.catalog}")

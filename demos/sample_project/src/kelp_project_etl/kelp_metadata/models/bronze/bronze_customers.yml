@@ -18,7 +18,7 @@ kelp_models:
         description: Customer family name.
       - name: user_id
         data_type: string
-        description: Internal user identifier; used to link orders to customers2.
+        description: Internal user identifier; used to link orders to customers.
         tags:
           business: customer_id
       - name: _rescued_data

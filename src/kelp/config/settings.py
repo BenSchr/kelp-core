@@ -179,3 +179,65 @@ def create_settings_resolver(
         DefaultSource(default_settings or {}),
     ]
     return SettingsResolver(sources)
+
+
+def resolve_setting(
+    key: str,
+    default: Any = None,
+    init_settings: dict | None = None,
+    target_settings: dict | None = None,
+    default_settings: dict | None = None,
+    env_prefix: str = KELP_ENV_PREFIX,
+) -> Any:
+    """Resolve a single setting using the standard resolver priority.
+
+    Args:
+        key: Setting key to resolve.
+        default: Default value if not found.
+        init_settings: Settings passed directly by caller.
+        target_settings: Target-specific settings.
+        default_settings: Default values.
+        env_prefix: Prefix for environment variables (default: "KELP_").
+
+    Returns:
+        Resolved value for the key.
+
+    """
+    resolver = create_settings_resolver(
+        init_settings=init_settings,
+        target_settings=target_settings,
+        default_settings=default_settings,
+        env_prefix=env_prefix,
+    )
+    return resolver.resolve(key, default)
+
+
+def resolve_settings(
+    keys: list[str],
+    defaults: dict | None = None,
+    init_settings: dict | None = None,
+    target_settings: dict | None = None,
+    default_settings: dict | None = None,
+    env_prefix: str = KELP_ENV_PREFIX,
+) -> dict:
+    """Resolve multiple settings into a dictionary.
+
+    Args:
+        keys: Setting keys to resolve.
+        defaults: Default values keyed by setting.
+        init_settings: Settings passed directly by caller.
+        target_settings: Target-specific settings.
+        default_settings: Default values.
+        env_prefix: Prefix for environment variables (default: "KELP_").
+
+    Returns:
+        Dictionary with resolved values.
+
+    """
+    resolver = create_settings_resolver(
+        init_settings=init_settings,
+        target_settings=target_settings,
+        default_settings=default_settings,
+        env_prefix=env_prefix,
+    )
+    return resolver.resolve_dict(keys, defaults)

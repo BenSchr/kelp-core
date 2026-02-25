@@ -6,6 +6,7 @@ import typer
 from dotenv import load_dotenv
 
 from kelp.cli.catalog import app as catalog_app
+from kelp.config.settings import resolve_setting
 from kelp.models.jsonschema import generate_json_schema
 
 app = typer.Typer(
@@ -15,6 +16,19 @@ app = typer.Typer(
 )
 
 app.add_typer(catalog_app)
+
+
+def _resolve_target(target: str | None) -> str | None:
+    """Resolve a target from settings when not provided.
+
+    Args:
+        target: Explicit target value, if provided.
+
+    Returns:
+        Resolved target or None if not set anywhere.
+
+    """
+    return target or resolve_setting("target", default=None)
 
 
 @app.command()
@@ -62,7 +76,7 @@ def validate(
         str | None,
         typer.Option("-c", help="Path to the kelp_project.yml"),
     ] = None,
-    target: Annotated[str, typer.Option(help="Environment to validate against")] = "dev",
+    target: Annotated[str | None, typer.Option(help="Environment to validate against")] = None,
     debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
 ) -> None:
     load_dotenv()
@@ -70,7 +84,9 @@ def validate(
 
     log_level = "DEBUG" if debug else None
 
-    run_ctx = init(config_path, target, log_level=log_level)
+    resolved_target = _resolve_target(target)
+
+    run_ctx = init(config_path, resolved_target, log_level=log_level)
     validated = bool(run_ctx)
     if validated:
         typer.secho("✓ Configuration is valid!", fg=typer.colors.GREEN)
@@ -99,7 +115,7 @@ def sync_local_catalog(
         str | None,
         typer.Option("-c", help="Path to the kelp_project.yml"),
     ] = None,
-    target: Annotated[str, typer.Option(help="Environment to sync against")] = "dev",
+    target: Annotated[str | None, typer.Option(help="Environment to sync against")] = None,
     profile: Annotated[str | None, typer.Option("-p", help="Databricks CLI profile to use")] = None,
     output_file: Annotated[
         str | None,
@@ -122,7 +138,8 @@ def sync_local_catalog(
     from kelp.utils.databricks import get_metric_view_from_dbx_sdk, get_table_from_dbx_sdk
 
     log_level = "DEBUG" if debug else None
-    init(config_path, target, log_level=log_level)
+    resolved_target = _resolve_target(target)
+    init(config_path, resolved_target, log_level=log_level)
     ctx = get_context()
 
     tables: list = []

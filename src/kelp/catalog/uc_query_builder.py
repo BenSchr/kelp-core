@@ -11,6 +11,7 @@ from kelp.catalog.uc_models import (
     DictDiff,
     TableDiff,
 )
+from kelp.models.table import ForeignKeyConstraint
 
 logger = logging.getLogger(__name__)
 
@@ -329,9 +330,11 @@ class UCQueryBuilder:
             queries.extend(self._drop_constraint(fqn, fk.name))
         for fk in fk_diff.update:
             queries.extend(self._drop_constraint(fqn, fk.name))
-            queries.extend(self._add_foreign_key(fqn, fk))
+            if isinstance(fk, ForeignKeyConstraint):
+                queries.extend(self._add_foreign_key(fqn, fk))
         for fk in fk_diff.create:
-            queries.extend(self._add_foreign_key(fqn, fk))
+            if isinstance(fk, ForeignKeyConstraint):
+                queries.extend(self._add_foreign_key(fqn, fk))
 
         if queries and table_type in _NO_CONSTRAINT_TYPES:
             logger.warning(
@@ -357,7 +360,7 @@ class UCQueryBuilder:
         logger.debug("Generated: %s", query)
         return [query]
 
-    def _add_foreign_key(self, fqn: str, constraint: Constraint) -> list[str]:
+    def _add_foreign_key(self, fqn: str, constraint: ForeignKeyConstraint) -> list[str]:
         query = _ADD_FK.format(
             fqn=fqn,
             name=constraint.name,

@@ -1,6 +1,6 @@
 import logging
 
-from kelp.config.settings import create_settings_resolver
+from kelp.config.settings import resolve_setting
 
 
 def configure_logging(level: str | None = None) -> None:
@@ -12,7 +12,7 @@ def configure_logging(level: str | None = None) -> None:
     logger.propagate = False
 
     if not level:
-        level = create_settings_resolver().resolve("log_level", default=None)
+        level = resolve_setting("log_level", default=None)
 
     if level:
         mapped = logging.getLevelNamesMapping().get(level.upper())

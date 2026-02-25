@@ -9,12 +9,12 @@ def get_table(name: str) -> KelpSdpTable:
 ## Use SDPTable object for api
 def target(name: str) -> str:
     """Returns the target name for the table if quarantine or validation is enabled, else returns the main table name"""
-    return TableManager.build_sdp_table(name).target_table
+    return TableManager.build_sdp_table(name).target_table or name
 
 
 def ref(name: str) -> str:
     """Returns the source name for the table, which is always the main table name"""
-    return TableManager.build_sdp_table(name).fqn
+    return TableManager.build_sdp_table(name).fqn or name
 
 
 def schema(name: str) -> str | None:
