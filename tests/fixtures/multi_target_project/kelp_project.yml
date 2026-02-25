@@ -1,0 +1,23 @@
+kelp_project:
+  models_path: "./kelp_metadata/models"
+  models:
+    +catalog: ${ default_catalog }
+    +schema: ${ default_schema }
+
+vars:
+  base_catalog: shared_catalog
+  default_catalog: ${base_catalog}
+  default_schema: default_schema
+
+targets:
+  dev:
+    vars:
+      default_catalog: dev_catalog
+      default_schema: dev_schema
+      environment: development
+
+  prod:
+    vars:
+      default_catalog: prod_catalog
+      default_schema: prod_schema
+      environment: production

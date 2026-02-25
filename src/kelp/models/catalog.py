@@ -83,11 +83,6 @@ class Catalog(BaseModel):
             self._build_metrics_index()
         return self._metrics_index_cache
 
-    @property
-    def index(self) -> dict[str, Table]:
-        """Return a mapping name -> Table (backward compatibility)."""
-        return self.table_index
-
     def get_table(self, name: str, soft_handle: bool = False) -> Table:
         """Return the first Table matching `name` or None if not found."""
         table = self.table_index.get(name)

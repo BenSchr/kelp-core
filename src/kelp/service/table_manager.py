@@ -188,7 +188,7 @@ class TableManager:
         table_name: str,
         schema: str | None = None,
         catalog: str | None = None,
-    ):
+    ) -> str:
         """Get the quarantine table name for a given table name."""
         prefix = ctx.project_config.quarantine_config.quarantine_prefix
         suffix = ctx.project_config.quarantine_config.quarantine_suffix

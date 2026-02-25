@@ -20,6 +20,8 @@ dev = [
     "databricks-labs-dqx>=0.12.0",
     "pyspark[pipelines]>=4.1",
     "faker>=40.4.0",
+    "pytest>=8.3.0",
+    "pytest-mock>=3.14.0",
 ]
 docs = [
     "griffe-pydantic>=1.2.0",
@@ -39,6 +41,7 @@ package = true
 [tool.ruff]
 line-length = 100
 #preview = true
+include = ["pyproject.toml", "src/**/*.py", "scripts/**/*.py", "tests/**/*.py"]
 
 [tool.ruff.lint]
 extend-select = [
@@ -73,11 +76,22 @@ extend-select = [
 ignore=["RET504","SIM105"]
 #extend-select = ["B","FA","LOG","INP","PIE","T20","Q","RSE","RET","TID","TD","I","N"]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101","SLF001"]
+
 [tool.ruff.lint.flake8-comprehensions]
 allow-dict-calls-with-keyword-arguments = true
 
 [tool.ruff.format]
 docstring-code-format = true
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
 [tool.ty.src]
-include = ["src", "tests"]
+include = ["src", "tests","scripts"]

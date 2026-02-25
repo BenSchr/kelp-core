@@ -1,0 +1,11 @@
+kelp_models:
+  - name: users
+    description: User data for ${ environment }
+    table_type: managed
+    columns:
+      - name: user_id
+        data_type: bigint
+        nullable: false
+      - name: username
+        data_type: string
+        nullable: false

@@ -97,7 +97,7 @@ def validate(
     typer.echo(f"Target environment: {run_ctx.target}")
     typer.echo(f"Runtime variables: {run_ctx.runtime_vars}")
     typer.echo(f"Relative models path: {run_ctx.project_config.models_path}")
-    typer.echo(f"Models found: {len(run_ctx.catalog.index)}")
+    typer.echo(f"Models found: {len(run_ctx.catalog.table_index)}")
 
     # Show metrics info if metrics are configured
     if run_ctx.project_config.metrics_path:

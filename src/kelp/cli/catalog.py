@@ -169,7 +169,7 @@ def sync_from_pipeline(
         raise typer.Exit(1)
 
     # Compare with catalog and sync
-    catalog_index = ctx.catalog.index
+    catalog_index = ctx.catalog.table_index
     new_tables = []
     existing_tables = []
 
