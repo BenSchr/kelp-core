@@ -43,13 +43,14 @@ class DictDiff:
 
     """
 
+    creates: dict[str, str] = field(default_factory=dict)
     updates: dict[str, str] = field(default_factory=dict)
     deletes: list[str] = field(default_factory=list)
 
     @property
     def has_changes(self) -> bool:
         """Return True when at least one update or delete is present."""
-        return bool(self.updates or self.deletes)
+        return bool(self.creates or self.updates or self.deletes)
 
 
 @dataclass

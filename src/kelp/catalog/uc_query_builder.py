@@ -242,7 +242,18 @@ class UCQueryBuilder:
                 query = _UNSET_TAG_ON.format(type="COLUMN", path=f"{fqn}.{col_name}", key=key)
                 logger.debug("Generated: %s", query)
                 queries.append(query)
+            for key, value in tag_diff.creates.items():
+                query = _SET_TAG_ON.format(
+                    type="COLUMN",
+                    path=f"{fqn}.{col_name}",
+                    key=key,
+                    value=_esc(value),
+                )
+                logger.debug("Generated: %s", query)
+                queries.append(query)
             for key, value in tag_diff.updates.items():
+                if key in tag_diff.creates:
+                    continue  # already handled by creates loop
                 unset = _UNSET_TAG_ON.format(type="COLUMN", path=f"{fqn}.{col_name}", key=key)
                 logger.debug("Generated (pre-unset): %s", unset)
                 queries.append(unset)

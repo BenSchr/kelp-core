@@ -211,6 +211,7 @@ def generate_alter_metric_view_column_tags_ddl(
     metric_view: MetricView,
     local_def: dict,
     remote_def: dict,
+    enforce_tags: bool = False,
 ) -> list[str]:
     """Generate ALTER VIEW statements for metric view column tags (dimensions/measures).
 
@@ -240,9 +241,20 @@ def generate_alter_metric_view_column_tags_ddl(
     }
 
     for dim_name in set(local_dims.keys()) | set(remote_dims.keys()):
-        tag_diff = _create_tag_diff(local_dims.get(dim_name, {}), remote_dims.get(dim_name, {}))
+        tag_diff = _create_tag_diff(
+            local_dims.get(dim_name, {}), remote_dims.get(dim_name, {}) if not enforce_tags else {}
+        )
         if tag_diff.has_changes:
-            statements.extend(builder._column_tag_queries(fqn, dim_name, tag_diff, "view"))  # noqa: SLF001
+            tag_statements = builder._column_tag_queries(fqn, dim_name, tag_diff, "view")  # noqa: SLF001
+            ## filter out unset tag if enfore_tags
+            filtered_statements = []
+            if enforce_tags:
+                filtered_statements = [
+                    stmt for stmt in tag_statements if not stmt.strip().startswith("UNSET TAG")
+                ]
+            else:
+                filtered_statements = tag_statements
+            statements.extend(filtered_statements)
 
     # Process measures
     local_measures = {
@@ -255,10 +267,18 @@ def generate_alter_metric_view_column_tags_ddl(
     for measure_name in set(local_measures.keys()) | set(remote_measures.keys()):
         tag_diff = _create_tag_diff(
             local_measures.get(measure_name, {}),
-            remote_measures.get(measure_name, {}),
+            remote_measures.get(measure_name, {}) if not enforce_tags else {},
         )
-        if tag_diff.has_changes:
-            statements.extend(builder._column_tag_queries(fqn, measure_name, tag_diff, "view"))  # noqa: SLF001
+        tag_statements = builder._column_tag_queries(fqn, dim_name, tag_diff, "view")  # noqa: SLF001
+        ## filter out unset tag if enfore_tags
+        filtered_statements = []
+        if enforce_tags:
+            filtered_statements = [
+                stmt for stmt in tag_statements if not stmt.strip().startswith("UNSET TAG")
+            ]
+        else:
+            filtered_statements = tag_statements
+        statements.extend(filtered_statements)
 
     return statements
 
@@ -274,7 +294,8 @@ def _create_tag_diff(local_tags: dict[str, str], remote_tags: dict[str, str]) ->
         DictDiff with updates and deletes.
 
     """
+    creates = {key: value for key, value in local_tags.items() if key not in remote_tags}
     updates = {key: value for key, value in local_tags.items() if remote_tags.get(key) != value}
     deletes = [key for key in remote_tags if key not in local_tags]
 
-    return DictDiff(updates=updates, deletes=deletes)
+    return DictDiff(creates=creates, updates=updates, deletes=deletes)

@@ -7,7 +7,6 @@ logger = logging.getLogger(f"{__name__}")
 
 
 def sync_catalog(
-    create_metric_views: bool = True,
     sync_metric_views: bool = True,
     sync_tables: bool = True,
 ) -> list[str]:
@@ -15,8 +14,7 @@ def sync_catalog(
     uc_adapter = UnityCatalogAdapter()
     logger.info("Starting remote catalog sync for all tables & metric views...")
     queries: list[str] = []
-    if create_metric_views:
-        queries.extend(uc_adapter.create_all_metric_views(get_context().catalog.get_metric_views()))
+
     if sync_metric_views:
         queries.extend(uc_adapter.sync_all_metric_views(get_context().catalog.get_metric_views()))
     if sync_tables:

@@ -131,17 +131,21 @@ class UnityCatalogAdapter:
         from kelp.utils.databricks import get_metric_view_from_dbx_sdk
 
         fqn = metric_view.get_qualified_name()
+        statements: list[str] = []
+        enforce_tags: bool = False
         try:
             remote = get_metric_view_from_dbx_sdk(fqn)
-        except Exception as e:  # noqa: BLE001
-            logger.warning(
-                "Metric view '%s' not found in Unity Catalog; skipping sync. Error: %s",
-                fqn,
-                e,
-            )
-            return []
-
-        statements: list[str] = []
+        except Exception:  # noqa: BLE001
+            # logger.warning(
+            #     "Metric view '%s' not found in Unity Catalog; skipping sync. Error: %s",
+            #     fqn,
+            #     e,
+            # )
+            # return []
+            # if not exists switch to create mode
+            remote = metric_view
+            enforce_tags = True
+            statements.extend([self.create_metric_view(metric_view)])
 
         # Normalize definitions for comparison (remove comment and tags as they're handled separately)
         def _normalize_for_comparison(definition: dict) -> dict:
@@ -186,6 +190,7 @@ class UnityCatalogAdapter:
             metric_view,
             metric_view.definition,
             remote.definition,
+            enforce_tags=enforce_tags,
         )
         if column_tag_statements:
             statements.extend(column_tag_statements)
@@ -198,7 +203,7 @@ class UnityCatalogAdapter:
         # Check tags diff using existing differ logic
         tag_diff = self._differ.diff_dicts(
             metric_view.tags,
-            remote.tags,
+            remote.tags if not enforce_tags else {},
             self._config.managed_table_tags,
             self._config.table_tag_mode,
         )
