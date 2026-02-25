@@ -16,10 +16,24 @@ logger = logging.getLogger(f"{__name__}")
 
 
 class Catalog(BaseModel):
-    """Catalog of tables and metric views defined in the kelp project."""
+    """Catalog of tables and metric views defined in the kelp project.
 
-    models: list[Table] = Field(default_factory=list)
-    metric_views: list[MetricView] = Field(default_factory=list)
+    Maintains indexed collections of tables and metric views with deduplication
+    of names (keeps first occurrence). Provides efficient lookup by name.
+
+    Attributes:
+        models: List of Table definitions in the catalog.
+        metric_views: List of MetricView definitions in the catalog.
+    """
+
+    models: list[Table] = Field(
+        default_factory=list,
+        description="Table definitions in the catalog",
+    )
+    metric_views: list[MetricView] = Field(
+        default_factory=list,
+        description="Metric view definitions in the catalog",
+    )
     _table_index_cache: dict[str, Table] = PrivateAttr(default_factory=dict)
     _metrics_index_cache: dict[str, MetricView] = PrivateAttr(default_factory=dict)
     _table_index_built: bool = PrivateAttr(default=False)

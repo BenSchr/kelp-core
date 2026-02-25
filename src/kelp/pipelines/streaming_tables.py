@@ -14,7 +14,15 @@ from kelp.service.table_manager import TableManager
 
 
 def _combine_rules(rules: dict[str, str], apply_not: bool = False) -> str:
-    """Combine multiple SQL rule expressions with AND for a single validity predicate."""
+    """Combine multiple SQL rule expressions with AND for a single validity predicate.
+
+    Args:
+        rules: Dictionary mapping rule names to SQL expressions.
+        apply_not: If True, wraps the combined expression in NOT(...).
+
+    Returns:
+        Combined SQL predicate expression or "TRUE" if rules is empty.
+    """
     if not rules:
         return "TRUE"
     predicate = " AND ".join(f"({sql})" for sql in rules.values())
@@ -29,7 +37,20 @@ def _apply_expectations(
     expect_all_or_drop: dict[str, str] | None = None,
     expect_all_or_fail: dict[str, str] | None = None,
 ) -> Callable[..., DataFrame]:
-    """Apply expectation decorators based on quality configuration."""
+    """Apply SDP expectation decorators based on quality configuration.
+
+    Wraps a DataFrame-returning function with Databricks SDP expectation decorators
+    to enforce data quality checks at query execution time.
+
+    Args:
+        func: Function returning a DataFrame to decorate.
+        expect_all: Dictionary of SQL expressions that must all pass.
+        expect_all_or_drop: Dictionary of SQL expressions; failing rows are dropped.
+        expect_all_or_fail: Dictionary of SQL expressions; job fails if any fail.
+
+    Returns:
+        Decorated function with quality checks applied.
+    """
     expect_all_func: Any = getattr(dp, "expect_all", None)
     expect_all_or_drop_func: Any = getattr(dp, "expect_all_or_drop", None)
     expect_all_or_fail_func: Any = getattr(dp, "expect_all_or_fail", None)
@@ -73,8 +94,50 @@ def streaming_table(
     # Future extension point
     **kwargs,
 ) -> Callable[[Callable[..., DataFrame]], None] | None:
-    """Drop-in replacement for @dp.table geared for streaming tables with
-    built-in data quality quarantine support.
+    """Drop-in replacement for @dp.table with built-in data quality and quarantine support.
+
+    This decorator extends Databricks' standard @dp.table with enhanced data quality
+    processing. It supports both SDP (Spark Data Pruning) expectations and DQX checks,
+    with automatic quarantine table creation for failed records.
+
+    Features:
+    - Automatic schema and parameter discovery from table metadata
+    - SDP expectations (expect_all, expect_all_or_drop, expect_all_or_fail)
+    - Quarantine table support for failed records
+    - DQX integration for complex quality checks
+    - Parameter override support for flexibility
+
+    Args:
+        query_function: The decorated function returning a DataFrame (for @decorator form).
+        name: Table name. If not provided, uses function name.
+        comment: Table description/comment.
+        spark_conf: Spark configuration properties.
+        table_properties: Databricks table properties.
+        path: Physical path for external tables or custom locations.
+        partition_cols: List of column names for partitioning.
+        cluster_by_auto: Enable automatic clustering optimization.
+        cluster_by: List of column names for explicit clustering (max 4).
+        schema: Table schema definition (DDL or StructType).
+        row_filter: SQL row filter expression.
+        private: Whether the table should be private.
+        expect_all: Dictionary of SQL expressions that must all pass.
+        expect_all_or_drop: Dictionary of SQL expressions; failing rows are dropped.
+        expect_all_or_fail: Dictionary of SQL expressions; job fails if any fail.
+        expect_all_or_quarantine: Dictionary of SQL expressions; failing rows quarantined.
+        exclude_params: List of parameter keys to exclude from metadata discovery.
+        **kwargs: Additional arguments passed to the underlying @dp.table.
+
+    Returns:
+        Decorator function or None if called with a query function directly.
+
+    Raises:
+        ValueError: If validation or quarantine table names cannot be determined.
+        ImportError: If DQX checks are configured but databricks-labs-dqx is not installed.
+
+    Example:
+        @streaming_table(name="my_table", expect_all={"non_null": "column1 IS NOT NULL"})
+        def get_my_data():
+            return spark.read.table("source_table")
     """
     # Build a dict of explicit overwrites provided at callsite.
     spark = SparkSession.active()
@@ -263,7 +326,32 @@ def create_streaming_table(
     # Future extension point
     **kwargs,
 ) -> None:
-    """Drop-in replacement for dp.create_streaming_table."""
+    """Enhanced version of dp.create_streaming_table with Kelp metadata discovery.
+
+    Creates a Databricks streaming table with automatic parameter discovery from
+    table metadata. This is useful for programmatic table creation where table
+    configuration is defined in YAML.
+
+    Args:
+        name: Table name (required). Used to look up configuration in metadata.
+        comment: Table description/comment.
+        spark_conf: Spark configuration properties.
+        table_properties: Databricks table properties.
+        path: Physical path for external tables or custom locations.
+        partition_cols: List of column names for partitioning.
+        cluster_by_auto: Enable automatic clustering optimization.
+        cluster_by: List of column names for explicit clustering (max 4).
+        schema: Table schema definition (DDL or StructType).
+        row_filter: SQL row filter expression.
+        expect_all: Dictionary of SQL expressions that must all pass.
+        expect_all_or_drop: Dictionary of SQL expressions; failing rows are dropped.
+        expect_all_or_fail: Dictionary of SQL expressions; job fails if any fail.
+        exclude_params: List of parameter keys to exclude from metadata discovery.
+        **kwargs: Additional arguments passed to dp.create_streaming_table.
+
+    Raises:
+        KeyError: If the table name is not found in the catalog.
+    """
 
     params = dict(
         name=name,

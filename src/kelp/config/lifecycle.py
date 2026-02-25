@@ -179,7 +179,18 @@ def get_context(init: bool = True) -> RuntimeContext:
 
 
 def set_var(key: str, value) -> None:
-    """Set a runtime variable in the global context."""
+    """Set a runtime variable in the global context.
+
+    Stores a runtime variable in the current context that can be retrieved
+    during execution and passed to pipelines or other components.
+
+    Args:
+        key: Variable name/key.
+        value: Value to store.
+
+    Raises:
+        ContextMissingError: If no global context is initialized.
+    """
     ctx = get_context()
     if ctx.runtime_vars is None:
         ctx.runtime_vars = {}
@@ -187,7 +198,21 @@ def set_var(key: str, value) -> None:
 
 
 def get_var(key: str, default=None):
-    """Get a runtime variable from the global context."""
+    """Get a runtime variable from the global context.
+
+    Retrieves a runtime variable that was previously set via set_var or loaded
+    from configuration files.
+
+    Args:
+        key: Variable name/key to retrieve.
+        default: Value to return if key is not found.
+
+    Returns:
+        Variable value, or default if not found.
+
+    Raises:
+        ContextMissingError: If no global context is initialized.
+    """
     ctx = get_context()
     if ctx.runtime_vars is None:
         return default

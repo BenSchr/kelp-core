@@ -17,6 +17,33 @@ from kelp.models.table import (
 
 @dataclass
 class KelpTable:
+    """Representation of a Kelp-managed table with computed properties.
+
+    This dataclass extends a Table model with additional computed properties used
+    in Databricks pipelines and SDP operations, including qualified names, DDL
+    statements, and quality check metadata.
+
+    Attributes:
+        name: Simple table name.
+        table_type: Type of table (MANAGED, VIEW, STREAMING_TABLE, etc.).
+        comment: Table description/comment.
+        table_properties: Databricks table properties.
+        spark_conf: Spark configuration parameters.
+        path: Physical path for external tables.
+        partition_cols: List of partition column names.
+        cluster_by_auto: Whether automatic clustering is enabled.
+        cluster_by: Manual clustering column names (max 4).
+        row_filter: SQL row filter expression.
+        fqn: Fully qualified table name (catalog.schema.name).
+        schema: Spark schema DDL including constraints and generated columns.
+        schema_lite: Raw Spark schema without constraints or generated columns.
+        dqx_checks: DQX quality check configurations.
+        validation_table: Name of the validation table if quality checks enabled.
+        quarantine_table: Name of the quarantine table for failed records.
+        target_table: Target table name for flows (main or validation table).
+        root_table: Reference to the source Table model object.
+    """
+
     name: str
     table_type: str | None = None
     comment: str | None = None
@@ -28,29 +55,36 @@ class KelpTable:
     cluster_by: list[str] | None = None
     row_filter: str | None = None
     fqn: str | None = None
-    schema: str | None = (
-        None  # Schema including constraints and generated columns for use with @dp.table
-    )
-    schema_lite: str | None = (
-        None  # Raw schema without any modifications for use with Struct operations
-    )
+    schema: str | None = None
+    schema_lite: str | None = None
     dqx_checks: list[dict] | None = None
 
     validation_table: str | None = None
     quarantine_table: str | None = None
-    target_table: str | None = (
-        None  # The table that should be used as the target in flows, based on quality config
-    )
-    root_table: Table | None = None  # Provide the root table object for edge cases
+    target_table: str | None = None
+    root_table: Table | None = None
 
     def get_dqx_check_obj(self) -> DQXQuality | None:
-        """Get the DQX quality object if defined."""
+        """Get the DQX quality object if defined.
+
+        Returns:
+            DQXQuality object if root_table has DQX quality configured, None otherwise.
+        """
         if self.root_table and isinstance(self.root_table.quality, DQXQuality):
             return self.root_table.quality
         return None
 
     def get_ddl(self, if_not_exists=True) -> str | None:
-        """Get the DDL for creating the table, if available."""
+        """Get the DDL for creating the table.
+
+        Generates the Databricks SQL DDL statement for creating the table.
+
+        Args:
+            if_not_exists: If True, generates "CREATE ... IF NOT EXISTS" statement.
+
+        Returns:
+            DDL statement string, or None if root_table is not available.
+        """
         mapped_type = _UC_TYPE.get(self.table_type.lower(), "TABLE") if self.table_type else "TABLE"
         return (
             TableManager.get_spark_schema_ddl(
@@ -65,7 +99,18 @@ class KelpTable:
 
 @dataclass
 class KelpSdpTable(KelpTable):
-    """Utility class to use a table object flexibly"""
+    """Databricks SDP (Spark Data Pruning) table with quality expectations configuration.
+
+    Extends KelpTable with SDP-specific quality expectations that control row-level
+    data quality enforcement. Provides multiple parameter extraction methods for
+    different use cases (standard SDP, create_streaming_table, raw cloning).
+
+    Attributes:
+        expect_all: Dictionary of SQL expressions that must all pass.
+        expect_all_or_fail: Dictionary of SQL expressions; job fails if any fail.
+        expect_all_or_drop: Dictionary of SQL expressions; failing rows are dropped.
+        expect_all_or_quarantine: Dictionary of SQL expressions; failing rows quarantined.
+    """
 
     expect_all: dict | None = None
     expect_all_or_fail: dict | None = None
@@ -73,6 +118,15 @@ class KelpSdpTable(KelpTable):
     expect_all_or_quarantine: dict | None = None
 
     def params(self, exclude: list[str] | None = None) -> dict[str, str]:
+        """Get SDP table parameters excluding quality expectations.
+
+        Args:
+            exclude: Additional parameter keys to exclude from the result.
+
+        Returns:
+            Dictionary of parameters suitable for @dp.table decorator, excluding
+            all quality expectations (expect_all, expect_all_or_drop, etc.).
+        """
         exclude = exclude or []
         default_exclude = [
             "expect_all",
@@ -84,12 +138,32 @@ class KelpSdpTable(KelpTable):
         return self.get_sdp_params(exclude=exclude)
 
     def params_raw(self, exclude: list[str] | None = None) -> dict[str, str]:
-        """Get the raw parameters without excluding any quality parameters, for use in cases like cloning where we want to preserve the original quality config."""
+        """Get raw parameters preserving all quality configuration.
+
+        Used for operations like cloning where the original quality configuration
+        needs to be preserved unchanged.
+
+        Args:
+            exclude: Parameter keys to exclude from the result.
+
+        Returns:
+            Dictionary of all parameters including quality expectations.
+        """
         exclude = exclude or []
         return self.get_sdp_params(exclude=exclude)
 
     def params_cst(self, exclude: list[str] | None = None) -> dict[str, str]:
-        """Params for create_streaming_table api"""
+        """Get parameters for create_streaming_table API.
+
+        Returns parameters suitable for the Databricks create_streaming_table API,
+        excluding expect_all_or_quarantine which is not supported.
+
+        Args:
+            exclude: Additional parameter keys to exclude from the result.
+
+        Returns:
+            Dictionary of parameters suitable for create_streaming_table.
+        """
         exclude = exclude or []
         default_exclude = [
             "expect_all_or_quarantine",
@@ -98,7 +172,17 @@ class KelpSdpTable(KelpTable):
         return self.get_sdp_params(exclude=exclude)
 
     def get_sdp_params(self, exclude: list[str] | None = None) -> dict[str, Any]:
-        """Get the streaming table parameters as a dictionary for use with @dp.table."""
+        """Get the streaming table parameters as a dictionary for use with @dp.table.
+
+        Converts all table properties into a dictionary suitable for passing to
+        Databricks SDP decorators, filtering out None values and excluded keys.
+
+        Args:
+            exclude: Parameter keys to exclude from the result.
+
+        Returns:
+            Dictionary of non-None SDP parameters.
+        """
         exclude = exclude or []
         params = {
             "name": self.fqn,
@@ -120,7 +204,18 @@ class KelpSdpTable(KelpTable):
         return params
 
     def get_ddl(self, if_not_exists=False, or_refresh=True) -> str | None:
-        """Get the DDL for creating the table, if available."""
+        """Get the DDL for creating a new streaming table.
+
+        Generates the Databricks SQL DDL statement for creating a streaming table,
+        with options for conditional creation and refresh behavior.
+
+        Args:
+            if_not_exists: If True, generates "CREATE ... IF NOT EXISTS" statement.
+            or_refresh: If True, generates "CREATE ... OR REFRESH" for stream updates.
+
+        Returns:
+            DDL statement string, or None if root_table is not available.
+        """
         mapped_type = _UC_TYPE.get(self.table_type.lower(), "TABLE") if self.table_type else "TABLE"
         return (
             TableManager.get_spark_schema_ddl(

@@ -84,6 +84,7 @@ class TestMetricView:
     def test_metric_view_schema_alias(self):
         """Test that 'schema' alias works for schema_ field."""
         from typing import Any
+
         data: dict[str, Any] = {
             "name": "test_metric",
             "schema_": "my_schema",
