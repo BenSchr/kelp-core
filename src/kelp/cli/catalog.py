@@ -3,7 +3,6 @@ from pathlib import Path
 
 import typer
 import yaml
-from dotenv import load_dotenv
 
 from kelp.config.lifecycle import get_context
 from kelp.config.settings import resolve_setting
@@ -123,7 +122,6 @@ def sync_from_pipeline(
 
     from kelp.config.lifecycle import init
 
-    load_dotenv()
     log_level = "DEBUG" if debug else None
     resolved_target = _resolve_target(target)
 
@@ -344,7 +342,6 @@ def generate_alter_statements(
     from kelp.catalog.api import sync_catalog
     from kelp.config.lifecycle import init
 
-    load_dotenv()
     resolved_target = _resolve_target(target)
     init(project_root=project_file_path, target=resolved_target, log_level=log_level)
     queries = sync_catalog()
@@ -393,7 +390,6 @@ def generate_ddl(
     from kelp.catalog.metric_view_ddl import generate_create_metric_view_ddl
     from kelp.config.lifecycle import init
 
-    load_dotenv()
     resolved_target = _resolve_target(target)
     init(project_root=project_file_path, target=resolved_target, log_level=log_level)
 

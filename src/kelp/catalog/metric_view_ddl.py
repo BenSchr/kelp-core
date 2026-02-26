@@ -244,7 +244,11 @@ def generate_alter_metric_view_column_tags_ddl(
         tag_diff = _create_tag_diff(
             local_dims.get(dim_name, {}), remote_dims.get(dim_name, {}) if not enforce_tags else {}
         )
+
         if tag_diff.has_changes:
+            logger.debug(
+                "Tag diff for dimension '%s' in metric view '%s': %s", dim_name, fqn, tag_diff
+            )
             tag_statements = builder._column_tag_queries(fqn, dim_name, tag_diff, "view")  # noqa: SLF001
             ## filter out unset tag if enfore_tags
             filtered_statements = []
@@ -269,16 +273,21 @@ def generate_alter_metric_view_column_tags_ddl(
             local_measures.get(measure_name, {}),
             remote_measures.get(measure_name, {}) if not enforce_tags else {},
         )
-        tag_statements = builder._column_tag_queries(fqn, dim_name, tag_diff, "view")  # noqa: SLF001
-        ## filter out unset tag if enfore_tags
-        filtered_statements = []
-        if enforce_tags:
-            filtered_statements = [
-                stmt for stmt in tag_statements if not stmt.strip().startswith("UNSET TAG")
-            ]
-        else:
-            filtered_statements = tag_statements
-        statements.extend(filtered_statements)
+
+        if tag_diff.has_changes:
+            logger.debug(
+                "Tag diff for measure '%s' in metric view '%s': %s", measure_name, fqn, tag_diff
+            )
+            tag_statements = builder._column_tag_queries(fqn, measure_name, tag_diff, "view")  # noqa: SLF001
+            ## filter out unset tag if enfore_tags
+            filtered_statements = []
+            if enforce_tags:
+                filtered_statements = [
+                    stmt for stmt in tag_statements if not stmt.strip().startswith("UNSET TAG")
+                ]
+            else:
+                filtered_statements = tag_statements
+            statements.extend(filtered_statements)
 
     return statements
 

@@ -30,11 +30,11 @@ def sync_catalog(
     uc_adapter = UnityCatalogAdapter()
     logger.info("Starting remote catalog sync for all tables & metric views...")
     queries: list[str] = []
-
-    if sync_metric_views:
-        queries.extend(uc_adapter.sync_all_metric_views(get_context().catalog.get_metric_views()))
     if sync_tables:
         queries.extend(uc_adapter.sync_all_tables(tables))
+    if sync_metric_views:
+        queries.extend(uc_adapter.sync_all_metric_views(get_context().catalog.get_metric_views()))
+
     return queries
 
 

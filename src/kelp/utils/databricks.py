@@ -73,21 +73,21 @@ def get_table_from_dbx_sdk(
     pk_contraint = {}
     fk_constraint = {}
     if info.table_constraints:
-        for contraint in info.table_constraints:
-            if contraint.primary_key_constraint:
+        for constraint in info.table_constraints:
+            if constraint.primary_key_constraint:
                 pk_contraint = {
-                    "name": contraint.primary_key_constraint.name,
+                    "name": constraint.primary_key_constraint.name,
                     "type": "primary_key",
-                    "columns": contraint.primary_key_constraint.child_columns,
+                    "columns": constraint.primary_key_constraint.child_columns,
                 }
                 table_obj["constraints"].append(pk_contraint)
-            if contraint.foreign_key_constraint:
+            if constraint.foreign_key_constraint:
                 fk_constraint = {
-                    "name": contraint.foreign_key_constraint.name,
+                    "name": constraint.foreign_key_constraint.name,
                     "type": "foreign_key",
-                    "columns": contraint.foreign_key_constraint.child_columns,
-                    "reference_table": contraint.foreign_key_constraint.parent_table,
-                    "reference_columns": contraint.foreign_key_constraint.parent_columns,
+                    "columns": constraint.foreign_key_constraint.child_columns,
+                    "reference_table": constraint.foreign_key_constraint.parent_table,
+                    "reference_columns": constraint.foreign_key_constraint.parent_columns,
                 }
                 table_obj["constraints"].append(fk_constraint)
 

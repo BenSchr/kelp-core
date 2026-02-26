@@ -1,6 +1,6 @@
 # kelp
 
-Kelp is a catalog-based toolkit for Databricks Spark Declarative Pipelines (SDP) and native Spark ETL projects. It provides a simple api for catalog management, data quality and building reliable data pipelines. Kelp is designed to be flexible and extensible, allowing you to easily integrate it into your existing Spark projects. What distinguishes Kelp from other similar frameworks is its focus on beeing future-proof and easily maintainable againts any new features or syntax changes in the platform.
+Kelp is a catalog-based toolkit for Databricks Spark Declarative Pipelines (SDP) and native Spark ETL projects. It provides a simple api for catalog management, data quality and building reliable data pipelines. Kelp is designed to be flexible and extensible, allowing you to easily integrate it into your existing Spark projects. What distinguishes Kelp from other similar frameworks is its focus on being future-proof and easily maintainable against any new features or syntax changes in the platform.
 
 ## Features
 - SDP: Kelp provides simple apis and decorators to improve your pipeline code, quality and reliability. It also provides a simple way to build quarantine patterns based on the quality checks and expectations defined in the catalog.

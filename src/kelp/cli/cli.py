@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-from dotenv import load_dotenv
 
 from kelp.cli.catalog import app as catalog_app
 from kelp.cli.init import app as init_app
@@ -95,7 +94,7 @@ def validate(
     debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
 ) -> None:
     """Validate the Kelp project configuration and catalog."""
-    load_dotenv()
+
     from kelp.config.lifecycle import init
 
     log_level = "DEBUG" if debug else None
@@ -148,7 +147,7 @@ def sync_local_catalog(
     If a name or FQN is provided, only that object is synced. Otherwise, all
     cataloged objects are synced.
     """
-    load_dotenv()
+
     from kelp.config.lifecycle import get_context, init
     from kelp.service.yaml_manager import ServicePathConfig, YamlManager
     from kelp.utils.databricks import get_metric_view_from_dbx_sdk, get_table_from_dbx_sdk

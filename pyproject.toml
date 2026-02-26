@@ -4,7 +4,6 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "databricks-sdk>=0.80.0",
-    "python-dotenv>=0.9.9",
     "jinja2>=3.1.6",
     "pydantic<3",
     "pyyaml>=6.0",
@@ -22,6 +21,7 @@ dev = [
     "faker>=40.4.0",
     "pytest>=8.3.0",
     "pytest-mock>=3.14.0",
+    "pytest-cov>=7.0.0",
 ]
 docs = [
     "griffe-pydantic>=1.2.0",
@@ -40,7 +40,6 @@ package = true
 
 [tool.ruff]
 line-length = 100
-#preview = true
 include = ["pyproject.toml", "src/**/*.py", "scripts/**/*.py", "tests/**/*.py"]
 
 [tool.ruff.lint]
@@ -57,7 +56,7 @@ extend-select = [
     "G",
     "PIE",
     "T20",
-    "PT", # try pytest style 
+    "PT", 
     "Q",
     "RSE",
     "RET",
@@ -74,7 +73,6 @@ extend-select = [
     "RUF",
 ]
 ignore=["RET504","SIM105"]
-#extend-select = ["B","FA","LOG","INP","PIE","T20","Q","RSE","RET","TID","TD","I","N"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101","SLF001"]

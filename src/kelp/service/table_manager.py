@@ -465,7 +465,7 @@ class SparkSchemaBuilder:
         return self
 
     def build_raw(self) -> str:
-        """Build the base Spark schema wihout outer parts like clustering or table properties."""
+        """Build the base Spark schema without outer parts like clustering or table properties."""
         return ", ".join(self.table_parts)
 
     def build_ddl(

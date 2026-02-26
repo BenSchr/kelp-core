@@ -1,19 +1,10 @@
 """Global pytest fixtures and configuration."""
 
-import os
 from pathlib import Path
 
 import pytest
-from dotenv import load_dotenv
 
 from kelp.config.lifecycle import ContextStore
-
-
-@pytest.fixture(scope="session", autouse=True)
-def load_environment_variables():
-    """Load environment variables from .env file at the start of the test session."""
-    os.environ.pop("KELP_TARGET", None)  # Ensure KELP_ENV is not set to interfere with tests
-    load_dotenv(".env.test", override=True)
 
 
 @pytest.fixture(autouse=True)
