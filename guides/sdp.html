@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../index.html">
+        <link rel="prev" href="catalog.html">
       
       
         <link rel="next" href="../reference/index.html">
@@ -255,7 +255,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="SDP.html" class="md-tabs__link">
+        <a href="catalog.html" class="md-tabs__link">
           
   
   
@@ -419,6 +419,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="catalog.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sync Metadata with Your Catalog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -449,7 +477,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="SDP.html" class="md-nav__link md-nav__link--active">
+      <a href="sdp.html" class="md-nav__link md-nav__link--active">
         
   
   
@@ -535,7 +563,7 @@
   <a href="#pass-parameters-without-decorators" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pass parameters without decorators
+        Pass Parameters Without Decorators
       
     </span>
   </a>
@@ -585,7 +613,7 @@
   <a href="#using-ref-and-target-functions-in-sdp" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Using ref() and target() functions in SDP
+        Using ref() and target() Functions in SDP
       
     </span>
   </a>
@@ -607,7 +635,7 @@
   <a href="#applying-catalog-metadata-to-sdp-tables" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Applying catalog metadata to SDP tables
+        Applying Catalog Metadata to SDP Tables
       
     </span>
   </a>
@@ -993,7 +1021,7 @@
   <a href="#pass-parameters-without-decorators" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pass parameters without decorators
+        Pass Parameters Without Decorators
       
     </span>
   </a>
@@ -1043,7 +1071,7 @@
   <a href="#using-ref-and-target-functions-in-sdp" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Using ref() and target() functions in SDP
+        Using ref() and target() Functions in SDP
       
     </span>
   </a>
@@ -1065,7 +1093,7 @@
   <a href="#applying-catalog-metadata-to-sdp-tables" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Applying catalog metadata to SDP tables
+        Applying Catalog Metadata to SDP Tables
       
     </span>
   </a>
@@ -1093,7 +1121,7 @@
 
 
 <h1 id="spark-declarative-pipelines-sdp">Spark Declarative Pipelines (SDP)<a class="headerlink" href="#spark-declarative-pipelines-sdp" title="Permanent link">&para;</a></h1>
-<p>This guide provides an overview of how to integrate Kelp with Databricks Spark Declarative Pipelines (SDP). It covers the initialization of Kelp in an SDP environment, using decorators for defining pipeline components, implementing quality checks, and utilizing the low-level API for more control over your pipelines.</p>
+<p>This guide provides an overview of how to integrate Kelp with Databricks Spark Declarative Pipelines (SDP). It covers Kelp initialization in an SDP environment, using decorators to define pipeline components, implementing quality checks, and utilizing the low-level API for more control over your pipelines.</p>
 <h2 id="initialize-kelp-in-sdp">Initialize Kelp in SDP<a class="headerlink" href="#initialize-kelp-in-sdp" title="Permanent link">&para;</a></h2>
 <h3 id="spark-configurations">Spark Configurations<a class="headerlink" href="#spark-configurations" title="Permanent link">&para;</a></h3>
 <p>Kelp autodetects project and target configurations from Spark configurations. You can set these in your pipeline configurations.</p>
@@ -1121,8 +1149,8 @@
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">      </span><span class="c1"># ...</span>
 </span></code></pre></div>
 <h3 id="explicit-initialization-in-code">Explicit initialization in code<a class="headerlink" href="#explicit-initialization-in-code" title="Permanent link">&para;</a></h3>
-<p>You can also explicitly initialize Kelp in your code, for example in a Python file that is part of your pipeline. This can be useful if you want to have more control over the initialization process.</p>
-<p>Be aware that you have to set the <code>init</code> in each file to guarantee that Kelp is properly initialized in all situations (e.g. when partially running a pipeline).</p>
+<p>You can also explicitly initialize Kelp in your code, for example in a Python file that is part of your pipeline. This can be useful if you want more control over the initialization process.</p>
+<p>Note that you must call <code>init</code> in each file to guarantee that Kelp is properly initialized in all situations (e.g., when partially running a pipeline).</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">kelp.pipelines</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kp</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">kp</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="s2">&quot;&lt;path to kelp_project.yml&gt;&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;&lt;target&gt;&quot;</span><span class="p">)</span>
@@ -1133,7 +1161,7 @@
 </span></code></pre></div>
 <h2 id="use-kelp-decorators-in-sdp">Use Kelp Decorators in SDP<a class="headerlink" href="#use-kelp-decorators-in-sdp" title="Permanent link">&para;</a></h2>
 <p>Kelp provides decorators that wrap around the built-in SDP decorators to auto-inject the parameters defined in your metadata files.</p>
-<p>Function names and decorator arguments are used to find the corresponding model definitions in your <code>kelp_metadata/models</code> directory. This allows you to keep your pipeline code clean and focused on the logic, while Kelp handles the configuration and metadata management.</p>
+<p>Function names and decorator arguments are used to find the corresponding model definitions in your <code>kelp_metadata/models</code> directory. This keeps your pipeline code clean and focused on the logic, while Kelp handles configuration and metadata management.</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">kelp_models</span><span class="p">:</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_table</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="c1">#... </span>
@@ -1156,15 +1184,15 @@
 <p>This will use the provided name to search for the corresponding model definition in your <code>kelp_metadata/models</code> directory.</p>
 </li>
 </ol>
-<p>You can exclude parameters from being auto-injected through <code>exclude_params</code>. This allows you to have more control over the parameters that are passed to your pipeline components. For example, if you want to exclude the <code>schema</code> parameter to not set the Spark Schema by SDP.</p>
+<p>You can exclude parameters from being auto-injected by using <code>exclude_params</code>. This gives you more control over the parameters passed to your pipeline components. For example, you can exclude the <code>schema</code> parameter to prevent SDP from setting the Spark Schema.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">kelp.pipelines</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kp</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">])</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">my_table</span><span class="p">():</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="c1"># ...</span>
 </span></code></pre></div>
-<h2 id="pass-parameters-without-decorators">Pass parameters without decorators<a class="headerlink" href="#pass-parameters-without-decorators" title="Permanent link">&para;</a></h2>
-<p>Since Spark Declarative Pipelines (SDP) is under fast development which may change syntax or put extra parameters in the decorated functions, Kelp provides a low-level API to pass parameters without using decorators. This allows you to have more control over the parameters that are passed to your pipeline components and makes your code more resilient to changes in SDP.</p>
+<h2 id="pass-parameters-without-decorators">Pass Parameters Without Decorators<a class="headerlink" href="#pass-parameters-without-decorators" title="Permanent link">&para;</a></h2>
+<p>Since Spark Declarative Pipelines (SDP) is under rapid development and may change syntax or add extra parameters to decorated functions, Kelp provides a low-level API to pass parameters without using decorators. This gives you more control over the parameters passed to your pipeline components and makes your code more resilient to changes in SDP.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark</span><span class="w"> </span><span class="kn">import</span> <span class="n">pipelines</span> <span class="k">as</span> <span class="n">dp</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">kelp.pipelines</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kp</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
@@ -1180,7 +1208,7 @@
 <li>You may also exclude parameters when using the low-level API, just like with the decorators.</li>
 </ol>
 <h2 id="quality-checks-and-quarantine">Quality Checks and Quarantine<a class="headerlink" href="#quality-checks-and-quarantine" title="Permanent link">&para;</a></h2>
-<p>Kelp's quality checks can be easily integrated into your SDP pipelines. You can define your quality checks in your models and then use them in your pipeline code. Kelp will automatically run the quality checks after the corresponding pipeline component is executed.</p>
+<p>Kelp's quality checks can be easily integrated into your SDP pipelines. Define your quality checks in your models and then use them in your pipeline code. Kelp will automatically run the quality checks after the corresponding pipeline component is executed.</p>
 <h3 id="sdp-expectations">SDP Expectations<a class="headerlink" href="#sdp-expectations" title="Permanent link">&para;</a></h3>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">kelp_models</span><span class="p">:</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_table</span>
@@ -1193,8 +1221,8 @@
 </span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">      </span><span class="nt">expect_all_or_drop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">      </span><span class="nt">expect_all_or_quarantine</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </span></code></pre></div>
-<p>When you use <code>expect_all_or_quarantine</code>, Kelp will automatically quarantine the data if any of the expectations fail. You can then choose to investigate and fix the issues with the data before allowing it to be used in downstream pipeline components.
-This would generate the following SDP-Chart</p>
+<p>When you use <code>expect_all_or_quarantine</code>, Kelp will automatically quarantine the data if any of the expectations fail. You can then investigate and fix the issues with the data before allowing it to be used in downstream pipeline components.</p>
+<p>This generates the following SDP chart:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>flowchart LR
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  upstream(&quot;upstream_table&quot;) --&gt; validation
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>  validation(&quot;my_table_validation(private)&quot;) --&gt; table(&quot;my_table&quot;)
@@ -1202,10 +1230,10 @@ This would generate the following SDP-Chart</p>
 </span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>  table --&gt; downstream(&quot;downstream_table&quot;)
 </span></code></pre></div>
 <h3 id="dqx-checks">DQX Checks<a class="headerlink" href="#dqx-checks" title="Permanent link">&para;</a></h3>
-<p>A similar approach can be taken for DQX checks, where you define your DQX checks in your model metadata and Kelp will automatically run them in your pipeline.</p>
-<p>Since DQX checks are applied on the code level you can also set the expectation level and quarantine pattern for each table in your model metadata. This allows you to have more control over how the quality checks are applied and how the data is handled when checks fail.</p>
-<p>The <code>sdp_expect_level</code> can be set to <code>warn</code>, <code>fail</code>, <code>drop</code> which correspond to the different expectation decorators in SDP. You can deactivate the expectation by setting it to <code>deactivate</code>.</p>
-<p>Setting <code>sdp_quarantine</code> to <code>true</code> will enable the quarantine pattern for this table, which will automatically quarantine the data if any of the DQX checks fail. This will generate the same SDP-Chart as shown above for the <code>expect_all_or_quarantine</code> example, but with the DQX checks being applied in the validation step.</p>
+<p>A similar approach can be taken for DQX checks. Define your DQX checks in your model metadata and Kelp will automatically run them in your pipeline.</p>
+<p>Since DQX checks are applied at the code level, you can also set the expectation level and quarantine pattern for each table in your model metadata. This gives you more control over how the quality checks are applied and how the data is handled when checks fail.</p>
+<p>The <code>sdp_expect_level</code> can be set to <code>warn</code>, <code>fail</code>, or <code>drop</code>, which correspond to the different expectation decorators in SDP. You can deactivate the expectation by setting it to <code>deactivate</code>.</p>
+<p>Setting <code>sdp_quarantine</code> to <code>true</code> enables the quarantine pattern for this table, which will automatically quarantine the data if any of the DQX checks fail. This generates the same SDP chart as shown above for the <code>expect_all_or_quarantine</code> example, but with the DQX checks applied in the validation step.</p>
 <p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">kelp_models</span><span class="p">:</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_table</span>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="c1"># ...</span>
@@ -1223,10 +1251,10 @@ This would generate the following SDP-Chart</p>
 </span></code></pre></div>
 1. This will append an SDP expectation to the pipeline with the corresponding level. 
 2. This will enable the quarantine pattern for this table.</p>
-<h2 id="using-ref-and-target-functions-in-sdp">Using ref() and target() functions in SDP<a class="headerlink" href="#using-ref-and-target-functions-in-sdp" title="Permanent link">&para;</a></h2>
-<p>You can also also use the <code>ref()</code> and <code>target()</code> functions to develop your upstream and downstream pipeline components.
-This is useful to reduce the need for passing catalog and schema configurations in your pipeline code, as Kelp will auto-resolve these based on the model metadata.
-If you use a quarantine-pattern <code>target</code> will auto-resolve to the validation table.</p>
+<h2 id="using-ref-and-target-functions-in-sdp">Using ref() and target() Functions in SDP<a class="headerlink" href="#using-ref-and-target-functions-in-sdp" title="Permanent link">&para;</a></h2>
+<p>You can also use the <code>ref()</code> and <code>target()</code> functions to develop your upstream and downstream pipeline components.
+This reduces the need to pass catalog and schema configurations in your pipeline code, as Kelp will auto-resolve these based on the model metadata.
+If you use a quarantine pattern, <code>target</code> will auto-resolve to the validation table.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">kelp.pipelines</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kp</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark</span><span class="w"> </span><span class="kn">import</span> <span class="n">pipelines</span> <span class="k">as</span> <span class="n">dp</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
@@ -1243,8 +1271,8 @@ If you use a quarantine-pattern <code>target</code> will auto-resolve to the val
 </span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>    <span class="c1"># ...</span>
 </span></code></pre></div>
 <h2 id="create-streaming-table-function">Create Streaming Table Function<a class="headerlink" href="#create-streaming-table-function" title="Permanent link">&para;</a></h2>
-<p>You can also create streaming tables by using the <code>create_streaming_table</code> wrapper-function or by using the low-level API <code>params_cst()</code>. The same rules for auto-injecting parameters and excluding parameters apply to streaming tables as well.</p>
-<p>Both also inject the SDP expectation quality checks if they are defined in the model metadata.</p>
+<p>You can create streaming tables by using the <code>create_streaming_table</code> wrapper function or by using the low-level API <code>params_cst()</code>. The same rules for auto-injecting and excluding parameters apply to streaming tables.</p>
+<p>Both options also inject the SDP expectation quality checks if they are defined in the model metadata.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">kelp.pipelines</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kp</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">kp</span><span class="o">.</span><span class="n">create_streaming_table</span><span class="p">(</span><span class="s2">&quot;my_streaming_table&quot;</span><span class="p">)</span>
@@ -1254,8 +1282,8 @@ If you use a quarantine-pattern <code>target</code> will auto-resolve to the val
 </span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>
 </span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="n">dp</span><span class="o">.</span><span class="n">create_streaming_table</span><span class="p">(</span><span class="o">**</span><span class="n">kp</span><span class="o">.</span><span class="n">params_cst</span><span class="p">(</span><span class="s2">&quot;my_streaming_table&quot;</span><span class="p">))</span>
 </span></code></pre></div>
-<h2 id="applying-catalog-metadata-to-sdp-tables">Applying catalog metadata to SDP tables<a class="headerlink" href="#applying-catalog-metadata-to-sdp-tables" title="Permanent link">&para;</a></h2>
-<p>Currently SDP does not have full built-in support for catalog metadata like tags or if you which to omit the spark-schema you also can't apply descriptions to your columns. Kelp provides a workaround for this by applying the catalog metadata in a separate step in your Lakeflow Job.</p>
+<h2 id="applying-catalog-metadata-to-sdp-tables">Applying Catalog Metadata to SDP Tables<a class="headerlink" href="#applying-catalog-metadata-to-sdp-tables" title="Permanent link">&para;</a></h2>
+<p>Currently, SDP does not have full built-in support for catalog metadata like tags. If you wish to omit the Spark schema, you also cannot apply descriptions to your columns. Kelp provides a workaround for this by applying the catalog metadata in a separate step in your Lakeflow Job.</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">kelp_models</span><span class="p">:</span>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_table</span>
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="c1"># ...</span>
@@ -1267,9 +1295,9 @@ If you use a quarantine-pattern <code>target</code> will auto-resolve to the val
 </span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">tag2 </span><span class="p">:</span><span class="w"> </span><span class="s">&quot;value&quot;</span>
 </span></code></pre></div>
 <ol>
-<li>This will apply the tag <code>column_tag1</code> with an empty value to <code>column1</code> in the catalog.</li>
+<li>This will apply the tag <code>tag1</code> as key-only tag to <code>column1</code> in the catalog.</li>
 </ol>
-<p>Go to [here catalog sync docs]</p>
+<p>Learn more about syncing your catalog metadata with your tables here: <a href="catalog.html">Sync Metadata with Your Catalog</a></p>
 
 
 
