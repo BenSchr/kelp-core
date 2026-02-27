@@ -6,7 +6,7 @@ spark = SparkSession.active()
 # kp.init("../../kelp_metadata/kelp_project.yml")
 
 
-@kp.streaming_table()
+@kp.table()
 def silver_orders_cleaned():
     return (
         spark.readStream.table(kp.ref("bronze_orders"))

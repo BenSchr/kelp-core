@@ -69,7 +69,7 @@ def _apply_expectations(
 # -----------------------
 
 
-def streaming_table(
+def table(
     # --- standard @dp.table parameters (keep signature compatible) ---
     query_function: Callable[..., DataFrame] | None = None,
     *,

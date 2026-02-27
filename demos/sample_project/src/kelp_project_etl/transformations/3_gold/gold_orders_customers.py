@@ -6,7 +6,7 @@ spark = SparkSession.active()
 # kp.init("../../kelp_metadata/kelp_project.yml")
 
 
-@dp.materialized_view(**kp.params("gold_orders_customers"))
+@dp.table(**kp.params("gold_orders_customers"))
 def gold_orders_customers():
     """Gold materialized view: enriched orders joined with customers."""
     orders = spark.read.table(kp.ref("silver_orders_cleaned"))

@@ -100,13 +100,13 @@ class TableDiffCalculator:
             local: Desired state.
             remote: Current state.
             managed: Keys the adapter is allowed to manage.
-            mode: "replace" removes remote keys absent locally; "merge"/"append" only adds/updates.
+            mode: "replace" removes remote keys absent locally; "append" only adds/updates keys; "managed" only removes keys in managed list if set.
 
         Returns:
             DictDiff with updates and deletes populated.
 
         """
-        normalized_mode = "replace" if mode == "replace" else "merge"
+        # normalized_mode = "replace" if mode == "replace" else "merge"
 
         local_keys = set(local.keys()) if local else set()
         remote_keys = set(remote.keys()) if remote else set()
@@ -118,7 +118,11 @@ class TableDiffCalculator:
             if key not in remote_keys or local[key] != remote[key]:
                 updates[key] = local[key]
 
-        if normalized_mode == "replace":
+        if mode == "replace":
+            deletes.extend(
+                list(remote_keys - local_keys),
+            )
+        if mode == "managed":
             deletes.extend(
                 [key for key in remote_keys - local_keys if self._in_scope(key, managed)],
             )

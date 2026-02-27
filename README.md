@@ -43,7 +43,7 @@ Kelp provides simple apis and decorators to improve your pipeline code, quality 
 
 - [x] Add pytest
 - [ ] Add integration tests with Databricks 
-- [ ] Add coverage
+- [x] Add coverage
 - [x] Add init command for project scaffolding
 - [ ] Improve documentation with getting started and examples
 - [x] Improve docstrings of user facing functions and classes

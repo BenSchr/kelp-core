@@ -6,7 +6,7 @@ spark = SparkSession.active()
 # kp.init("../../kelp_metadata/kelp_project.yml")
 
 
-@kp.streaming_table()  # exclude_params=["schema"]
+@kp.table()  # exclude_params=["schema"]
 def bronze_orders():
     """
     Bronze transformation for orders. Reads from the source_orders temporary view and writes to the bronze layer.

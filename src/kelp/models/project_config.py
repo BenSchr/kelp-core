@@ -46,31 +46,31 @@ class RemoteCatalogConfig(BaseModel):
     """Configuration for remote Databricks catalog synchronization.
 
     Attributes:
-        table_tag_mode: How to apply table tags ("append" or "replace").
+        table_tag_mode: How to apply table tags ("append", "replace", "managed").
         managed_table_tags: List of tag keys to manage on tables.
-        column_tag_mode: How to apply column tags ("append" or "replace").
+        column_tag_mode: How to apply column tags ("append", "replace", "managed").
         managed_column_tags: List of tag keys to manage on columns.
-        table_property_mode: How to apply table properties ("append" or "replace").
+        table_property_mode: How to apply table properties ("append" or "managed").
         managed_table_properties: List of property keys to manage on tables.
     """
 
-    table_tag_mode: Literal["append", "replace"] = Field(
-        default="append",
+    table_tag_mode: Literal["append", "replace", "managed"] = Field(
+        default="replace",
         description="How to apply table tags to remote catalog",
     )
     managed_table_tags: list[str] = Field(
         default_factory=list,
         description="List of tag keys to manage on tables",
     )
-    column_tag_mode: Literal["append", "replace"] = Field(
-        default="append",
+    column_tag_mode: Literal["append", "replace", "managed"] = Field(
+        default="replace",
         description="How to apply column tags to remote catalog",
     )
     managed_column_tags: list[str] = Field(
         default_factory=list,
         description="List of tag keys to manage on columns",
     )
-    table_property_mode: Literal["append", "replace"] = Field(
+    table_property_mode: Literal["append", "managed"] = Field(
         default="append",
         description="How to apply table properties to remote catalog",
     )

@@ -1,8 +1,12 @@
 site_name: Kelp
 theme:
   name: material
-  icon:
-    logo: material/leaf-circle
+  # icon:
+  #   repo: fontawesome/brands/github-alt
+  # icon:
+  #logo: material/leaf-circle
+  logo: img/kelp_logo.png
+  favicon: img/kelp_logo.png
   palette:
     # Palette toggle for automatic mode
     - media: "(prefers-color-scheme)"
@@ -31,6 +35,7 @@ theme:
     - content.footnote.tooltips
     - content.tabs.link
     - navigation.tabs
+    - navigation.sections
 repo_name: BenSchr/kelp
 repo_url: https://github.com/BenSchr/kelp
 plugins:
@@ -72,3 +77,5 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
