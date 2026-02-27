@@ -1,6 +1,6 @@
-# Spark Declarative Pipelines (SDP)
+# 01 Spark Declarative Pipelines (SDP)
 
-This guide provides an overview of how to integrate Kelp with Databricks Spark Declarative Pipelines (SDP). It covers the initialization of Kelp in an SDP environment, using decorators for defining pipeline components, implementing quality checks, and utilizing the low-level API for more control over your pipelines.
+This guide provides an overview of how to integrate Kelp with Databricks Spark Declarative Pipelines (SDP). It covers Kelp initialization in an SDP environment, using decorators to define pipeline components, implementing quality checks, and utilizing the low-level API for more control over your pipelines.
 
 
 ## Initialize Kelp in SDP
@@ -39,9 +39,9 @@ resources:
 
 ### Explicit initialization in code
 
-You can also explicitly initialize Kelp in your code, for example in a Python file that is part of your pipeline. This can be useful if you want to have more control over the initialization process.
+You can also explicitly initialize Kelp in your code, for example in a Python file that is part of your pipeline. This can be useful if you want more control over the initialization process.
 
-Be aware that you have to set the `init` in each file to guarantee that Kelp is properly initialized in all situations (e.g. when partially running a pipeline).
+Note that you must call `init` in each file to guarantee that Kelp is properly initialized in all situations (e.g., when partially running a pipeline).
 
 ```python
 import kelp.pipelines as kp
@@ -58,7 +58,7 @@ def my_table():
 
 Kelp provides decorators that wrap around the built-in SDP decorators to auto-inject the parameters defined in your metadata files.
 
-Function names and decorator arguments are used to find the corresponding model definitions in your `kelp_metadata/models` directory. This allows you to keep your pipeline code clean and focused on the logic, while Kelp handles the configuration and metadata management.
+Function names and decorator arguments are used to find the corresponding model definitions in your `kelp_metadata/models` directory. This keeps your pipeline code clean and focused on the logic, while Kelp handles configuration and metadata management.
 
 ```yaml
 kelp_models:
@@ -84,7 +84,7 @@ def different_name():
 2. This will use the provided name to search for the corresponding model definition in your `kelp_metadata/models` directory.
 
 
-You can exclude parameters from being auto-injected through `exclude_params`. This allows you to have more control over the parameters that are passed to your pipeline components. For example, if you want to exclude the `schema` parameter to not set the Spark Schema by SDP.
+You can exclude parameters from being auto-injected by using `exclude_params`. This gives you more control over the parameters passed to your pipeline components. For example, you can exclude the `schema` parameter to prevent SDP from setting the Spark Schema.
 
 ```python
 import kelp.pipelines as kp
@@ -94,9 +94,9 @@ def my_table():
     # ...
 ```
 
-## Pass parameters without decorators
+## Pass Parameters Without Decorators
 
-Since Spark Declarative Pipelines (SDP) is under fast development which may change syntax or put extra parameters in the decorated functions, Kelp provides a low-level API to pass parameters without using decorators. This allows you to have more control over the parameters that are passed to your pipeline components and makes your code more resilient to changes in SDP.
+Since Spark Declarative Pipelines (SDP) is under rapid development and may change syntax or add extra parameters to decorated functions, Kelp provides a low-level API to pass parameters without using decorators. This gives you more control over the parameters passed to your pipeline components and makes your code more resilient to changes in SDP.
 
 ```python
 from pyspark import pipelines as dp
@@ -119,7 +119,8 @@ def my_table_no_schema():
 1. You may also exclude parameters when using the low-level API, just like with the decorators.
 
 ## Quality Checks and Quarantine
-Kelp's quality checks can be easily integrated into your SDP pipelines. You can define your quality checks in your models and then use them in your pipeline code. Kelp will automatically run the quality checks after the corresponding pipeline component is executed.
+
+Kelp's quality checks can be easily integrated into your SDP pipelines. Define your quality checks in your models and then use them in your pipeline code. Kelp will automatically run the quality checks after the corresponding pipeline component is executed.
 
 ### SDP Expectations
 
@@ -136,8 +137,9 @@ kelp_models:
       expect_all_or_quarantine: ...
 ```
 
-When you use `expect_all_or_quarantine`, Kelp will automatically quarantine the data if any of the expectations fail. You can then choose to investigate and fix the issues with the data before allowing it to be used in downstream pipeline components.
-This would generate the following SDP-Chart
+When you use `expect_all_or_quarantine`, Kelp will automatically quarantine the data if any of the expectations fail. You can then investigate and fix the issues with the data before allowing it to be used in downstream pipeline components.
+
+This generates the following SDP chart:
 
 ```mermaid
 flowchart LR
@@ -149,13 +151,13 @@ flowchart LR
 
 ### DQX Checks
 
-A similar approach can be taken for DQX checks, where you define your DQX checks in your model metadata and Kelp will automatically run them in your pipeline.
+A similar approach can be taken for DQX checks. Define your DQX checks in your model metadata and Kelp will automatically run them in your pipeline.
 
-Since DQX checks are applied on the code level you can also set the expectation level and quarantine pattern for each table in your model metadata. This allows you to have more control over how the quality checks are applied and how the data is handled when checks fail.
+Since DQX checks are applied at the code level, you can also set the expectation level and quarantine pattern for each table in your model metadata. This gives you more control over how the quality checks are applied and how the data is handled when checks fail.
 
-The `sdp_expect_level` can be set to `warn`, `fail`, `drop` which correspond to the different expectation decorators in SDP. You can deactivate the expectation by setting it to `deactivate`.
+The `sdp_expect_level` can be set to `warn`, `fail`, or `drop`, which correspond to the different expectation decorators in SDP. You can deactivate the expectation by setting it to `deactivate`.
 
-Setting `sdp_quarantine` to `true` will enable the quarantine pattern for this table, which will automatically quarantine the data if any of the DQX checks fail. This will generate the same SDP-Chart as shown above for the `expect_all_or_quarantine` example, but with the DQX checks being applied in the validation step.
+Setting `sdp_quarantine` to `true` enables the quarantine pattern for this table, which will automatically quarantine the data if any of the DQX checks fail. This generates the same SDP chart as shown above for the `expect_all_or_quarantine` example, but with the DQX checks applied in the validation step.
 
 ```yaml
 kelp_models:
@@ -179,11 +181,11 @@ kelp_models:
 
 
 
-## Using ref() and target() functions in SDP
+## Using ref() and target() Functions in SDP
 
-You can also also use the `ref()` and `target()` functions to develop your upstream and downstream pipeline components.
-This is useful to reduce the need for passing catalog and schema configurations in your pipeline code, as Kelp will auto-resolve these based on the model metadata.
-If you use a quarantine-pattern `target` will auto-resolve to the validation table.
+You can also use the `ref()` and `target()` functions to develop your upstream and downstream pipeline components.
+This reduces the need to pass catalog and schema configurations in your pipeline code, as Kelp will auto-resolve these based on the model metadata.
+If you use a quarantine pattern, `target` will auto-resolve to the validation table.
 
 ```python
 import kelp.pipelines as kp
@@ -204,9 +206,9 @@ def downstream_table():
 
 ## Create Streaming Table Function
 
-You can also create streaming tables by using the `create_streaming_table` wrapper-function or by using the low-level API `params_cst()`. The same rules for auto-injecting parameters and excluding parameters apply to streaming tables as well.
+You can create streaming tables by using the `create_streaming_table` wrapper function or by using the low-level API `params_cst()`. The same rules for auto-injecting and excluding parameters apply to streaming tables.
 
-Both also inject the SDP expectation quality checks if they are defined in the model metadata.
+Both options also inject the SDP expectation quality checks if they are defined in the model metadata.
 
 ```python
 import kelp.pipelines as kp
@@ -219,9 +221,9 @@ from pyspark import pipelines as dp
 dp.create_streaming_table(**kp.params_cst("my_streaming_table"))
 ``` 
 
-## Applying catalog metadata to SDP tables
+## Applying Catalog Metadata to SDP Tables
 
-Currently SDP does not have full built-in support for catalog metadata like tags or if you which to omit the spark-schema you also can't apply descriptions to your columns. Kelp provides a workaround for this by applying the catalog metadata in a separate step in your Lakeflow Job.
+Currently, SDP does not have full built-in support for catalog metadata like tags. If you wish to omit the Spark schema, you also cannot apply descriptions to your columns. Kelp provides a workaround for this by applying the catalog metadata in a separate step in your Lakeflow Job.
 
 ```yaml
 kelp_models:
@@ -235,7 +237,6 @@ kelp_models:
           - tag2 : "value"
 ```
 
-1. This will apply the tag `column_tag1` with an empty value to `column1` in the catalog.
+1. This will apply the tag `tag1` as key-only tag to `column1` in the catalog.
 
-
-Go to [here catalog sync docs]
+Learn more about syncing your catalog metadata with your tables here: [Sync Metadata with Your Catalog](./catalog.md)
