@@ -360,7 +360,9 @@ def generate_alter_statements(
 
 @app.command()
 def generate_ddl(
-    name: str = typer.Argument(..., help="Name of the table or metric view"),
+    name: str = typer.Argument(
+        ..., help="Name of the table, metric view, function, or ABAC policy"
+    ),
     project_file_path: str | None = typer.Option(
         None,
         "-c",
@@ -381,9 +383,8 @@ def generate_ddl(
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview output without writing"),
     debug: bool = typer.Option(False, "--debug", help="Enable debug logging"),
 ) -> None:
-    """Generate CREATE DDL statement for a table or metric view.
+    """Generate CREATE DDL statement for a table, metric view, function, or ABAC policy.
 
-    This command generates the DDL for creating a metric view from the catalog.
     For tables, this currently shows metadata (CREATE TABLE DDL generation is not yet implemented).
     """
     log_level = "DEBUG" if debug else None
@@ -414,6 +415,48 @@ def generate_ddl(
     except KeyError:
         pass  # Not a metric view, try table
 
+    # Try to find in functions
+    try:
+        function = ctx.catalog.get_function(name)
+        from kelp.catalog.function_ddl import generate_create_function_ddl
+
+        ddl = generate_create_function_ddl(function)
+
+        if output_file:
+            if dry_run:
+                typer.echo(ddl + ";")
+                typer.secho(f"• dry-run: skipped writing {output_file}", fg=typer.colors.YELLOW)
+                return
+            with Path(output_file).open("w") as f:
+                f.write(ddl + ";\n")
+            typer.secho(f"✓ DDL written to {output_file}", fg=typer.colors.GREEN)
+        else:
+            typer.echo(ddl + ";")
+        return
+    except KeyError:
+        pass
+
+    # Try to find in ABAC policies
+    try:
+        policy = ctx.catalog.get_abac(name)
+        from kelp.catalog.abac_ddl import generate_create_abac_policy_ddl
+
+        ddl = generate_create_abac_policy_ddl(policy)
+
+        if output_file:
+            if dry_run:
+                typer.echo(ddl)
+                typer.secho(f"• dry-run: skipped writing {output_file}", fg=typer.colors.YELLOW)
+                return
+            with Path(output_file).open("w") as f:
+                f.write(ddl + "\n")
+            typer.secho(f"✓ DDL written to {output_file}", fg=typer.colors.GREEN)
+        else:
+            typer.echo(ddl)
+        return
+    except KeyError:
+        pass
+
     # Try to find in tables
     try:
         table = ctx.catalog.get_table(name, soft_handle=False)
@@ -443,5 +486,8 @@ def generate_ddl(
         pass  # Not found in either
 
     # Not found
-    typer.secho(f"✗ '{name}' not found in catalog (tables or metric views)", fg=typer.colors.RED)
+    typer.secho(
+        f"✗ '{name}' not found in catalog (tables, metric views, functions, or ABAC policies)",
+        fg=typer.colors.RED,
+    )
     raise typer.Exit(code=1)

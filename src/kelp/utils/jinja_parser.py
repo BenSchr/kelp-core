@@ -132,6 +132,12 @@ def _attach_file_path(
     if parsed_yaml.get("kelp_metric_views"):
         for metric_view in parsed_yaml["kelp_metric_views"]:
             metric_view["origin_file_path"] = str(file_path)
+    if parsed_yaml.get("kelp_functions"):
+        for function in parsed_yaml["kelp_functions"]:
+            function["origin_file_path"] = str(file_path)
+    if parsed_yaml.get("kelp_abacs"):
+        for abac in parsed_yaml["kelp_abacs"]:
+            abac["origin_file_path"] = str(file_path)
     return parsed_yaml
 
 

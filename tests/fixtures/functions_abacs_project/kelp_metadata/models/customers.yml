@@ -1,0 +1,17 @@
+kelp_models:
+  - name: customers
+    description: Customer master data with sensitive fields
+    table_type: managed
+    columns:
+      - name: id
+        data_type: bigint
+        nullable: false
+        description: Customer ID
+      - name: email
+        data_type: string
+        nullable: true
+        description: Customer email
+      - name: ssn
+        data_type: string
+        nullable: true
+        description: Sensitive identifier

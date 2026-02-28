@@ -1,0 +1,22 @@
+kelp_project:
+  models_path: "./kelp_metadata/models"
+  models:
+    +catalog: ${ data_catalog }
+    +schema: ${ data_schema }
+
+  functions_path: "./kelp_metadata/functions"
+  functions:
+    +catalog: ${ function_catalog }
+    +schema: ${ function_schema }
+
+  abacs_path: "./kelp_metadata/abacs"
+  abacs: {}
+
+vars:
+  data_catalog: dev_data_catalog
+  data_schema: dev_data_schema
+  function_catalog: dev_security_catalog
+  function_schema: dev_security_schema
+
+targets:
+  dev: {}

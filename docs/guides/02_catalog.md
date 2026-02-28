@@ -2,6 +2,13 @@
 
 Kelp's catalog sync feature allows you to keep your local metadata in sync with your remote catalog. This ensures that any changes you make to your local metadata are reflected in your remote catalog, and vice versa.
 
+Catalog sync supports:
+
+- `kelp_models` (tables)
+- `kelp_metric_views`
+- `kelp_functions`
+- `kelp_abacs`
+
 ## Sync Metadata Code
 
 When you use Kelp's catalog sync feature, you can leverage metadata defined in your project to apply descriptions, tags, and constraints to your tables and metric views.
@@ -34,15 +41,23 @@ for query in kc.sync_catalog():
 
 ### Other Functions
 
-Kelp also provides `sync_tables()` and `sync_metric_views()` to sync only tables or only metric views, respectively. These functions are useful when you want to sync just a subset of your metadata.
+Kelp also provides specialized sync functions when you want to sync a subset of metadata.
 
 ```python
-# To sync only tables
+# Sync only tables
 for query in kc.sync_tables():
     # execute query
 
-# To sync only metric views
+# Sync only metric views
 for query in kc.sync_metric_views():
+    # execute query
+
+# Sync only functions
+for query in kc.sync_functions():
+    # execute query
+
+# Sync only ABAC policies
+for query in kc.sync_abac_policies():
     # execute query
 
 # Sync only a subset of metadata
@@ -50,8 +65,18 @@ for query in kc.sync_tables(table_names=["my_table1", "my_table2"]):
     # execute query
 
 for query in kc.sync_metric_views(view_names=["my_metric_view1"]):
-    # execute query    
+    # execute query
+
+for query in kc.sync_functions(function_names=["my_function1"]):
+    # execute query
+
+for query in kc.sync_abac_policies(policy_names=["my_policy1"]):
+    # execute query
 ```
+
+### Execution Order
+
+When using `sync_catalog()`, Kelp applies functions before other objects so function dependencies are available for downstream metadata (for example ABAC policies referencing UDFs).
 
 
 ## Configuration for Metadata Sync

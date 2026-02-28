@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import logging
 
+from kelp.catalog.abac_ddl import generate_create_abac_policy_ddl
+from kelp.catalog.function_ddl import generate_create_function_ddl
 from kelp.catalog.metric_view_ddl import generate_create_metric_view_ddl
 from kelp.catalog.uc_diff import TableDiffCalculator
 from kelp.catalog.uc_models import RemoteCatalogConfig, Table
 from kelp.catalog.uc_query_builder import UCQueryBuilder
 from kelp.config.lifecycle import get_context
+from kelp.models.abac import AbacPolicy
+from kelp.models.function import KelpFunction
 from kelp.models.metric_view import MetricView as KelpMetricView
 from kelp.models.table import Table as KelpTable
 from kelp.service.table_manager import TableManager
@@ -114,6 +118,26 @@ class UnityCatalogAdapter:
         """
         catalog_tables = tables or get_context().catalog.get_tables()
         return self.sync_tables(catalog_tables)
+
+    def sync_function(self, function: KelpFunction) -> list[str]:
+        """Return SQL queries required to sync a single function.
+
+        Functions are treated as pre-applied entities and currently use
+        CREATE OR REPLACE semantics.
+        """
+        return [generate_create_function_ddl(function)]
+
+    def sync_functions(self, functions: list[KelpFunction]) -> list[str]:
+        """Return SQL queries for all provided functions."""
+        queries: list[str] = []
+        for function in functions:
+            queries.extend(self.sync_function(function))
+        return queries
+
+    def sync_all_functions(self, functions: list[KelpFunction] | None = None) -> list[str]:
+        """Sync all functions from the current project context."""
+        catalog_functions = functions or get_context().catalog.get_functions()
+        return self.sync_functions(catalog_functions)
 
     def sync_metric_view(self, metric_view: KelpMetricView) -> list[str]:
         """Return SQL queries required to sync a single metric view.
@@ -308,6 +332,22 @@ class UnityCatalogAdapter:
         """
         catalog_metrics = metric_views or get_context().catalog.get_metric_views()
         return self.create_metric_views(catalog_metrics)
+
+    def sync_abac_policy(self, policy: AbacPolicy) -> list[str]:
+        """Return SQL queries required to sync a single ABAC policy."""
+        return [generate_create_abac_policy_ddl(policy)]
+
+    def sync_abac_policies(self, policies: list[AbacPolicy]) -> list[str]:
+        """Return SQL queries for all provided ABAC policies."""
+        queries: list[str] = []
+        for policy in policies:
+            queries.extend(self.sync_abac_policy(policy))
+        return queries
+
+    def sync_all_abac_policies(self, policies: list[AbacPolicy] | None = None) -> list[str]:
+        """Sync all ABAC policies from the current project context."""
+        catalog_policies = policies or get_context().catalog.get_abacs()
+        return self.sync_abac_policies(catalog_policies)
 
 
 def _table_type_value(table_type) -> str:

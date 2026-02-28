@@ -1,0 +1,27 @@
+kelp_functions:
+  - name: normalize_email
+    language: SQL
+    description: Normalize customer email address
+    parameters:
+      - name: email
+        data_type: STRING
+    returns_data_type: STRING
+    body: lower(trim(email))
+
+  - name: mask_ssn
+    language: SQL
+    description: Mask SSN values
+    parameters:
+      - name: ssn
+        data_type: STRING
+    returns_data_type: STRING
+    body_path: ./kelp_metadata/functions/sql/mask_ssn.sql
+
+  - name: format_greeting
+    language: PYTHON
+    description: Format a simple greeting
+    parameters:
+      - name: name
+        data_type: STRING
+    returns_data_type: STRING
+    body_path: ./kelp_metadata/functions/python/format_greeting.py

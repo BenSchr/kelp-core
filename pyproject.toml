@@ -41,6 +41,7 @@ package = true
 [tool.ruff]
 line-length = 100
 include = ["pyproject.toml", "src/**/*.py", "scripts/**/*.py", "tests/**/*.py"]
+exclude = ["tests/fixtures/**"]
 
 [tool.ruff.lint]
 extend-select = [
@@ -92,4 +93,5 @@ filterwarnings = [
 ]
 
 [tool.ty.src]
-include = ["src", "tests","scripts"]
+include = ["src", "tests", "scripts"]
+exclude = ["tests/fixtures"]

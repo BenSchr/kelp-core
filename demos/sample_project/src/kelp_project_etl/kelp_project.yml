@@ -20,8 +20,17 @@ kelp_project:
     +tags:
       kelp_managed: ""
 
+  functions_path: "./kelp_metadata/functions"
+  functions:
+    +catalog: ${ catalog }
+    +schema: ${ funcs }
+
+  abacs_path: "./kelp_metadata/abacs"
+  abacs: {}
+
 vars:
   catalog: kelp_catalog
+  funcs: funcs
 
 targets:
   dev:

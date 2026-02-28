@@ -39,6 +39,8 @@ kelp_project.yml # (1)!
 kelp_metadata/# (2)!
     models/**/*.yml
     metrics/**/*.yml
+  functions/**/*.yml
+  abacs/**/*.yml
 ```
 
 1. This is where your main project configuration file lives. Here you can set global settings, variables, and other configurations for your Kelp project.
@@ -57,6 +59,12 @@ kelp_metadata/
             gold_customers.yml
     metrics/
         customer_metrics.yml
+    functions/
+      functions.yml
+      sql/
+        mask_ssn.sql
+    abacs/
+      policies.yml
 ```
 
 ## Set Up Targets and Base Configurations
@@ -85,24 +93,50 @@ kelp_project:
     +tags:
       kelp_managed: ""
 
+  functions_path: "./kelp_metadata/functions"
+  functions:
+    +catalog: ${ security_catalog } # (4)!
+    +schema: ${ security_schema }
+
+  abacs_path: "./kelp_metadata/abacs"
+  abacs: {}
+
 vars:
   default_catalog: my_catalog
   default_schema: my_schema
+  default_security_catalog: security_catalog
+  default_security_schema: security_schema
 
 targets:
   dev:
     vars:
       catalog: ${default_catalog}_dev # (3)!
       schema: ${default_schema}_dev
+      security_catalog: ${default_security_catalog}_dev
+      security_schema: ${default_security_schema}_dev
   prod:
     vars:
       catalog: ${default_catalog}_prod
       schema: ${default_schema}_prod
+      security_catalog: ${default_security_catalog}_prod
+      security_schema: ${default_security_schema}_prod
 ```
 
 1. Set up directory-level configurations with `+` that can be inherited by all models and metric views in that directory.
 2. This sets a tag on all models in this project.
 3. You can override variables for each target.
+4. Functions often live in a separate security schema/catalog and can be configured independently.
+
+## Define Functions and ABAC Policies
+
+Kelp now supports two additional top-level metadata objects:
+
+- `kelp_functions` for SQL/Python Unity Catalog functions
+- `kelp_abacs` for Unity Catalog ABAC policies (row filters and column masks)
+
+You can define function bodies inline or reference external SQL/Python files with `body_path`.
+
+Learn more in the dedicated guide: [Functions and ABAC Policies](guides/03_functions_abacs.md).
 
 ## Sync Your Pipeline Tables
 

@@ -7,8 +7,10 @@ logger = logging.getLogger(f"{__name__}")
 
 
 def sync_catalog(
+    sync_functions: bool = True,
     sync_metric_views: bool = True,
     sync_tables: bool = True,
+    sync_abacs: bool = True,
 ) -> list[str]:
     """Synchronize all tables and metric views to remote Databricks catalog.
 
@@ -30,11 +32,27 @@ def sync_catalog(
     uc_adapter = UnityCatalogAdapter()
     logger.info("Starting remote catalog sync for all tables & metric views...")
     queries: list[str] = []
+    if sync_functions:
+        queries.extend(uc_adapter.sync_all_functions(get_context().catalog.get_functions()))
     if sync_tables:
         queries.extend(uc_adapter.sync_all_tables(tables))
     if sync_metric_views:
         queries.extend(uc_adapter.sync_all_metric_views(get_context().catalog.get_metric_views()))
+    if sync_abacs:
+        queries.extend(uc_adapter.sync_all_abac_policies(get_context().catalog.get_abacs()))
 
+    return queries
+
+
+def sync_functions(function_names: list[str] | None = None) -> list[str]:
+    """Synchronize specified functions to the remote catalog.
+
+    Functions are pre-applied entities and are synced via CREATE OR REPLACE DDL.
+    """
+    function_names = function_names or []
+    functions = [f for f in get_context().catalog.get_functions() if f.name in function_names]
+    uc_adapter = UnityCatalogAdapter()
+    queries = uc_adapter.sync_functions(functions)
     return queries
 
 
@@ -83,6 +101,15 @@ def sync_metric_views(view_names: list[str] | None = None) -> list[str]:
     uc_adapter = UnityCatalogAdapter()
     logger.info("Starting sync for metric views...")
     queries = uc_adapter.sync_all_metric_views(metric_views)
+    return queries
+
+
+def sync_abac_policies(policy_names: list[str] | None = None) -> list[str]:
+    """Synchronize specified ABAC policies to the remote catalog."""
+    policy_names = policy_names or []
+    policies = [p for p in get_context().catalog.get_abacs() if p.name in policy_names]
+    uc_adapter = UnityCatalogAdapter()
+    queries = uc_adapter.sync_abac_policies(policies)
     return queries
 
 

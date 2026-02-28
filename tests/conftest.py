@@ -44,3 +44,9 @@ def multi_target_project_dir(fixtures_dir: Path) -> Path:
 def minimal_project_dir(fixtures_dir: Path) -> Path:
     """Return the path to a minimal test project."""
     return fixtures_dir / "minimal_project"
+
+
+@pytest.fixture
+def functions_abacs_project_dir(fixtures_dir: Path) -> Path:
+    """Return the path to a test project with functions and ABAC policies."""
+    return fixtures_dir / "functions_abacs_project"

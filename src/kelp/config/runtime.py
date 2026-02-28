@@ -14,6 +14,7 @@ import logging
 from pathlib import Path
 
 from kelp.config.catalog import parse_catalog
+from kelp.config.catalog_spec import CATALOG_PARSE_SPECS
 from kelp.config.project import load_project_config
 from kelp.models.runtime_context import RuntimeContext
 from kelp.utils.jinja_parser import _deep_merge_dicts, load_yaml_with_jinja
@@ -72,24 +73,23 @@ def load_runtime_config(
     project_root = Path(project_config.project_file_path).parent
     runtime_vars = project_config.runtime_vars
 
-    # Load metadata files with resolved variables
-    raw_config = load_config_files(project_root, project_config.models_path, runtime_vars)
+    raw_objects: dict[str, list] = {}
+    for spec in CATALOG_PARSE_SPECS:
+        file_paths = getattr(project_config, spec.path_attr, None)
+        raw_config = load_config_files(project_root, file_paths, runtime_vars)
+        raw_objects[spec.root_key] = raw_config.get(spec.root_key, [])
 
-    # Load metrics files with resolved variables
-    raw_metrics_config = {}
-    if project_config.metrics_path:
-        raw_metrics_config = load_config_files(
-            project_root,
-            project_config.metrics_path,
-            runtime_vars,
-        )
+    project_object_configs: dict[str, dict] = {
+        spec.project_config_key: getattr(project_config, spec.project_config_key, {}) or {}
+        for spec in CATALOG_PARSE_SPECS
+    }
 
     # Parse catalog
     catalog = parse_catalog(
-        raw_config.get("kelp_models", []),
-        project_config.models,
-        raw_metrics_config.get("kelp_metric_views", []),
-        project_config.metric_views,
+        raw_objects=raw_objects,
+        project_object_configs=project_object_configs,
+        specs=CATALOG_PARSE_SPECS,
+        project_root=str(project_root),
     )
 
     return RuntimeContext(
