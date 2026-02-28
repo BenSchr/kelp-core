@@ -1,4 +1,4 @@
-# 02 Sync Metadata with Your Catalog
+# Sync Metadata with Your Catalog
 
 Kelp's catalog sync feature allows you to keep your local metadata in sync with your remote catalog. This ensures that any changes you make to your local metadata are reflected in your remote catalog, and vice versa.
 

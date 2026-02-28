@@ -1,4 +1,4 @@
-# 01 Spark Declarative Pipelines (SDP)
+# Spark Declarative Pipelines (SDP)
 
 This guide provides an overview of how to integrate Kelp with Databricks Spark Declarative Pipelines (SDP). It covers Kelp initialization in an SDP environment, using decorators to define pipeline components, implementing quality checks, and utilizing the low-level API for more control over your pipelines.
 
@@ -239,4 +239,4 @@ kelp_models:
 
 1. This will apply the tag `tag1` as key-only tag to `column1` in the catalog.
 
-Learn more about syncing your catalog metadata with your tables here: [Sync Metadata with Your Catalog](./catalog.md)
+Learn more about syncing your catalog metadata with your tables here: [Sync Metadata with Your Catalog](./02_catalog.md)
