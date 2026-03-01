@@ -414,6 +414,8 @@ class TableManager:
             add_generated=False,
         )
 
+        kelp_table.root_table = table
+
         if table.quality and isinstance(table.quality, DQXQuality):
             kelp_table.dqx_checks = table.quality.checks
 

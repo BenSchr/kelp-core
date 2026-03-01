@@ -7,6 +7,7 @@ in conftest.py). Kelp catalog lookups are mocked via ``pytest-mock``.
 from __future__ import annotations
 
 from datetime import date, datetime
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -25,6 +26,7 @@ from pyspark.sql.types import (
     VariantType,
 )
 
+from kelp import init
 from kelp.models.table import Column
 from kelp.transformations.schema import apply_schema
 
@@ -447,6 +449,24 @@ class TestKelpCatalogLookup:
         result = df.transform(apply_schema("my_table"))
         # Only "id" should be in the target schema; "no_type" was skipped
         assert result.columns == ["id"]
+
+    def test_schema_from_metadata_catalog_drop_add_reorder(
+        self, spark: SparkSession, simple_project_dir: Path
+    ) -> None:
+        init(project_root=str(simple_project_dir / "kelp_project.yml"))
+        df = spark.createDataFrame(
+            [("2025-01-15 10:30:00", "1", "extra_val", "Alice")],
+            ["created_at", "id", "extra", "name"],
+        )
+
+        result = df.transform(apply_schema("customers"))
+
+        assert result.columns == ["id", "name", "email", "created_at"]
+        row = result.collect()[0]
+        assert row.id == 1
+        assert row.name == "Alice"
+        assert row.email is None
+        assert row.created_at == datetime(2025, 1, 15, 10, 30)
 
 
 # ---------------------------------------------------------------------------

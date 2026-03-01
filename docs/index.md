@@ -127,37 +127,145 @@ targets:
 3. You can override variables for each target.
 4. Functions often live in a separate security schema/catalog and can be configured independently.
 
-## Define Functions and ABAC Policies
+## Next Steps
 
-Kelp now supports two additional top-level metadata objects:
+Explore Kelp's comprehensive guides to get the most out of the framework:
 
-- `kelp_functions` for SQL/Python Unity Catalog functions
-- `kelp_abacs` for Unity Catalog ABAC policies (row filters and column masks)
+| Guide | Overview |
+|-------|----------|
+| [Spark Declarative Pipelines (SDP)](guides/sdp.md) | Integrate Kelp with Databricks SDP using decorators and the low-level API |
+| [Normal Spark (Non-SDP)](guides/normal_spark.md) | Use Kelp in standard Spark jobs with `kelp.tables`, DDL, and DQX |
+| [Sync Metadata with Your Catalog](guides/catalog.md) | Keep local metadata in sync with Unity Catalog |
+| [DataFrame Transformations](guides/transformations.md) | Use composable transformations like `apply_schema()` and `apply_func()` |
+| [Project Configuration](guides/project_config.md) | Master `kelp_project.yml` configuration, hierarchies, and targets |
+| [CLI Reference](guides/cli.md) | Command-line tools for project management and metadata sync |
+| [Functions](guides/functions.md) | Define reusable SQL and Python functions in Unity Catalog |
+| [ABAC Policies](guides/abacs.md) | Implement row and column access control |
+| [Metric Views](guides/metric_views.md) | Define business metrics and dimensions |
 
-You can define function bodies inline or reference external SQL/Python files with `body_path`.
+## Build Transformations
 
-Learn more in the dedicated guide: [Functions and ABAC Policies](guides/03_functions_abacs.md).
+Kelp provides utilities to transform data using DataFrame transformations that can be chained together:
 
-## Sync Your Pipeline Tables
+- **Schema enforcement** - Apply and enforce schemas from metadata via `apply_schema()`
+- **Function application** - Apply Unity Catalog functions via `apply_func()`
 
-If you use Databricks SDP, you can run the following command to sync tables from pipelines to metadata:
+Use Kelp's composable transformations in your pipelines:
+
+```python
+from kelp.transformations import apply_schema, apply_func
+import kelp.pipelines as kp
+
+@kp.table()
+def silver_customers():
+    df = spark.readStream.table(kp.ref("bronze_customers"))
+    
+    return (
+        df
+        .transform(apply_schema("silver_customers"))
+        .transform(apply_func(
+            func_name="normalize_email",
+            new_column="email_clean",
+            parameters="email"
+        ))
+    )
+```
+
+Learn more in the [DataFrame Transformations](guides/transformations.md) guide.
+
+## Define Functions, Metrics, and Policies
+
+Kelp supports multiple metadata objects beyond tables:
+
+- **`kelp_functions`** - SQL/Python Unity Catalog functions (define once, use in code and ABAC)
+- **`kelp_metric_views`** - Business metrics for analytics and dashboards
+- **`kelp_abacs`** - Row filters and column masking (attribute-based access control)
+
+Example function:
+
+```yaml
+kelp_functions:
+  - name: normalize_email
+    language: SQL
+    parameters:
+      - name: email
+        data_type: STRING
+    returns_data_type: STRING
+    body: lower(trim(email))
+```
+
+Example metric view:
+
+```yaml
+kelp_metric_views:
+  - name: customer_monthly_revenue
+    catalog: ${ catalog }
+    schema: ${ metric_schema }
+    definition:
+      measures:
+        - name: total_revenue
+          expr: SUM(amount)
+        - name: order_count
+          expr: COUNT(*)
+      dimensions:
+        - name: order_month
+          expr: DATE_TRUNC('MONTH', order_date)
+      source_table: ${ catalog }.gold.orders
+```
+
+Learn more in the [Functions](guides/functions.md), [Metric Views](guides/metric_views.md), and [ABAC Policies](guides/abacs.md) guides.
+
+## Use the Kelp CLI
+
+The Kelp CLI provides commands for project management and metadata synchronization:
 
 ```bash
-kelp sync-from-pipeline <pipeline_id>
+# Initialize a new project
+uv run kelp init project  ./my_project
+
+# Generate JSON schema for IDE support
+uv run kelp json-schema --output kelp_json_schema.json
+
+# Sync metadata from Databricks tables to YAML
+uv run kelp catalog sync-from-catalog "catalog.schema.table" --output models/table.yml
+
+# Validate project configuration
+uv run kelp validate --target prod
+
 ```
-If no tables are found, validate or run the pipeline and try again.
 
-If you omit `<pipeline_id>`, Kelp attempts to detect the pipeline IDs from your local Databricks Asset Bundle state (if it exists).
+Learn more in the [CLI Reference](guides/cli.md).
+
+## Sync Metadata to Unity Catalog
+
+After your pipeline creates tables, sync metadata (descriptions, tags, constraints) to the catalog:
+
+```python
+import kelp.catalog as kc
+
+kc.init("kelp_project.yml", target="prod")
+
+# Sync functions first (before pipeline runs)
+for query in kc.sync_functions():
+    spark.sql(query)
+
+# Sync tables, metric views and ABAC policies (after pipeline runs)
+for query in kc.sync_catalog():
+    spark.sql(query)
 
 ```
-kelp sync-from-pipeline
-```
 
-## Set Environment Variables
+Learn more in the [Sync Metadata with Your Catalog](guides/catalog.md) guide.
 
-If you frequently reuse a specific target and project path, you can set them as environment variables to avoid passing them as arguments with every command.
+## Environment Variables
+
+If you frequently reuse a specific target and project path, you can set them as environment variables:
 
 ```bash
-export KELP_TARGET=dev
-export KELP_PROJECT_PATH=/path/to/your/kelp_project.yml
+export KELP_TARGET=prod
+export KELP_PROJECT_FILE=/path/to/kelp_project.yml
+
+# Now commands use these defaults
+uv run kelp validate
+uv run kelp catalog sync-from-catalog "catalog.schema.table"
 ```

@@ -6,4 +6,10 @@ from kelp.models.function import KelpFunction
 from kelp.models.metric_view import MetricView
 from kelp.models.table import Table
 
-__all__ = ["AbacPolicy", "Catalog", "KelpFunction", "MetricView", "Table"]
+__all__ = [
+    "AbacPolicy",
+    "Catalog",
+    "KelpFunction",
+    "MetricView",
+    "Table",
+]

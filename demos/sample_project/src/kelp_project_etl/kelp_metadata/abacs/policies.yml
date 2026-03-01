@@ -11,5 +11,3 @@ kelp_abacs:
     match_columns:
       - condition: hasTag('customer_id')
         alias: id_col
-    using_columns:
-      - id_col
