@@ -1,6 +1,5 @@
 kelp_functions:
   - name: mask_id
-    schema: test
     language: SQL
     description: Mask ID values
     parameters:

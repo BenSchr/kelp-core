@@ -25,7 +25,6 @@ kelp_project:
     +catalog: ${ catalog }
     +schema: ${ function_schema }
     abac:
-      +catalog: ${ catalog }_test
       +schema: ${ abac_schema }
 
   abacs_path: "./kelp_metadata/abacs"

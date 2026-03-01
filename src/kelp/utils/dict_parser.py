@@ -2,6 +2,34 @@ import copy
 from pathlib import Path
 
 
+def _merge_with_precedence(base: dict, override: dict) -> dict:
+    """Deep-merge two dicts where ``override`` wins for conflicts.
+
+    This is used to build an effective defaults object from hierarchy layers
+    (top-level first, then deeper folders). Explicit model values are still
+    protected later by ``merge_defaults``.
+    """
+    merged = copy.deepcopy(base)
+    for key, value in override.items():
+        if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
+            merged[key] = _merge_with_precedence(merged[key], value)
+        else:
+            merged[key] = copy.deepcopy(value)
+    return merged
+
+
+def _extract_plus_defaults(cfg_node: dict) -> dict:
+    """Extract keys prefixed with ``+`` and strip the prefix."""
+    if not isinstance(cfg_node, dict):
+        return {}
+
+    defaults: dict = {}
+    for key, value in cfg_node.items():
+        if isinstance(key, str) and key.startswith("+"):
+            defaults[key[1:]] = value
+    return defaults
+
+
 def merge_defaults(target, defaults):
     """Merge defaults into target without overwriting existing values.
 
@@ -46,48 +74,27 @@ def apply_cfg_hierarchy_to_dict_recursive(
     if not isinstance(target, dict):
         return target
 
-    def _collect_plus_defaults(cfg_node: dict):
-        global_defaults = {}
-        folder_defaults = {}
-        if not isinstance(cfg_node, dict):
-            return global_defaults, folder_defaults
+    if not isinstance(cfg, dict):
+        return target
 
-        # top-level global +keys
-        for k, v in cfg_node.items():
-            if isinstance(k, str) and k.startswith("+"):
-                global_defaults[k[1:]] = v
+    # Build effective defaults by walking the hierarchy path:
+    # top-level +keys, then each matching folder in order.
+    effective_defaults = _extract_plus_defaults(cfg)
 
-        # recursively collect +keys from nested folder dicts
-        def _recurse(node, name=None):
-            if not isinstance(node, dict):
-                return
-            fd = {}
-            for kk, vv in node.items():
-                if isinstance(kk, str) and kk.startswith("+"):
-                    fd[kk[1:]] = vv
-            if fd and name:
-                # last-wins for identical folder names encountered deeper
-                folder_defaults[name] = fd
-            for kk, vv in node.items():
-                if isinstance(kk, str) and isinstance(vv, dict):
-                    _recurse(vv, kk)
-
-        for k, v in cfg_node.items():
-            if isinstance(k, str) and isinstance(v, dict):
-                _recurse(v, k)
-
-        return global_defaults, folder_defaults
-
-    global_defaults, folder_defaults = _collect_plus_defaults(cfg or {})
-
-    # apply global defaults first
-    merge_defaults(target, global_defaults)
-
-    # apply folder defaults based on tpl_path parts
     if tpl_path is not None:
         parts = Path(str(tpl_path)).parent.parts
+        current_cfg = cfg
+
         for part in parts:
-            if part in folder_defaults:
-                merge_defaults(target, folder_defaults[part])
+            next_cfg = current_cfg.get(part)
+            if not isinstance(next_cfg, dict):
+                break
+
+            folder_defaults = _extract_plus_defaults(next_cfg)
+            effective_defaults = _merge_with_precedence(effective_defaults, folder_defaults)
+            current_cfg = next_cfg
+
+    # Apply computed defaults without overwriting explicit values in target.
+    merge_defaults(target, effective_defaults)
 
     return target
