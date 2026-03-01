@@ -163,9 +163,7 @@ def table(
     def outer(decorated: Callable[..., DataFrame]) -> None:
 
         table_name = name or getattr(decorated, "__name__", "unknown")
-        sdp_table = TableManager.build_sdp_table(table_name)
-        # table_def = TableManager(table_name, soft_handle=True)
-        # meta_params = table_def.get_sdp_table_params_as_dict(exclude=exclude_params or [])
+        sdp_table = TableManager.build_sdp_table(table_name, soft_handle=True)
         meta_params = sdp_table.params_raw(exclude=exclude_params or [])
 
         params = merge_params(params_passed, meta_params, passed_kwargs)
@@ -369,8 +367,80 @@ def create_streaming_table(
         expect_all_or_fail=expect_all_or_fail,
     )
 
-    meta_params = TableManager.build_sdp_table(name).params_cst(exclude=exclude_params or [])
+    meta_params = TableManager.build_sdp_table(name, soft_handle=True).params_cst(
+        exclude=exclude_params or []
+    )
 
     params = merge_params(params, meta_params, kwargs)
 
     dp.create_streaming_table(**params)
+
+
+def materialized_view(
+    query_function: Callable[..., DataFrame] | None = None,
+    *,
+    name: str | None = None,
+    comment: str | None = None,
+    spark_conf: dict[str, str] | None = None,
+    table_properties: dict[str, str] | None = None,
+    path: str | None = None,
+    partition_cols: list[str] | None = None,
+    cluster_by_auto: bool = False,
+    cluster_by: list[str] | None = None,
+    schema: str | Any | None = None,
+    row_filter: str | None = None,
+    private: bool | None = None,
+    exclude_params: list[str] | None = None,
+    **kwargs,
+) -> Callable[[Callable[..., DataFrame]], None] | None:
+    """Drop-in wrapper for @dp.materialized_view with Kelp metadata parameter injection.
+
+    This decorator mirrors the parameter style of :func:`table` and resolves
+    missing values from Kelp model metadata, but it does not apply SDP
+    expectations, DQX checks, or quarantine flows.
+
+    Args:
+        query_function: The decorated function returning a DataFrame.
+        name: Materialized view name. Defaults to function name.
+        comment: Object description/comment.
+        spark_conf: Spark configuration properties.
+        table_properties: Databricks table properties.
+        path: Physical path for custom locations.
+        partition_cols: List of column names for partitioning.
+        cluster_by_auto: Enable automatic clustering optimization.
+        cluster_by: List of column names for explicit clustering.
+        schema: Schema definition (DDL or StructType).
+        row_filter: SQL row filter expression.
+        private: Whether the materialized view should be private.
+        exclude_params: List of metadata keys to exclude from auto-injection.
+        **kwargs: Additional arguments forwarded to @dp.materialized_view.
+
+    Returns:
+        Decorator function or None when used as ``@materialized_view``.
+    """
+    params_passed = dict(
+        name=name,
+        comment=comment,
+        spark_conf=spark_conf,
+        table_properties=table_properties,
+        path=path,
+        partition_cols=partition_cols,
+        cluster_by_auto=cluster_by_auto,
+        cluster_by=cluster_by,
+        schema=schema,
+        row_filter=row_filter,
+        private=private,
+    )
+    passed_kwargs = kwargs
+
+    def outer(decorated: Callable[..., DataFrame]) -> None:
+        table_name = name or getattr(decorated, "__name__", "unknown")
+        sdp_table = TableManager.build_sdp_table(table_name, soft_handle=True)
+        meta_params = sdp_table.params(exclude=exclude_params or [])
+        params = merge_params(params_passed, meta_params, passed_kwargs)
+        dp.materialized_view(**params)(decorated)
+
+    if query_function is not None and callable(query_function):
+        outer(query_function)
+        return None
+    return outer

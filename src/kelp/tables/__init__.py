@@ -14,11 +14,12 @@ Example::
     fqn = tables.ref("my_table")
 """
 
-from kelp.tables.api import columns, ddl, get_table, ref, schema, schema_lite
+from kelp.tables.api import columns, ddl, func, get_table, ref, schema, schema_lite
 
 __all__ = [
     "columns",
     "ddl",
+    "func",
     "get_table",
     "ref",
     "schema",

@@ -3,7 +3,14 @@ resources:
     kelp_sample_job:
       name: kelp_sample_job
       tasks:
+        - task_key: prepare_functions
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/kelp_project_etl/notebooks/prepare_functions
+            source: WORKSPACE
+          environment_key: Default
         - task_key: kelp_sdp_pipeline
+          depends_on:
+            - task_key: prepare_functions
           pipeline_task:
             pipeline_id: ${resources.pipelines.kelp_sample_sdp.id}
             full_refresh: false

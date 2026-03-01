@@ -95,10 +95,17 @@ def generate_create_function_ddl(function: KelpFunction) -> str:
         if environment_items:
             ddl_parts.append(f"ENVIRONMENT ({', '.join(environment_items)})")
 
-    body_clause = "AS" if function.language == "PYTHON" else "RETURN"
-    ddl_parts.append(f"{body_clause} $$")
-    ddl_parts.append(function.body.rstrip())
-    ddl_parts.append("$$")
+    body = function.body.strip()
+    if function.language == "PYTHON":
+        ddl_parts.append("AS $$")
+        ddl_parts.append(body)
+        ddl_parts.append("$$")
+    else:
+        if body.upper().startswith("RETURN "):
+            ddl_parts.append(body)
+        else:
+            ddl_parts.append("RETURN")
+            ddl_parts.append(body)
 
     return "\n".join(ddl_parts)
 

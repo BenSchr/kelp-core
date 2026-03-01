@@ -330,9 +330,16 @@ class TableManager:
         table_name: str,
         table: Table | None = None,
         ctx: RuntimeContext | None = None,
+        soft_handle: bool = False,
     ) -> KelpSdpTable:
         ctx = ctx or get_context()
-        table = table or ctx.catalog.get_table(table_name)
+        if table is None:
+            table = ctx.catalog.get_table(table_name, soft_handle=soft_handle)
+            if table is None:
+                # Return minimal table for soft_handle case
+                from kelp.models.table import Table as TableModel
+
+                table = TableModel(name=table_name)
         sdp_table = KelpSdpTable(name=table.name)
         sdp_table.comment = table.description
         sdp_table.spark_conf = table.spark_conf

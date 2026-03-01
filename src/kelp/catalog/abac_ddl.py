@@ -14,12 +14,16 @@ def _render_principals(principals: list[str]) -> str:
 
 
 def generate_create_abac_policy_ddl(policy: AbacPolicy) -> str:
-    """Generate CREATE OR REPLACE POLICY SQL statement."""
+    """Generate CREATE POLICY SQL statement."""
     if not policy.name:
         raise ValueError("ABAC policy name is required")
 
+    create_stmt = "CREATE OR REPLACE POLICY"
+    if policy.mode == "ROW_FILTER":
+        create_stmt = "CREATE POLICY"
+
     ddl_parts = [
-        f"CREATE OR REPLACE POLICY {policy.name}",
+        f"{create_stmt} {policy.name}",
         f"ON {policy.securable_type} {policy.securable_name}",
     ]
 
@@ -31,7 +35,7 @@ def generate_create_abac_policy_ddl(policy: AbacPolicy) -> str:
     else:
         if not policy.target_column:
             raise ValueError("COLUMN_MASK policy requires target_column")
-        ddl_parts.append(f"COLUMN MASK {policy.udf_name} ON COLUMN {policy.target_column}")
+        ddl_parts.append(f"COLUMN MASK {policy.udf_name}")
 
     if policy.principals_to:
         ddl_parts.append(f"TO {_render_principals(policy.principals_to)}")
@@ -48,8 +52,11 @@ def generate_create_abac_policy_ddl(policy: AbacPolicy) -> str:
         )
         ddl_parts.append(f"MATCH COLUMNS {match_expr}")
 
-    if policy.using_columns:
+    if policy.mode == "ROW_FILTER" and policy.using_columns:
         ddl_parts.append(f"USING COLUMNS ({', '.join(policy.using_columns)})")
+
+    if policy.mode == "COLUMN_MASK":
+        ddl_parts.append(f"ON COLUMN {policy.target_column}")
 
     return "\n".join(ddl_parts) + ";"
 

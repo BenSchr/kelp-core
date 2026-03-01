@@ -1,13 +1,15 @@
 from kelp.config import init
-from kelp.pipelines.api import get_table, params, params_cst, ref, schema, schema_lite, target
-from kelp.pipelines.streaming_tables import create_streaming_table, table
+from kelp.pipelines.api import func, get_table, params, params_cst, ref, schema, schema_lite, target
+from kelp.pipelines.streaming_tables import create_streaming_table, materialized_view, table
 from kelp.transformations import apply_schema
 
 __all__ = [
     "apply_schema",
     "create_streaming_table",
+    "func",
     "get_table",
     "init",
+    "materialized_view",
     "params",
     "params_cst",
     "ref",

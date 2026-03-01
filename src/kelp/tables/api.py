@@ -110,3 +110,24 @@ def columns(name: str) -> list[Column]:
     if table.root_table:
         return table.root_table.columns
     return []
+
+
+def func(name: str) -> str:
+    """Get the fully qualified name for a Unity Catalog function.
+
+    Returns the fully qualified name (``catalog.schema.function_name``) of the
+    function for use in PySpark expressions and SQL queries.
+
+    Args:
+        name: Function name.
+
+    Returns:
+        Fully qualified function name.
+
+    Raises:
+        KeyError: If the function name is not found in the catalog.
+    """
+    from kelp.config import get_context
+
+    context = get_context()
+    return context.catalog.get_function(name).get_qualified_name()

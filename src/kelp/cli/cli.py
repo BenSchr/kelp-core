@@ -114,6 +114,14 @@ def validate(
     typer.echo(f"Relative models path: {run_ctx.project_config.models_path}")
     typer.echo(f"Models found: {len(run_ctx.catalog.table_index)}")
 
+    if run_ctx.project_config.functions_path:
+        typer.echo(f"Relative functions path: {run_ctx.project_config.functions_path}")
+        typer.echo(f"Functions found: {len(run_ctx.catalog.function_index)}")
+
+    if run_ctx.project_config.abacs_path:
+        typer.echo(f"Relative ABACs path: {run_ctx.project_config.abacs_path}")
+        typer.echo(f"ABAC policies found: {len(run_ctx.catalog.abac_index)}")
+
     # Show metrics info if metrics are configured
     if run_ctx.project_config.metrics_path:
         typer.echo(f"Relative metrics path: {run_ctx.project_config.metrics_path}")

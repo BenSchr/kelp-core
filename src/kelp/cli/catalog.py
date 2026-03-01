@@ -344,7 +344,7 @@ def generate_alter_statements(
 
     resolved_target = _resolve_target(target)
     init(project_root=project_file_path, target=resolved_target, log_level=log_level)
-    queries = sync_catalog()
+    queries = sync_catalog(sync_functions=True)
     if not silent:
         for q in queries:
             typer.echo(q + ";")

@@ -7,7 +7,7 @@ logger = logging.getLogger(f"{__name__}")
 
 
 def sync_catalog(
-    sync_functions: bool = True,
+    sync_functions: bool = False,
     sync_metric_views: bool = True,
     sync_tables: bool = True,
     sync_abacs: bool = True,
@@ -52,7 +52,7 @@ def sync_functions(function_names: list[str] | None = None) -> list[str]:
     function_names = function_names or []
     functions = [f for f in get_context().catalog.get_functions() if f.name in function_names]
     uc_adapter = UnityCatalogAdapter()
-    queries = uc_adapter.sync_functions(functions)
+    queries = uc_adapter.sync_all_functions(functions)
     return queries
 
 

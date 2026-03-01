@@ -24,7 +24,8 @@ def test_generate_create_sql_function_ddl() -> None:
     assert "CREATE OR REPLACE FUNCTION main.default.area(x DOUBLE, y DOUBLE)" in ddl
     assert "RETURNS DOUBLE" in ddl
     assert "LANGUAGE SQL" in ddl
-    assert "RETURN $$" in ddl
+    assert "RETURN\nx * y" in ddl
+    assert "$$" not in ddl
     assert "x * y" in ddl
 
 
@@ -43,3 +44,18 @@ def test_generate_create_python_function_ddl() -> None:
     assert "LANGUAGE PYTHON" in ddl
     assert "AS $$" in ddl
     assert 'return "Hello " + name' in ddl
+
+
+def test_generate_create_sql_function_ddl_with_return_body() -> None:
+    """SQL function body that already includes RETURN should not be prefixed again."""
+    function = KelpFunction(
+        name="roll",
+        language="SQL",
+        returns_data_type="INT",
+        body="RETURN 1",
+    )
+
+    ddl = generate_create_function_ddl(function)
+
+    assert "RETURN 1" in ddl
+    assert "RETURN\nRETURN 1" not in ddl

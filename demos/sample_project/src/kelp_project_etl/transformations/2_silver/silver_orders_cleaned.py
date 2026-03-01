@@ -1,6 +1,7 @@
 from pyspark import pipelines as dp
 from pyspark.sql import SparkSession
 from kelp import pipelines as kp
+from kelp.transformations import apply_schema
 
 spark = SparkSession.active()
 # kp.init("../../kelp_metadata/kelp_project.yml")

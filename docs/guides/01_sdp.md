@@ -77,11 +77,17 @@ def my_table():
 @kp.table(name="my_table") # (2)!
 def different_name():
     # ...
+
+@kp.materialized_view(name="my_mv") # (3)!
+def my_mv():
+  # ...
 ```
 
 1. This will use the function name to search for the corresponding model definition in your `kelp_metadata/models` directory.
 
 2. This will use the provided name to search for the corresponding model definition in your `kelp_metadata/models` directory.
+
+3. `@kp.materialized_view` uses the same parameter style as `@kp.table`, but acts as a pass-through wrapper around SDP `@dp.materialized_view` without expectation or quarantine handling.
 
 
 You can exclude parameters from being auto-injected by using `exclude_params`. This gives you more control over the parameters passed to your pipeline components. For example, you can exclude the `schema` parameter to prevent SDP from setting the Spark Schema.

@@ -20,7 +20,8 @@ def test_generate_create_row_filter_policy_ddl() -> None:
 
     ddl = generate_create_abac_policy_ddl(policy)
 
-    assert "CREATE OR REPLACE POLICY hide_eu_customers" in ddl
+    assert "CREATE POLICY hide_eu_customers" in ddl
+    assert "CREATE OR REPLACE POLICY" not in ddl
     assert "ON SCHEMA main.sales" in ddl
     assert "ROW FILTER main.security.non_eu_region" in ddl
     assert "TO `analysts`" in ddl
@@ -43,6 +44,9 @@ def test_generate_create_column_mask_policy_ddl() -> None:
 
     ddl = generate_create_abac_policy_ddl(policy)
 
-    assert "COLUMN MASK main.security.mask_ssn ON COLUMN ssn" in ddl
+    assert "CREATE OR REPLACE POLICY mask_ssn" in ddl
+    assert "COLUMN MASK main.security.mask_ssn" in ddl
+    assert "ON COLUMN ssn" in ddl
+    assert "COLUMN MASK main.security.mask_ssn ON COLUMN ssn" not in ddl
     assert "TO `analysts`" in ddl
     assert "EXCEPT `admins`" in ddl

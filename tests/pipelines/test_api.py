@@ -149,3 +149,23 @@ class TestPipelinesApi:
         _ = api.params_cst("test_table", exclude=["path"])
 
         mock_table.params_cst.assert_called_once_with(exclude=["path"])
+
+    @patch("kelp.tables.func")
+    def test_func(self, mock_tables_func):
+        """Test func returns qualified function name by delegating to tables.func."""
+        mock_tables_func.return_value = "catalog.schema.my_function"
+
+        result = api.func("my_function")
+
+        assert result == "catalog.schema.my_function"
+        mock_tables_func.assert_called_once_with("my_function")
+
+    @patch("kelp.tables.func")
+    def test_func_different_function(self, mock_tables_func):
+        """Test func with different function name."""
+        mock_tables_func.return_value = "prod.transforms.normalize_customer_id"
+
+        result = api.func("normalize_customer_id")
+
+        assert result == "prod.transforms.normalize_customer_id"
+        mock_tables_func.assert_called_once_with("normalize_customer_id")

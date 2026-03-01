@@ -23,14 +23,18 @@ kelp_project:
   functions_path: "./kelp_metadata/functions"
   functions:
     +catalog: ${ catalog }
-    +schema: ${ funcs }
+    +schema: ${ function_schema }
+    abac:
+      +catalog: ${ catalog }_test
+      +schema: ${ abac_schema }
 
   abacs_path: "./kelp_metadata/abacs"
   abacs: {}
 
 vars:
   catalog: kelp_catalog
-  funcs: funcs
+  function_schema: kelp_funcs
+  abac_schema: kelp_abac
 
 targets:
   dev:

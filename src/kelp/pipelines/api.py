@@ -124,3 +124,23 @@ def params_cst(name: str, exclude: list[str] | None = None) -> dict[str, str]:
     """
     exclude = exclude or []
     return TableManager.build_sdp_table(name).params_cst(exclude=exclude)
+
+
+def func(name: str) -> str:
+    """Get the fully qualified name for a Unity Catalog function.
+
+    Returns the fully qualified name (``catalog.schema.function_name``) of the
+    function for use in PySpark expressions and SQL queries.
+
+    Args:
+        name: Function name.
+
+    Returns:
+        Fully qualified function name.
+
+    Raises:
+        KeyError: If the function name is not found in the catalog.
+    """
+    from kelp.tables import func as tables_func
+
+    return tables_func(name)

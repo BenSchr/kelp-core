@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from kelp.models.table import Column, Table
 from kelp.service.table_manager import KelpTable
 
@@ -172,3 +174,38 @@ class TestColumns:
         from kelp.tables import columns
 
         assert columns("orders") == []
+
+
+class TestFunc:
+    def test_returns_qualified_function_name(self, mocker: MagicMock) -> None:
+        mock_function = MagicMock()
+        mock_function.get_qualified_name.return_value = "catalog.schema.my_function"
+
+        mock_catalog = MagicMock()
+        mock_catalog.get_function.return_value = mock_function
+
+        mock_context = MagicMock()
+        mock_context.catalog = mock_catalog
+
+        mocker.patch("kelp.config.get_context", return_value=mock_context)
+
+        from kelp.tables import func
+
+        result = func("my_function")
+        assert result == "catalog.schema.my_function"
+        mock_catalog.get_function.assert_called_once_with("my_function")
+        mock_function.get_qualified_name.assert_called_once()
+
+    def test_function_not_found(self, mocker: MagicMock) -> None:
+        mock_catalog = MagicMock()
+        mock_catalog.get_function.side_effect = KeyError("my_function")
+
+        mock_context = MagicMock()
+        mock_context.catalog = mock_catalog
+
+        mocker.patch("kelp.config.get_context", return_value=mock_context)
+
+        from kelp.tables import func
+
+        with pytest.raises(KeyError):
+            func("nonexistent_function")
