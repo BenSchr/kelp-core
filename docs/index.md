@@ -8,18 +8,43 @@
 ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝
 Metadata Toolkit for Databricks Spark and Declarative Pipelines
 ```
-Welcome to Kelp's documentation! This guide will help you install and initialize Kelp for your data engineering projects. Kelp is a powerful framework designed to simplify the management of data pipelines, quality checks, and table configurations. Follow the instructions below to set up Kelp in your environment and start building robust data solutions.
+Kelp is a powerful framework designed to simplify the management of data pipelines, quality checks, and table configurations. Follow the instructions below to set up Kelp in your environment and start building robust data solutions.
+
+## Why Kelp?
+Kelp provides a metadata and transformation layer for Databricks Spark and Spark Declarative Pipelines (SDP). It lets you define data models, quality checks, and transformations in structured YAML while offering Python utilities for advanced logic. With Kelp you can:
+
+### Metadata management
+- Define models, metric views, functions, and ABAC policies in readable, maintainable YAML
+- Keep local metadata synchronized with Unity Catalog for improved governance and discoverability
+- Use variables and targets for environment-specific configuration
+- Inherit directory-level settings and tags across models
+
+### Spark Declarative Pipelines (SDP)
+- Inject metadata into SDP decorators with minimal boilerplate
+- Optionally use DQX quality checks instead of SDP expectations
+- Apply a quarantine pattern for validation failures
+- Sync metadata to Unity Catalog after pipeline runs
+- Easily inject catalog and schema names for tables and functions
+- Sync descriptions and tags from metadata to tables and columns without requiring the Spark schema to match exactly
+- Use a low-level API (no decorators) to stay robust against SDP syntax or feature changes
+
+### Extra utilities
+- Composable DataFrame transformations for schema enforcement and function application
+- CLI tools for project management and metadata synchronization
+- Metric views for defining business metrics and dimensions in metadata
+- ABAC policies for row- and column-level access control defined in metadata and applied in code and the catalog
+- Reusable function definitions in metadata that can be referenced from code and ABAC policies for consistent logic and easier maintenance
 
 ## Installation
 
 To install Kelp, you can use `uv`, `pip`, or the package manager of your choice. Below are the commands for both methods:
 
 ```
-uv add kelp-py==0.1.0
+uv add kelp-core==0.1.0
 ```
 
 ```
-pip install kelp-py==0.1.0
+pip install kelp-core==0.1.0
 ```
 
 
@@ -39,8 +64,8 @@ kelp_project.yml # (1)!
 kelp_metadata/# (2)!
     models/**/*.yml
     metrics/**/*.yml
-  functions/**/*.yml
-  abacs/**/*.yml
+    functions/**/*.yml
+    abacs/**/*.yml
 ```
 
 1. This is where your main project configuration file lives. Here you can set global settings, variables, and other configurations for your Kelp project.

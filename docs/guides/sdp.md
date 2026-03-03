@@ -112,21 +112,18 @@ import kelp.pipelines as kp
 def my_table():
     # ...
 
-@dp.table(**kp.params("my_table", exclude=["schema"])) #! (1)
+@dp.table(**kp.params("my_table", exclude=["schema"])) # (1)!
 def my_table_no_schema():
     # ...
 
 ```
 
-
-
-
-
 1. You may also exclude parameters when using the low-level API, just like with the decorators.
 
 ## Quality Checks and Quarantine
 
-Kelp's quality checks can be easily integrated into your SDP pipelines. Define your quality checks in your models and then use them in your pipeline code. Kelp will automatically run the quality checks after the corresponding pipeline component is executed.
+Kelp's quality checks can be easily integrated into your SDP pipelines. Define your quality checks in your models and then use them in your pipeline code. Kelp will automatically attach the defined quality checks to your decorated function.
+The quarantine implementation is based on the Databricks documentation: [Quarantine invalid records](https://docs.databricks.com/aws/en/ldp/expectation-patterns?language=Python#quarantine-invalid-records)
 
 ### SDP Expectations
 
@@ -171,8 +168,8 @@ kelp_models:
     # ...
     quality:
       engine: dqx
-      sdp_expect_level: warn #! (1)
-      sdp_quarantine: true #! (2)
+      sdp_expect_level: warn # (1)!
+      sdp_quarantine: true # (2)!
       checks:
         - check:
             function: is_in_list
@@ -181,7 +178,9 @@ kelp_models:
               allowed:
                 - ...
 ```
-1. This will append an SDP expectation to the pipeline with the corresponding level. 
+
+1. This will append an SDP expectation to the pipeline with the corresponding level.
+
 2. This will enable the quarantine pattern for this table.
 
 
@@ -231,7 +230,7 @@ dp.create_streaming_table(**kp.params_cst("my_streaming_table"))
 
 Currently, SDP does not have full built-in support for catalog metadata like tags. If you wish to omit the Spark schema, you also cannot apply descriptions to your columns. Kelp provides a workaround for this by applying the catalog metadata in a separate step in your Lakeflow Job.
 
-```yaml
+``` yaml
 kelp_models:
   - name: my_table
     # ...
@@ -239,7 +238,7 @@ kelp_models:
       column1:
         description: This is column 1
         tags:
-          - tag1 : "" #! (1)
+          - tag1 : "" # (1)!
           - tag2 : "value"
 ```
 

@@ -1,50 +1,296 @@
-# kelp
 
-Kelp is a catalog-based toolkit for Databricks Spark Declarative Pipelines (SDP) and native Spark ETL projects. It provides a simple api for catalog management, data quality and building reliable data pipelines. Kelp is designed to be flexible and extensible, allowing you to easily integrate it into your existing Spark projects. What distinguishes Kelp from other similar frameworks is its focus on being future-proof and easily maintainable against any new features or syntax changes in the platform.
+```
+██╗  ██╗███████╗██╗     ██████╗
+██║ ██╔╝██╔════╝██║     ██╔══██╗
+█████╔╝ █████╗  ██║     ██████╔╝
+██╔═██╗ ██╔══╝  ██║     ██╔═══╝
+██║  ██╗███████╗███████╗██║
+╚═╝  ╚═╝╚══════╝╚══════╝╚═╝
+Metadata Toolkit for Databricks Spark and Declarative Pipelines
+```
+Kelp is a powerful framework designed to simplify the management of data pipelines, quality checks, and table configurations. Follow the instructions below to set up Kelp in your environment and start building robust data solutions.
 
-## Features
-- SDP: Kelp provides simple apis and decorators to improve your pipeline code, quality and reliability. It also provides a simple way to build quarantine patterns based on the quality checks and expectations defined in the catalog.
-- Data quality: Kelp provides the ability to define SDP expectations and DQX checks  
-- Catalog management: Kelp provides a simple api for managing your catalog, including syncing it with your Spark metastore and refreshing it when needed. It also provides a simple way to define and manage your catalog in a yaml file. This includes descriptions, tags and table properties and other metadata that can be used for documentation and data discovery.
-- Minimal invasive: Kelp is designed to be minimally invasive, allowing you to easily integrate it into your existing Spark projects without requiring significant changes to your codebase. To keep the project maintainable against the pace of new features and syntax changes in the platform.
+## Why Kelp?
+Kelp provides a metadata and transformation layer for Databricks Spark and Spark Declarative Pipelines (SDP). It lets you define data models, quality checks, and transformations in structured YAML while offering Python utilities for advanced logic. With Kelp you can:
 
-# Features
+### Metadata management
+- Define models, metric views, functions, and ABAC policies in readable, maintainable YAML
+- Keep local metadata synchronized with Unity Catalog for improved governance and discoverability
+- Use variables and targets for environment-specific configuration
+- Inherit directory-level settings and tags across models
 
-- Easily manage your metadata
-- Conveniently apply metadata to your pipelines and tables
-- Build reliable pipelines with quality checks and quarantine patterns
-- Apply tags, descriptions and other metadata to your tables for better documentation and data discovery
-- Build for extensibility and future-proofing against new features and syntax changes without large refactors or breaking changes
+### Spark Declarative Pipelines (SDP)
+- Inject metadata into SDP decorators with minimal boilerplate
+- Optionally use DQX quality checks instead of SDP expectations
+- Apply a quarantine pattern for validation failures
+- Sync metadata to Unity Catalog after pipeline runs
+- Easily inject catalog and schema names for tables and functions
+- Sync descriptions and tags from metadata to tables and columns without requiring the Spark schema to match exactly
+- Use a low-level API (no decorators) to stay robust against SDP syntax or feature changes
 
-## Variables and configuration management
-Kelp provides a simple and flexible way to manage your metadata catalog.
-- Specify enviromennt specific variables
-- Apply metadata and settings hierarchically based on folder structure to keep your config dry and organized
+### Extra utilities
+- Composable DataFrame transformations for schema enforcement and function application
+- CLI tools for project management and metadata synchronization
+- Metric views for defining business metrics and dimensions in metadata
+- ABAC policies for row- and column-level access control defined in metadata and applied in code and the catalog
+- Reusable function definitions in metadata that can be referenced from code and ABAC policies for consistent logic and easier maintenance
 
-## Spark Declarative Pipelines (SDP)
-Kelp provides simple apis and decorators to improve your pipeline code, quality and reliability.
-- Auto inject configuration, variables and schema from the metadata catalog
-- Apply expectations and DQX checks defined in the metadata catalog
-- Build quarantine patterns based on the quality checks and expectations defined in the catalog
-- Use `ref` and `target` functions to auto-resolve table references and target tables based on the catalog definitions reducing the need for passing pipeline parameters
-- Apply natively unsupported metadata like tags
-- Apply metadata even if you omit the spark-schema from the pipeline table definition
+## Installation
 
-## Metric Views
-- Create and update Metric Views 
-- Apply tags and descriptions to your metric views, dimensions and measures
+To install Kelp, you can use `uv`, `pip`, or the package manager of your choice. Below are the commands for both methods:
 
-## Native Spark
-- Use the schema, properties and ddl to create and refine your tables in native Spark ETL projects
-- Apply tags, descriptions and other metadata to your tables
-- Use DQX checks defined in the catalog to apply data quality checks
+```
+uv add kelp-core==0.1.0
+```
 
-## TODOs
+```
+pip install kelp-core==0.1.0
+```
 
-- [x] Add pytest
-- [ ] Add integration tests with Databricks 
-- [x] Add coverage
-- [x] Add init command for project scaffolding
-- [ ] Improve documentation with getting started and examples
-- [x] Improve docstrings of user facing functions and classes
-- [ ] Add transformations for "apply_schema" and "apply_dqx"
+
+## Initialization
+
+After installing `kelp`, initialize a new Kelp project in your desired directory by running the following command:
+
+```
+kelp init .
+```
+
+This will create a `kelp_project.yml` file in the current directory, which is the main configuration file for your Kelp project. You can customize this file to specify your project's settings, variables and file paths.
+
+
+```python
+kelp_project.yml # (1)!
+kelp_metadata/# (2)!
+    models/**/*.yml
+    metrics/**/*.yml
+    functions/**/*.yml
+    abacs/**/*.yml
+```
+
+1. This is where your main project configuration file lives. Here you can set global settings, variables, and other configurations for your Kelp project.
+2. This directory stores your model and metric definitions in YAML format. You can organize them in subdirectories as needed (e.g., by environment, team, or domain).
+
+Example structure
+```markdown
+kelp_project.yml 
+kelp_metadata/
+    models/
+        bronze/ 
+            bronze_customers.yml
+        silver/
+            silver_customers.yml
+        gold/
+            gold_customers.yml
+    metrics/
+        customer_metrics.yml
+    functions/
+      functions.yml
+      sql/
+        mask_ssn.sql
+    abacs/
+      policies.yml
+```
+
+## Set Up Targets and Base Configurations
+
+Targets in Kelp represent different environments or configurations for your pipelines (e.g., development, staging, production). Define targets in your `kelp_project.yml` file under the `targets` section. Each target can have its own settings, such as catalog and schema variables, as well as other environment-specific configurations.
+
+```yaml
+kelp_project:
+
+  models_path: "./kelp_metadata/models"
+  models:
+    +catalog: ${ catalog } # (1)!
+    bronze:
+      +schema: kelp_bronze
+    silver:
+      +schema: kelp_silver
+    gold:
+      +schema: kelp_gold
+    +tags:
+      kelp_managed: "" # (2)!
+
+  metrics_path: "./kelp_metadata/metrics"
+  metric_views:
+    +catalog: ${ catalog }
+    +schema: kelp_gold
+    +tags:
+      kelp_managed: ""
+
+  functions_path: "./kelp_metadata/functions"
+  functions:
+    +catalog: ${ security_catalog } # (4)!
+    +schema: ${ security_schema }
+
+  abacs_path: "./kelp_metadata/abacs"
+  abacs: {}
+
+vars:
+  default_catalog: my_catalog
+  default_schema: my_schema
+  default_security_catalog: security_catalog
+  default_security_schema: security_schema
+
+targets:
+  dev:
+    vars:
+      catalog: ${default_catalog}_dev # (3)!
+      schema: ${default_schema}_dev
+      security_catalog: ${default_security_catalog}_dev
+      security_schema: ${default_security_schema}_dev
+  prod:
+    vars:
+      catalog: ${default_catalog}_prod
+      schema: ${default_schema}_prod
+      security_catalog: ${default_security_catalog}_prod
+      security_schema: ${default_security_schema}_prod
+```
+
+1. Set up directory-level configurations with `+` that can be inherited by all models and metric views in that directory.
+2. This sets a tag on all models in this project.
+3. You can override variables for each target.
+4. Functions often live in a separate security schema/catalog and can be configured independently.
+
+## Next Steps
+
+Explore Kelp's comprehensive guides to get the most out of the framework:
+
+| Guide | Overview |
+|-------|----------|
+| [Spark Declarative Pipelines (SDP)](guides/sdp.md) | Integrate Kelp with Databricks SDP using decorators and the low-level API |
+| [Normal Spark (Non-SDP)](guides/normal_spark.md) | Use Kelp in standard Spark jobs with `kelp.tables`, DDL, and DQX |
+| [Sync Metadata with Your Catalog](guides/catalog.md) | Keep local metadata in sync with Unity Catalog |
+| [DataFrame Transformations](guides/transformations.md) | Use composable transformations like `apply_schema()` and `apply_func()` |
+| [Project Configuration](guides/project_config.md) | Master `kelp_project.yml` configuration, hierarchies, and targets |
+| [CLI Reference](guides/cli.md) | Command-line tools for project management and metadata sync |
+| [Functions](guides/functions.md) | Define reusable SQL and Python functions in Unity Catalog |
+| [ABAC Policies](guides/abacs.md) | Implement row and column access control |
+| [Metric Views](guides/metric_views.md) | Define business metrics and dimensions |
+
+## Build Transformations
+
+Kelp provides utilities to transform data using DataFrame transformations that can be chained together:
+
+- **Schema enforcement** - Apply and enforce schemas from metadata via `apply_schema()`
+- **Function application** - Apply Unity Catalog functions via `apply_func()`
+
+Use Kelp's composable transformations in your pipelines:
+
+```python
+from kelp.transformations import apply_schema, apply_func
+import kelp.pipelines as kp
+
+@kp.table()
+def silver_customers():
+    df = spark.readStream.table(kp.ref("bronze_customers"))
+    
+    return (
+        df
+        .transform(apply_schema("silver_customers"))
+        .transform(apply_func(
+            func_name="normalize_email",
+            new_column="email_clean",
+            parameters="email"
+        ))
+    )
+```
+
+Learn more in the [DataFrame Transformations](guides/transformations.md) guide.
+
+## Define Functions, Metrics, and Policies
+
+Kelp supports multiple metadata objects beyond tables:
+
+- **`kelp_functions`** - SQL/Python Unity Catalog functions (define once, use in code and ABAC)
+- **`kelp_metric_views`** - Business metrics for analytics and dashboards
+- **`kelp_abacs`** - Row filters and column masking (attribute-based access control)
+
+Example function:
+
+```yaml
+kelp_functions:
+  - name: normalize_email
+    language: SQL
+    parameters:
+      - name: email
+        data_type: STRING
+    returns_data_type: STRING
+    body: lower(trim(email))
+```
+
+Example metric view:
+
+```yaml
+kelp_metric_views:
+  - name: customer_monthly_revenue
+    catalog: ${ catalog }
+    schema: ${ metric_schema }
+    definition:
+      measures:
+        - name: total_revenue
+          expr: SUM(amount)
+        - name: order_count
+          expr: COUNT(*)
+      dimensions:
+        - name: order_month
+          expr: DATE_TRUNC('MONTH', order_date)
+      source_table: ${ catalog }.gold.orders
+```
+
+Learn more in the [Functions](guides/functions.md), [Metric Views](guides/metric_views.md), and [ABAC Policies](guides/abacs.md) guides.
+
+## Use the Kelp CLI
+
+The Kelp CLI provides commands for project management and metadata synchronization:
+
+```bash
+# Initialize a new project
+uv run kelp init project  ./my_project
+
+# Generate JSON schema for IDE support
+uv run kelp json-schema --output kelp_json_schema.json
+
+# Sync metadata from Databricks tables to YAML
+uv run kelp catalog sync-from-catalog "catalog.schema.table" --output models/table.yml
+
+# Validate project configuration
+uv run kelp validate --target prod
+
+```
+
+Learn more in the [CLI Reference](guides/cli.md).
+
+## Sync Metadata to Unity Catalog
+
+After your pipeline creates tables, sync metadata (descriptions, tags, constraints) to the catalog:
+
+```python
+import kelp.catalog as kc
+
+kc.init("kelp_project.yml", target="prod")
+
+# Sync functions first (before pipeline runs)
+for query in kc.sync_functions():
+    spark.sql(query)
+
+# Sync tables, metric views and ABAC policies (after pipeline runs)
+for query in kc.sync_catalog():
+    spark.sql(query)
+
+```
+
+Learn more in the [Sync Metadata with Your Catalog](guides/catalog.md) guide.
+
+## Environment Variables
+
+If you frequently reuse a specific target and project path, you can set them as environment variables:
+
+```bash
+export KELP_TARGET=prod
+export KELP_PROJECT_FILE=/path/to/kelp_project.yml
+
+# Now commands use these defaults
+uv run kelp validate
+uv run kelp catalog sync-from-catalog "catalog.schema.table"
+```
