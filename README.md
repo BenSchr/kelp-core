@@ -10,7 +10,7 @@ Metadata Toolkit for Databricks Spark and Declarative Pipelines
 ```
 Kelp is a powerful framework designed to simplify the management of data pipelines, quality checks, and table configurations. Follow the instructions below to set up Kelp in your environment and start building robust data solutions.
 
-Documentation: [benschr.github.io/kelp-core/](benschr.github.io/kelp-core/)
+Documentation: [https://benschr.github.io/kelp-core/](https://benschr.github.io/kelp-core/)
 
 ## Why Kelp?
 Kelp provides a metadata and transformation layer for Databricks Spark and Spark Declarative Pipelines (SDP). It lets you define data models, quality checks, and transformations in structured YAML while offering Python utilities for advanced logic. With Kelp you can:
