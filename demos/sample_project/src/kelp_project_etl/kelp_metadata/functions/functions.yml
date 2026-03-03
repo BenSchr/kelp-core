@@ -1,0 +1,29 @@
+kelp_functions:
+  - name: normalize_customer_id
+    language: SQL
+    description: Normalize customer identifiers by stripping non-alphanumerics and uppercasing.
+    parameters:
+      - name: id
+        data_type: STRING
+    returns_data_type: STRING
+    body: upper(regexp_replace(trim(id), '[^0-9A-Za-z]', ''))
+
+  - name: standardize_country
+    language: SQL
+    description: Standardize country values to a consistent title case or Unknown.
+    parameters:
+      - name: country
+        data_type: STRING
+    returns_data_type: STRING
+    body: CASE WHEN country IS NULL OR lower(trim(country)) IN ('', 'unknown', 'n/a') THEN 'Unknown' ELSE initcap(trim(country)) END
+
+  - name: format_full_name
+    language: PYTHON
+    description: Format a full name from first and last name, handling nulls.
+    parameters:
+      - name: first_name
+        data_type: STRING
+      - name: last_name
+        data_type: STRING
+    returns_data_type: STRING
+    body_path: ./kelp_metadata/functions/python/format_full_name.py

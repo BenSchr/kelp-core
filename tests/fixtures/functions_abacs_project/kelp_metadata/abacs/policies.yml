@@ -1,0 +1,18 @@
+kelp_abacs:
+  - name: mask_ssn_policy
+    securable_type: TABLE
+    securable_name: ${ data_catalog }.${ data_schema }.customers
+    description: Mask SSN for analysts
+    mode: COLUMN_MASK
+    udf_name: ${ function_catalog }.${ function_schema }.mask_ssn
+    target_column: ssn
+    principals_to:
+      - analysts
+    principals_except:
+      - admins
+    for_tables_when: hasTag('contains_sensitive_data')
+    match_columns:
+      - condition: hasTagValue('pii', 'ssn')
+        alias: ssn_col
+    using_columns:
+      - ssn_col

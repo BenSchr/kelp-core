@@ -1,0 +1,17 @@
+kelp_project:
+  models_path: "./kelp_metadata/models"
+  models:
+    +catalog: ${ catalog_name }
+    +schema: ${ schema_name }
+
+  metrics_path: "./kelp_metadata/metrics"
+  metric_views:
+    +catalog: ${ catalog_name }
+    +schema: ${ schema_name }
+
+vars:
+  catalog_name: dev_catalog
+  schema_name: dev_schema
+
+targets:
+  dev: {}

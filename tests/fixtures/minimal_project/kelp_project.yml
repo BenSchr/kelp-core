@@ -1,0 +1,6 @@
+kelp_project:
+  models_path: "./kelp_metadata/models"
+  models: {}
+
+targets:
+  dev: {}

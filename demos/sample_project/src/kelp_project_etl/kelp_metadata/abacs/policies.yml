@@ -1,0 +1,13 @@
+kelp_abacs:
+  - name: mask_id_policy
+    securable_type: CATALOG
+    securable_name: ${ catalog }
+    description: Mask ID for all
+    mode: COLUMN_MASK
+    udf_name: ${ catalog }.${ function_schema }.mask_id
+    target_column: id_col
+    principals_to:
+      - account users
+    match_columns:
+      - condition: hasTag('customer_id')
+        alias: id_col

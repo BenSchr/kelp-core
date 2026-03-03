@@ -1,0 +1,26 @@
+kelp_models:
+  - name: customers
+    description: Customer master data
+    table_type: managed
+    columns:
+      - name: id
+        data_type: bigint
+        nullable: false
+        description: Customer ID
+      - name: name
+        data_type: string
+        nullable: false
+        description: Customer name
+      - name: email
+        data_type: string
+        nullable: true
+        description: Customer email
+      - name: created_at
+        data_type: timestamp
+        nullable: false
+        description: Creation timestamp
+    constraints:
+      - name: pk_customers
+        type: primary_key
+        columns:
+          - id

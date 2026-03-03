@@ -1,0 +1,33 @@
+kelp_models:
+  - name: silver_orders_cleaned
+    description: This is the silver cleaned customer model
+    quality:
+      engine: dqx
+      sdp_expect_level: warn
+      sdp_quarantine: true
+      checks:
+        - check:
+            function: is_in_list
+            arguments:
+              column: order_state
+              allowed:
+                - Pending
+                - Shipped
+                - Delivered
+                - Cancelled
+              case_sensitive: false
+    columns:
+      - name: order_id
+        data_type: string
+      - name: order_state
+        data_type: string
+      - name: price
+        data_type: double
+      - name: product
+        data_type: string
+      - name: quantity
+        data_type: bigint
+      - name: store
+        data_type: string
+      - name: user_id
+        data_type: string

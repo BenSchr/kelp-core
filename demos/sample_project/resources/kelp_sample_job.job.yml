@@ -1,0 +1,49 @@
+resources:
+  jobs:
+    kelp_sample_job:
+      name: kelp_sample_job
+      tasks:
+        - task_key: prepare_functions
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/kelp_project_etl/notebooks/prepare_functions
+            source: WORKSPACE
+          environment_key: Default
+        - task_key: kelp_sdp_pipeline
+          depends_on:
+            - task_key: prepare_functions
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.kelp_sample_sdp.id}
+            full_refresh: false
+        - task_key: check_update_metadata
+          depends_on:
+            - task_key: kelp_sdp_pipeline
+          condition_task:
+            op: EQUAL_TO
+            left: "{{job.parameters.update_metadata}}"
+            right: "true"
+        - task_key: update_metadata
+          depends_on:
+            - task_key: check_update_metadata
+              outcome: "true"
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/kelp_project_etl/notebooks/update_metadata
+            base_parameters:
+              job_id: "{{job.id}}"
+            source: WORKSPACE
+          environment_key: Default
+      queue:
+        enabled: true
+      parameters:
+        - name: update_metadata
+          default: "true"
+        - name: kelp_project_file
+          default: ${var.kelp_project_file}
+        - name: kelp_target
+          default: ${bundle.target}
+      environments:
+        - environment_key: Default
+          spec:
+            dependencies:
+              - /Volumes/workspace/default/libs/kelp-0.1.0-py3-none-any.whl
+            environment_version: "4"
+      performance_target: PERFORMANCE_OPTIMIZED

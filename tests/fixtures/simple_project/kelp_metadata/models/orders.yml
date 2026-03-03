@@ -1,0 +1,34 @@
+kelp_models:
+  - name: orders
+    description: Orders data
+    table_type: managed
+    columns:
+      - name: order_id
+        data_type: bigint
+        nullable: false
+        description: Order ID
+      - name: customer_id
+        data_type: bigint
+        nullable: false
+        description: Customer ID (FK)
+      - name: amount
+        data_type: decimal(10, 2)
+        nullable: false
+        description: Order amount
+      - name: order_date
+        data_type: date
+        nullable: false
+        description: Order date
+    constraints:
+      - name: pk_orders
+        type: primary_key
+        columns:
+          - order_id
+      - name: fk_orders_customer
+        type: foreign_key
+        columns:
+          - customer_id
+        references:
+          table: customers
+          columns:
+            - id

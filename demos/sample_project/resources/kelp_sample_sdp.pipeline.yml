@@ -1,0 +1,34 @@
+# The main pipeline for test_project
+
+resources:
+  pipelines:
+    kelp_sample_sdp:
+      name: kelp_sample_sdp
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      serverless: true
+      root_path: "../src/kelp_project_etl"
+      libraries:
+        - glob:
+            include: ../src/kelp_project_etl/transformations/**
+
+      configuration:
+        parameters.source_catalog: ${var.source_catalog}
+        parameters.source_schema: ${var.source_schema}
+        kelp.project_file: ${var.kelp_project_file}
+        kelp.target: ${bundle.target}
+
+      event_log:
+        name: kelp_project_etl
+        catalog: kelp_catalog
+        schema: kelp_sdp_monitoring
+      environment:
+        dependencies:
+          - /Volumes/workspace/default/libs/kelp-0.1.0-py3-none-any.whl
+          - databricks-labs-dqx
+
+      # environment:
+      #   dependencies:
+      #     # We include every dependency defined by pyproject.toml by defining an editable environment
+      #     # that points to the folder where pyproject.toml is deployed.
+      #     - --editable ${workspace.file_path}

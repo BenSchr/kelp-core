@@ -1,0 +1,9 @@
+kelp_functions:
+  - name: mask_id
+    language: SQL
+    description: Mask ID values
+    parameters:
+      - name: id
+        data_type: STRING
+    returns_data_type: STRING
+    body_path: ./kelp_metadata/functions/sql/mask_id.sql

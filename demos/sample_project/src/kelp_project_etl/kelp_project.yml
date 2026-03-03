@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=/workspaces/kelp/.vscode/kelp_json_schema.json
+kelp_project:
+  models_path: "./kelp_metadata/models"
+  models:
+    +catalog: ${ catalog }
+    bronze:
+      +schema: kelp_bronze
+    silver:
+      +schema: kelp_silver
+    gold:
+      +schema: kelp_gold
+    +tags:
+      kelp_managed: ""
+
+  # Metric Views configuration
+  metrics_path: "./kelp_metadata/metrics"
+  metric_views:
+    +catalog: ${ catalog }
+    +schema: kelp_gold
+    +tags:
+      kelp_managed: ""
+
+  functions_path: "./kelp_metadata/functions"
+  functions:
+    +catalog: ${ catalog }
+    +schema: ${ function_schema }
+    abac:
+      +schema: ${ abac_schema }
+
+  abacs_path: "./kelp_metadata/abacs"
+  abacs: {}
+
+vars:
+  catalog: kelp_catalog
+  function_schema: kelp_funcs
+  abac_schema: kelp_abac
+
+targets:
+  dev:
+    vars:
+      catalog: ${catalog}
+
+  prod:
+    vars:
+      catalog: ${catalog}

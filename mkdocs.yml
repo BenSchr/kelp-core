@@ -1,0 +1,115 @@
+site_name: Kelp
+theme:
+  name: material
+  # icon:
+  #   repo: fontawesome/brands/github-alt
+  # icon:
+  #logo: material/leaf-circle
+  logo: img/kelp_logo.png
+  favicon: img/kelp_logo.png
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: green
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  features:
+    - content.code.annotate
+    - content.code.copy
+    - content.footnote.tooltips
+    - content.tabs.link
+    - navigation.tabs
+    - navigation.sections
+    - navigation.tabs.sticky
+repo_name: BenSchr/kelp
+repo_url: https://github.com/BenSchr/kelp
+nav:
+  - Home: index.md
+  - Guides:
+      - Spark Declarative Pipelines (SDP): guides/sdp.md
+      - Normal Spark (Non-SDP): guides/normal_spark.md
+      - Sync Metadata with Your Catalog: guides/catalog.md
+      - DataFrame Transformations: guides/transformations.md
+      - Project Configuration: guides/project_config.md
+      - CLI Reference: guides/cli.md
+      - Functions: guides/functions.md
+      - ABAC Policies: guides/abacs.md
+      - Metric Views: guides/metric_views.md
+  - Reference:
+      - Kelp: reference/kelp.md
+      - Catalog: reference/catalog.md
+      - Tables: reference/tables.md
+      - Pipelines: reference/pipelines.md
+      - Transformations: reference/transformations.md
+      - Config Models:
+          - abac: reference/models/abac.md
+          - catalog: reference/models/catalog.md
+          - function: reference/models/function.md
+          - jsonschema: reference/models/jsonschema.md
+          - metric_view: reference/models/metric_view.md
+          - project_config: reference/models/project_config.md
+          - runtime_context: reference/models/runtime_context.md
+          - table: reference/models/table.md
+plugins:
+  - search
+  - offline
+  - autorefs
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            extensions:
+              - dataclasses
+              - griffe_pydantic:
+                  schema: true
+            show_if_no_docstring: true
+            filters:
+              - "!^_"
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            inherited_members: true
+            show_root_heading: true
+            imported_members: true
+            members_order: source
+            separate_signature: true
+            merge_init_into_class: true
+            docstring_section_style: table
+            signature_crossrefs: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - toc:
+      permalink: true
