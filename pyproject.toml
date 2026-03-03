@@ -1,5 +1,5 @@
 [project]
-name = "kelp"
+name = "kelp-core"
 version = "0.0.1"
 requires-python = ">=3.12"
 description = "Metadata Toolkit for Databricks Spark and Declarative Pipelines"
