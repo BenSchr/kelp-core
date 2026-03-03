@@ -44,6 +44,11 @@ docs = [
 requires = ["uv_build>=0.9.23,<0.10.0"]
 build-backend = "uv_build"
 
+
+[tool.uv.build-backend]
+module-name = "kelp"
+
+
 [tool.uv]
 package = true
 

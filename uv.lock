@@ -1186,7 +1186,7 @@ wheels = [
 ]
 
 [[package]]
-name = "kelp"
+name = "kelp-core"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [

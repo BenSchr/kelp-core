@@ -7,16 +7,16 @@ This guide explains how to use Kelp in a standard Spark job (non-SDP), focusing 
 Kelp requires project initialization to load metadata:
 
 ```python
-from kelp import init
+import kelp.tables as kt
 
 # Auto-discover kelp_project.yml from cwd
-ctx = init(target="dev")
+ctx = kt.init(target="dev")
 ```
 
 Or pass an explicit path:
 
 ```python
-ctx = init("./config/kelp_project.yml", target="prod")
+ctx = kt.init("./config/kelp_project.yml", target="prod")
 ```
 
 ## Table Metadata with `kelp.tables`
@@ -24,7 +24,7 @@ ctx = init("./config/kelp_project.yml", target="prod")
 The `kelp.tables` API provides metadata accessors for any Spark job (no SDP dependencies).
 
 ```python
-from kelp import tables as kt
+import kelp.tables as kt
 
 # Fully qualified table name (catalog.schema.table)
 print(kt.ref("customers"))
@@ -49,7 +49,7 @@ for col in columns:
 Generate and execute DDL directly in Spark SQL:
 
 ```python
-from kelp import tables as kt
+import kelp.tables as kt
 from pyspark.sql import SparkSession
 
 spark = SparkSession.active()
@@ -99,7 +99,7 @@ result = raw_df.transform(
 Kelp exposes the resolved validation and quarantine table names on the table object. This is useful when you want to write valid/invalid rows using the same naming rules as SDP:
 
 ```python
-from kelp import tables as kt
+import kelp.tables as kt
 
 kelp_table = kt.get_table("orders")
 
@@ -118,7 +118,7 @@ Use Databricks DQX directly in a normal Spark job. For details on available chec
 ```python
 from databricks.sdk import WorkspaceClient
 from databricks.labs.dqx.engine import DQEngine
-from kelp import tables as kt
+import kelp.tables as kt
 
 spark = SparkSession.active()
 
@@ -153,14 +153,14 @@ invalid_df.write.mode("append").saveAsTable("analytics.orders_quarantine")
 ## Example: End-to-End Normal Spark Workflow
 
 ```python
-from kelp import init, tables as kt
+import kelp.tables as kt
 from kelp.transformations import apply_schema, apply_func
 from databricks.sdk import WorkspaceClient
 from databricks.labs.dqx.engine import DQEngine
 from pyspark.sql import SparkSession
 
 spark = SparkSession.active()
-init(target="prod")
+kt.init(target="prod")
 
 # Read raw data
 raw_df = spark.read.table("raw.orders")
