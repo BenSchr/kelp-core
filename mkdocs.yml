@@ -37,8 +37,8 @@ theme:
     - navigation.tabs
     - navigation.sections
     - navigation.tabs.sticky
-repo_name: BenSchr/kelp
-repo_url: https://github.com/BenSchr/kelp
+repo_name: BenSchr/kelp-core
+repo_url: https://github.com/BenSchr/kelp-core
 nav:
   - Home: index.md
   - Guides:
@@ -47,6 +47,7 @@ nav:
       - Sync Metadata with Your Catalog: guides/catalog.md
       - DataFrame Transformations: guides/transformations.md
       - Project Configuration: guides/project_config.md
+      - Data Sources: guides/sources.md
       - CLI Reference: guides/cli.md
       - Functions: guides/functions.md
       - ABAC Policies: guides/abacs.md
@@ -56,6 +57,7 @@ nav:
       - Catalog: reference/catalog.md
       - Tables: reference/tables.md
       - Pipelines: reference/pipelines.md
+      - Sources: reference/sources.md
       - Transformations: reference/transformations.md
       - Config Models:
           - abac: reference/models/abac.md
@@ -65,6 +67,7 @@ nav:
           - metric_view: reference/models/metric_view.md
           - project_config: reference/models/project_config.md
           - runtime_context: reference/models/runtime_context.md
+          - source: reference/models/source.md
           - table: reference/models/table.md
 plugins:
   - search

@@ -3,14 +3,25 @@ resources:
     kelp_sample_job:
       name: kelp_sample_job
       tasks:
+        - task_key: check_update_funcs
+          condition_task:
+            op: EQUAL_TO
+            left: "{{job.parameters.update_metadata}}"
+            right: "true"
         - task_key: prepare_functions
           notebook_task:
             notebook_path: ${workspace.file_path}/src/kelp_project_etl/notebooks/prepare_functions
             source: WORKSPACE
           environment_key: Default
+          depends_on:
+            - task_key: check_update_funcs
+              outcome: "true"
         - task_key: kelp_sdp_pipeline
+          run_if: AT_LEAST_ONE_SUCCESS
           depends_on:
             - task_key: prepare_functions
+            - task_key: check_update_funcs
+              outcome: "false"
           pipeline_task:
             pipeline_id: ${resources.pipelines.kelp_sample_sdp.id}
             full_refresh: false
@@ -44,6 +55,6 @@ resources:
         - environment_key: Default
           spec:
             dependencies:
-              - /Volumes/workspace/default/libs/kelp-0.1.0-py3-none-any.whl
+              - /Volumes/workspace/default/libs/kelp_core-0.0.2-py3-none-any.whl #kelp-core #/Volumes/workspace/default/libs/kelp-0.0.2-py3-none-any.whl
             environment_version: "4"
       performance_target: PERFORMANCE_OPTIMIZED

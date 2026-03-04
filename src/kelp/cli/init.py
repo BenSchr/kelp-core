@@ -5,8 +5,6 @@ import typer
 
 from kelp.constants import KELP_PROJECT_FILENAME
 
-app = typer.Typer()
-
 
 def _write_file(path: Path, content: str) -> None:
     """Write content to a file, creating parent directories as needed.
@@ -52,7 +50,7 @@ kelp_project:
     +tags:
       kelp_managed: ""
 
-  targets_path: "./kelp_metadata/targets"
+targets_path: "./kelp_metadata/targets"
 
 vars:
   catalog: "my_catalog"
@@ -101,7 +99,6 @@ def _init_metadata_dirs(project_root: Path) -> list[Path]:
     return created_files
 
 
-@app.command()
 def init(
     project_root: Annotated[
         str,

@@ -105,6 +105,8 @@ class ProjectConfig(BaseModel):
         functions: Configuration hierarchy for functions.
         abacs_path: Path to ABAC policy definitions.
         abacs: Configuration hierarchy for ABAC policies.
+        sources_path: Path to source definitions.
+        sources: Configuration hierarchy for sources.
         quarantine_config: Configuration for table quarantine and validation.
         remote_catalog_config: Configuration for remote catalog synchronization.
         runtime_vars: Runtime variables (internal use).
@@ -142,6 +144,14 @@ class ProjectConfig(BaseModel):
     abacs: dict = Field(
         default_factory=dict,
         description="Configuration hierarchy for ABAC policies",
+    )
+    sources_path: str | None = Field(
+        default=None,
+        description="Path to source definitions",
+    )
+    sources: dict = Field(
+        default_factory=dict,
+        description="Configuration hierarchy for sources",
     )
     quarantine_config: QuarantineConfig = Field(
         default_factory=QuarantineConfig,

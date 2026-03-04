@@ -118,7 +118,7 @@ def generate_create_metric_view_ddl(metric_view: MetricView) -> str:
         metric_view.definition,
         metric_view.description,
     )
-    yaml_body = yaml.safe_dump(definition_payload, sort_keys=False).rstrip()
+    yaml_body = yaml.safe_dump(definition_payload, sort_keys=False, allow_unicode=True).rstrip()
 
     # Wrap YAML in $$ delimiters
     ddl_parts.append("AS $$")
@@ -196,7 +196,7 @@ def generate_alter_metric_view_definition_ddl(metric_view: MetricView) -> str:
         metric_view.definition,
         metric_view.description,
     )
-    yaml_body = yaml.safe_dump(definition_payload, sort_keys=False).rstrip()
+    yaml_body = yaml.safe_dump(definition_payload, sort_keys=False, allow_unicode=True).rstrip()
 
     # Build ALTER METRIC VIEW statement (note: ALTER METRIC VIEW, not ALTER VIEW)
     ddl_parts = [f"ALTER VIEW {fqn}"]

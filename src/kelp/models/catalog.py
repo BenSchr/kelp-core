@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, PrivateAttr
 from kelp.models.abac import AbacPolicy
 from kelp.models.function import KelpFunction
 from kelp.models.metric_view import MetricView
+from kelp.models.source import Source
 from kelp.models.table import Table
 
 # from kelp.utils.dict_parser import apply_cfg_hierarchy_to_dict_recursive
@@ -26,6 +27,7 @@ class Catalog(BaseModel):
     Attributes:
         models: List of Table definitions in the catalog.
         metric_views: List of MetricView definitions in the catalog.
+        sources: List of Source definitions in the catalog.
     """
 
     models: list[Table] = Field(
@@ -44,14 +46,20 @@ class Catalog(BaseModel):
         default_factory=list,
         description="ABAC policy definitions in the catalog",
     )
+    sources: list[Source] = Field(
+        default_factory=list,
+        description="Source definitions in the catalog",
+    )
     _table_index_cache: dict[str, Table] = PrivateAttr(default_factory=dict)
     _metrics_index_cache: dict[str, MetricView] = PrivateAttr(default_factory=dict)
     _function_index_cache: dict[str, KelpFunction] = PrivateAttr(default_factory=dict)
     _abac_index_cache: dict[str, AbacPolicy] = PrivateAttr(default_factory=dict)
+    _source_index_cache: dict[str, Source] = PrivateAttr(default_factory=dict)
     _table_index_built: bool = PrivateAttr(default=False)
     _metrics_index_built: bool = PrivateAttr(default=False)
     _function_index_built: bool = PrivateAttr(default=False)
     _abac_index_built: bool = PrivateAttr(default=False)
+    _source_index_built: bool = PrivateAttr(default=False)
 
     # --- Index helpers -------------------------------------------------
     def _build_table_index(self) -> None:
@@ -131,6 +139,23 @@ class Catalog(BaseModel):
         self._abac_index_cache = index
         self._abac_index_built = True
 
+    def _build_source_index(self) -> None:
+        """Build name -> Source index and record duplicates."""
+        index: dict[str, Source] = {}
+
+        for source in self.sources:
+            name = getattr(source, "name", None) or "<unknown>"
+            if name in index:
+                logger.warning(
+                    "Duplicate source name encountered: %s (kept first occurrence)",
+                    name,
+                )
+                continue
+            index[name] = source
+
+        self._source_index_cache = index
+        self._source_index_built = True
+
     @property
     def table_index(self) -> dict[str, Table]:
         """Return a mapping name -> Table (keeps first occurrence on dupes)."""
@@ -158,6 +183,13 @@ class Catalog(BaseModel):
         if not self._abac_index_built:
             self._build_abac_index()
         return self._abac_index_cache
+
+    @property
+    def source_index(self) -> dict[str, Source]:
+        """Return a mapping name -> Source (keeps first occurrence on dupes)."""
+        if not self._source_index_built:
+            self._build_source_index()
+        return self._source_index_cache
 
     def get_table(self, name: str, soft_handle: bool = False) -> Table:
         """Return the first Table matching `name` or None if not found."""
@@ -203,6 +235,13 @@ class Catalog(BaseModel):
             raise KeyError(f"ABAC policy not found in catalog: {name}")
         return abac
 
+    def get_source(self, name: str) -> Source:
+        """Return the first Source matching `name`."""
+        source = self.source_index.get(name)
+        if source is None:
+            raise KeyError(f"Source not found in catalog: {name}")
+        return source
+
     def get_tables(self) -> list[Table]:
         """Return all Tables in the catalog as a list."""
         return self.models
@@ -219,6 +258,10 @@ class Catalog(BaseModel):
         """Return all ABAC policies in the catalog as a list."""
         return self.abacs
 
+    def get_sources(self) -> list[Source]:
+        """Return all Sources in the catalog as a list."""
+        return self.sources
+
     def refresh_index(self) -> None:
         """Rebuild the internal indices from `self.models` and `self.metric_views`.
 
@@ -228,11 +271,14 @@ class Catalog(BaseModel):
         self._metrics_index_cache = {}
         self._function_index_cache = {}
         self._abac_index_cache = {}
+        self._source_index_cache = {}
         self._table_index_built = False
         self._metrics_index_built = False
         self._function_index_built = False
         self._abac_index_built = False
+        self._source_index_built = False
         self._build_table_index()
         self._build_metrics_index()
         self._build_function_index()
         self._build_abac_index()
+        self._build_source_index()

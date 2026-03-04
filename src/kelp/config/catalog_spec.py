@@ -10,6 +10,7 @@ from typing import Any
 from kelp.models.abac import AbacPolicy
 from kelp.models.function import KelpFunction
 from kelp.models.metric_view import MetricView
+from kelp.models.source import Source
 from kelp.models.table import Table
 
 
@@ -78,6 +79,15 @@ CATALOG_PARSE_SPECS: tuple[CatalogParseSpec, ...] = (
         model_class=AbacPolicy,
         catalog_attr="abacs",
         model_label="AbacPolicy",
+        preprocess=_noop_preprocess,
+    ),
+    CatalogParseSpec(
+        root_key="kelp_sources",
+        project_config_key="sources",
+        path_attr="sources_path",
+        model_class=Source,
+        catalog_attr="sources",
+        model_label="Source",
         preprocess=_noop_preprocess,
     ),
 )

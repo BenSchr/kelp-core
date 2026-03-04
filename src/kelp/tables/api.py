@@ -131,3 +131,48 @@ def func(name: str) -> str:
 
     context = get_context()
     return context.catalog.get_function(name).get_qualified_name()
+
+
+def source(name: str) -> str:
+    """Get the path for a data source.
+
+    Returns the path for a source (volume, table, or raw path) that can be used
+    in any Spark job for reading or writing data.
+
+    For table sources: returns the fully qualified name (catalog.schema.table_name)
+    For volume sources: returns the volume path (/Volumes/catalog/schema/volume)
+    For raw_path sources: returns the configured path
+
+    Args:
+        name: Source name.
+
+    Returns:
+        Path string suitable for use with spark.read or spark.write.
+
+    Raises:
+        KeyError: If the source is not found in the catalog.
+        ValueError: If the source configuration is incomplete.
+    """
+    from kelp.service.source_manager import SourceManager
+
+    return SourceManager.get_path(name)
+
+
+def source_options(name: str) -> dict:
+    """Get the options dictionary for a data source.
+
+    Returns source-specific options that can be passed to Spark readers/writers
+    or used for configuring the source behavior.
+
+    Args:
+        name: Source name.
+
+    Returns:
+        Dictionary of source-specific options.
+
+    Raises:
+        KeyError: If the source is not found in the catalog.
+    """
+    from kelp.service.source_manager import SourceManager
+
+    return SourceManager.get_options(name)

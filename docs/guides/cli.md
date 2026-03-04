@@ -287,7 +287,7 @@ uv run kelp validate
 
 ```bash
 # Fetch from Databricks and generate YAML
-uv run kelp catalog sync-from-catalog \
+uv run kelp sync-from-catalog \
   "analytics_prod.core.customers" \
   -p my-profile \
   -o kelp_metadata/models/customers.yml

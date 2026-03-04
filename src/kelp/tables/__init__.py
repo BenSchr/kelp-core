@@ -15,7 +15,17 @@ Example::
 """
 
 from kelp.config import init
-from kelp.tables.api import columns, ddl, func, get_table, ref, schema, schema_lite
+from kelp.tables.api import (
+    columns,
+    ddl,
+    func,
+    get_table,
+    ref,
+    schema,
+    schema_lite,
+    source,
+    source_options,
+)
 
 __all__ = [
     "columns",
@@ -26,4 +36,6 @@ __all__ = [
     "ref",
     "schema",
     "schema_lite",
+    "source",
+    "source_options",
 ]

@@ -1,3 +1,4 @@
+from kelp.service.source_manager import SourceManager
 from kelp.service.table_manager import KelpSdpTable, TableManager
 
 
@@ -144,3 +145,44 @@ def func(name: str) -> str:
     from kelp.tables import func as tables_func
 
     return tables_func(name)
+
+
+def source(name: str) -> str:
+    """Get the path for a data source.
+
+    Returns the path for a source (volume, table, or raw path) that can be used
+    in pipelines for reading or writing data.
+
+    For table sources: returns the fully qualified name (catalog.schema.table_name)
+    For volume sources: returns the volume path (/Volumes/catalog/schema/volume)
+    For raw_path sources: returns the configured path
+
+    Args:
+        name: Source name.
+
+    Returns:
+        Path string suitable for use with spark.read or spark.write.
+
+    Raises:
+        KeyError: If the source is not found in the catalog.
+        ValueError: If the source configuration is incomplete.
+    """
+    return SourceManager.get_path(name)
+
+
+def source_options(name: str) -> dict:
+    """Get the options dictionary for a data source.
+
+    Returns source-specific options that can be passed to Spark readers/writers
+    or used for configuring the source behavior.
+
+    Args:
+        name: Source name.
+
+    Returns:
+        Dictionary of source-specific options.
+
+    Raises:
+        KeyError: If the source is not found in the catalog.
+    """
+    return SourceManager.get_options(name)

@@ -759,7 +759,9 @@ class YamlManager:
         """Write the YAML document to disk."""
         abs_path = cls._to_absolute_path(file_path)
         abs_path.parent.mkdir(parents=True, exist_ok=True)
-        yaml_text = yaml.safe_dump(document, sort_keys=False, default_flow_style=False)
+        yaml_text = yaml.safe_dump(
+            document, sort_keys=False, default_flow_style=False, allow_unicode=True
+        )
         abs_path.write_text(yaml_text, encoding="utf-8")
 
     @classmethod

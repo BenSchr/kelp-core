@@ -1,0 +1,1386 @@
+{
+  "$defs": {
+    "AbacMatchColumn": {
+      "description": "A MATCH COLUMNS clause item.",
+      "properties": {
+        "condition": {
+          "description": "hasTag/hasTagValue condition expression",
+          "title": "Condition",
+          "type": "string"
+        },
+        "alias": {
+          "description": "Alias used in USING COLUMNS",
+          "title": "Alias",
+          "type": "string"
+        }
+      },
+      "required": [
+        "condition",
+        "alias"
+      ],
+      "title": "AbacMatchColumn",
+      "type": "object"
+    },
+    "AbacPolicy": {
+      "description": "ABAC policy definition for Unity Catalog.",
+      "properties": {
+        "name": {
+          "description": "Policy name",
+          "title": "Name",
+          "type": "string"
+        },
+        "securable_type": {
+          "description": "Target securable type",
+          "enum": [
+            "CATALOG",
+            "SCHEMA",
+            "TABLE"
+          ],
+          "title": "Securable Type",
+          "type": "string"
+        },
+        "securable_name": {
+          "description": "Target securable fully qualified name",
+          "title": "Securable Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Policy comment",
+          "title": "Description"
+        },
+        "mode": {
+          "description": "Policy operation mode",
+          "enum": [
+            "ROW_FILTER",
+            "COLUMN_MASK"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "udf_name": {
+          "description": "UDF name referenced by policy",
+          "title": "Udf Name",
+          "type": "string"
+        },
+        "target_column": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Target column for COLUMN MASK policies",
+          "title": "Target Column"
+        },
+        "principals_to": {
+          "description": "Principals in TO clause",
+          "items": {
+            "type": "string"
+          },
+          "title": "Principals To",
+          "type": "array"
+        },
+        "principals_except": {
+          "description": "Principals in EXCEPT clause",
+          "items": {
+            "type": "string"
+          },
+          "title": "Principals Except",
+          "type": "array"
+        },
+        "for_tables_when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional FOR TABLES WHEN expression",
+          "title": "For Tables When"
+        },
+        "match_columns": {
+          "description": "MATCH COLUMNS clauses",
+          "items": {
+            "$ref": "#/$defs/AbacMatchColumn"
+          },
+          "title": "Match Columns",
+          "type": "array"
+        },
+        "using_columns": {
+          "description": "USING COLUMNS aliases",
+          "items": {
+            "type": "string"
+          },
+          "title": "Using Columns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "securable_type",
+        "securable_name",
+        "mode",
+        "udf_name"
+      ],
+      "title": "AbacPolicy",
+      "type": "object"
+    },
+    "Column": {
+      "description": "Column definition for a table.\n\nRepresents a column with its name, description, data type, nullability,\nand optional generated column configuration.\n\nAttributes:\n    name: Column name.\n    description: Human-readable description of the column.\n    data_type: SQL data type of the column.\n    nullable: Whether the column allows NULL values.\n    generated: Configuration for generated columns (identity or expression).\n    tags: Metadata tags for the column.",
+      "properties": {
+        "name": {
+          "description": "Column name",
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Human-readable description of the column",
+          "title": "Description"
+        },
+        "data_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SQL data type of the column",
+          "title": "Data Type"
+        },
+        "nullable": {
+          "default": true,
+          "description": "Whether the column allows NULL values",
+          "title": "Nullable",
+          "type": "boolean"
+        },
+        "generated": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "expression": "#/$defs/GeneratedExpressionColumnConfig",
+                  "identity": "#/$defs/GeneratedIdentityColumnConfig"
+                },
+                "propertyName": "type"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/GeneratedIdentityColumnConfig"
+                },
+                {
+                  "$ref": "#/$defs/GeneratedExpressionColumnConfig"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Configuration for generated columns (identity or expression based)",
+          "title": "Generated"
+        },
+        "tags": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Metadata tags for the column",
+          "title": "Tags",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Column",
+      "type": "object"
+    },
+    "DQXQuality": {
+      "description": "Databricks DQX quality checks configuration.\n\nAttributes:\n    engine: Quality engine type (always \"dqx\").\n    sdp_expect_level: Action for quality violations in SDP layer.\n    sdp_quarantine: Whether to quarantine rows failing quality checks.\n    checks: List of quality check configurations.",
+      "properties": {
+        "engine": {
+          "const": "dqx",
+          "description": "Quality engine type",
+          "title": "Engine",
+          "type": "string"
+        },
+        "level": {
+          "default": "row",
+          "description": "Level at which quality is enforced",
+          "enum": [
+            "row",
+            "table"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "sdp_expect_level": {
+          "default": "warn",
+          "description": "Action for quality violations: warn, fail, drop, or deactivate",
+          "enum": [
+            "warn",
+            "fail",
+            "drop",
+            "deactivate"
+          ],
+          "title": "Sdp Expect Level",
+          "type": "string"
+        },
+        "sdp_quarantine": {
+          "default": false,
+          "description": "Whether to quarantine rows failing quality checks",
+          "title": "Sdp Quarantine",
+          "type": "boolean"
+        },
+        "checks": {
+          "description": "Quality check configurations",
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Checks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "engine"
+      ],
+      "title": "DQXQuality",
+      "type": "object"
+    },
+    "ForeignKeyConstraint": {
+      "description": "Foreign key constraint definition.\n\nAttributes:\n    type: Constraint type identifier (always \"foreign_key\").\n    columns: List of local column names.\n    reference_table: Fully qualified name of the referenced table.\n    reference_columns: List of column names in the referenced table.",
+      "properties": {
+        "name": {
+          "description": "Constraint name",
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "default": "foreign_key",
+          "description": "Constraint type identifier",
+          "title": "Type",
+          "type": "string"
+        },
+        "columns": {
+          "description": "List of local column names",
+          "items": {
+            "type": "string"
+          },
+          "title": "Columns",
+          "type": "array"
+        },
+        "reference_table": {
+          "description": "Fully qualified name of the referenced table",
+          "title": "Reference Table",
+          "type": "string"
+        },
+        "reference_columns": {
+          "description": "List of column names in the referenced table",
+          "items": {
+            "type": "string"
+          },
+          "title": "Reference Columns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "reference_table"
+      ],
+      "title": "ForeignKeyConstraint",
+      "type": "object"
+    },
+    "FunctionEnvironment": {
+      "description": "Environment clause for Python functions.",
+      "properties": {
+        "dependencies": {
+          "description": "Python package dependencies and wheel references",
+          "items": {
+            "type": "string"
+          },
+          "title": "Dependencies",
+          "type": "array"
+        },
+        "environment_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python environment version (Databricks currently supports 'None')",
+          "title": "Environment Version"
+        }
+      },
+      "title": "FunctionEnvironment",
+      "type": "object"
+    },
+    "FunctionParameter": {
+      "description": "Function parameter definition.",
+      "properties": {
+        "name": {
+          "description": "Parameter name",
+          "title": "Name",
+          "type": "string"
+        },
+        "data_type": {
+          "description": "Parameter SQL data type",
+          "title": "Data Type",
+          "type": "string"
+        },
+        "default_expression": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional SQL default expression",
+          "title": "Default Expression"
+        },
+        "comment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional parameter comment",
+          "title": "Comment"
+        }
+      },
+      "required": [
+        "name",
+        "data_type"
+      ],
+      "title": "FunctionParameter",
+      "type": "object"
+    },
+    "FunctionReturnColumn": {
+      "description": "Column definition for table-valued function return schema.",
+      "properties": {
+        "name": {
+          "description": "Return column name",
+          "title": "Name",
+          "type": "string"
+        },
+        "data_type": {
+          "description": "Return column SQL data type",
+          "title": "Data Type",
+          "type": "string"
+        },
+        "comment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional return column comment",
+          "title": "Comment"
+        }
+      },
+      "required": [
+        "name",
+        "data_type"
+      ],
+      "title": "FunctionReturnColumn",
+      "type": "object"
+    },
+    "GeneratedExpressionColumnConfig": {
+      "description": "Configuration for expression-based generated columns.\n\nAttributes:\n    type: Column type identifier (always \"expression\").\n    expression: SQL expression used to generate the column value.",
+      "properties": {
+        "type": {
+          "const": "expression",
+          "description": "Column type identifier",
+          "title": "Type",
+          "type": "string"
+        },
+        "expression": {
+          "description": "SQL expression used to generate the column value",
+          "title": "Expression",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "expression"
+      ],
+      "title": "GeneratedExpressionColumnConfig",
+      "type": "object"
+    },
+    "GeneratedIdentityColumnConfig": {
+      "description": "Configuration for auto-incrementing identity columns.\n\nAttributes:\n    type: Column type identifier (always \"identity\").\n    as_default: If True, identity is generated as default; if False, always generated.\n    start_with: Starting value for the identity sequence.\n    increment_by: Increment step for the identity sequence.",
+      "properties": {
+        "type": {
+          "const": "identity",
+          "description": "Column type identifier",
+          "title": "Type",
+          "type": "string"
+        },
+        "as_default": {
+          "default": false,
+          "description": "Generated as default (True) or always (False)",
+          "title": "As Default",
+          "type": "boolean"
+        },
+        "start_with": {
+          "default": 1,
+          "description": "Starting value for the identity sequence",
+          "title": "Start With",
+          "type": "integer"
+        },
+        "increment_by": {
+          "default": 1,
+          "description": "Increment step for the identity sequence",
+          "title": "Increment By",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "GeneratedIdentityColumnConfig",
+      "type": "object"
+    },
+    "KelpFunction": {
+      "description": "Function definition in Unity Catalog.\n\nThis model validates function metadata and body source location, while leaving\nSQL/Python body parsing to Databricks at execution time.",
+      "properties": {
+        "name": {
+          "description": "Function name",
+          "title": "Name",
+          "type": "string"
+        },
+        "catalog": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Unity Catalog name",
+          "title": "Catalog"
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schema name",
+          "title": "Schema"
+        },
+        "language": {
+          "default": "SQL",
+          "description": "Function implementation language",
+          "enum": [
+            "SQL",
+            "PYTHON"
+          ],
+          "title": "Language",
+          "type": "string"
+        },
+        "temporary": {
+          "default": false,
+          "description": "Whether the function is temporary (session scoped)",
+          "title": "Temporary",
+          "type": "boolean"
+        },
+        "if_not_exists": {
+          "default": false,
+          "description": "Create only if function does not already exist",
+          "title": "If Not Exists",
+          "type": "boolean"
+        },
+        "or_replace": {
+          "default": true,
+          "description": "Use CREATE OR REPLACE semantics",
+          "title": "Or Replace",
+          "type": "boolean"
+        },
+        "deterministic": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Deterministic characteristic",
+          "title": "Deterministic"
+        },
+        "data_access": {
+          "anyOf": [
+            {
+              "enum": [
+                "CONTAINS SQL",
+                "READS SQL DATA"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional SQL data access characteristic",
+          "title": "Data Access"
+        },
+        "default_collation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default collation for SQL functions",
+          "title": "Default Collation"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Function comment",
+          "title": "Description"
+        },
+        "parameters": {
+          "description": "Function parameter definitions",
+          "items": {
+            "$ref": "#/$defs/FunctionParameter"
+          },
+          "title": "Parameters",
+          "type": "array"
+        },
+        "returns_data_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Scalar return data type",
+          "title": "Returns Data Type"
+        },
+        "returns_table": {
+          "description": "Table-valued return columns (for RETURNS TABLE)",
+          "items": {
+            "$ref": "#/$defs/FunctionReturnColumn"
+          },
+          "title": "Returns Table",
+          "type": "array"
+        },
+        "body": {
+          "default": "",
+          "description": "Function body text, normalized from inline content or file source",
+          "title": "Body",
+          "type": "string"
+        },
+        "body_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional path to external .sql/.py body file, relative to project root",
+          "title": "Body Path"
+        },
+        "environment": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FunctionEnvironment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python environment declaration"
+        },
+        "tags": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Metadata tags",
+          "title": "Tags",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "KelpFunction",
+      "type": "object"
+    },
+    "MetricView": {
+      "description": "Metric View definition for Databricks.\n\nAttributes:\n    name: The name of the metric view.\n    catalog: The catalog where the metric view will be created.\n    schema_: The schema where the metric view will be created.\n    description: Optional description of the metric view.\n    definition: The metric view definition as a dictionary. This should contain\n               the full metric view specification including dimensions, metrics,\n               and the underlying table.\n    tags: Optional tags for the metric view.\n    origin_file_path: Path to the source YAML file (internal use).\n    raw_config: Preserve original, unparsed config (including placeholder vars).",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "catalog": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Catalog"
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Schema"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "definition": {
+          "additionalProperties": true,
+          "description": "The metric view definition including dimensions, metrics, and source table",
+          "title": "Definition",
+          "type": "object"
+        },
+        "tags": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "MetricView",
+      "type": "object"
+    },
+    "PrimaryKeyConstraint": {
+      "description": "Primary key constraint definition.\n\nAttributes:\n    type: Constraint type identifier (always \"primary_key\").\n    columns: List of column names that form the primary key.",
+      "properties": {
+        "name": {
+          "description": "Constraint name",
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "default": "primary_key",
+          "description": "Constraint type identifier",
+          "title": "Type",
+          "type": "string"
+        },
+        "columns": {
+          "description": "List of column names forming the primary key",
+          "items": {
+            "type": "string"
+          },
+          "title": "Columns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "PrimaryKeyConstraint",
+      "type": "object"
+    },
+    "ProjectConfig": {
+      "description": "Project-level configuration for a kelp project.\n\nAttributes:\n    models_path: Path to table/model definitions.\n    models: Configuration hierarchy for models.\n    metrics_path: Path to metric view definitions.\n    metric_views: Configuration hierarchy for metric views.\n    functions_path: Path to function definitions.\n    functions: Configuration hierarchy for functions.\n    abacs_path: Path to ABAC policy definitions.\n    abacs: Configuration hierarchy for ABAC policies.\n    sources_path: Path to source definitions.\n    sources: Configuration hierarchy for sources.\n    quarantine_config: Configuration for table quarantine and validation.\n    remote_catalog_config: Configuration for remote catalog synchronization.\n    runtime_vars: Runtime variables (internal use).\n    project_file_path: Path to the project configuration file (internal use).",
+      "properties": {
+        "models_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Path to table/model definitions",
+          "title": "Models Path"
+        },
+        "models": {
+          "additionalProperties": true,
+          "description": "Configuration hierarchy for models",
+          "title": "Models",
+          "type": "object"
+        },
+        "metrics_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Path to metric view definitions",
+          "title": "Metrics Path"
+        },
+        "metric_views": {
+          "additionalProperties": true,
+          "description": "Configuration hierarchy for metric views",
+          "title": "Metric Views",
+          "type": "object"
+        },
+        "functions_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Path to function definitions",
+          "title": "Functions Path"
+        },
+        "functions": {
+          "additionalProperties": true,
+          "description": "Configuration hierarchy for functions",
+          "title": "Functions",
+          "type": "object"
+        },
+        "abacs_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Path to ABAC policy definitions",
+          "title": "Abacs Path"
+        },
+        "abacs": {
+          "additionalProperties": true,
+          "description": "Configuration hierarchy for ABAC policies",
+          "title": "Abacs",
+          "type": "object"
+        },
+        "sources_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Path to source definitions",
+          "title": "Sources Path"
+        },
+        "sources": {
+          "additionalProperties": true,
+          "description": "Configuration hierarchy for sources",
+          "title": "Sources",
+          "type": "object"
+        },
+        "quarantine_config": {
+          "$ref": "#/$defs/QuarantineConfig",
+          "description": "Configuration for table quarantine and validation"
+        },
+        "remote_catalog_config": {
+          "$ref": "#/$defs/RemoteCatalogConfig",
+          "description": "Configuration for remote catalog synchronization"
+        }
+      },
+      "title": "ProjectConfig",
+      "type": "object"
+    },
+    "QuarantineConfig": {
+      "description": "Configuration for table quarantine and validation.\n\nAttributes:\n    quarantine_catalog: Catalog name for quarantined data (defaults to project catalog).\n    quarantine_schema: Schema name for quarantined data (defaults to project schema).\n    quarantine_prefix: Prefix for quarantine table names.\n    quarantine_suffix: Suffix for quarantine table names.\n    validation_prefix: Prefix for validation table names.\n    validation_suffix: Suffix for validation table names.",
+      "properties": {
+        "quarantine_catalog": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Catalog for quarantined data",
+          "title": "Quarantine Catalog"
+        },
+        "quarantine_schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schema for quarantined data",
+          "title": "Quarantine Schema"
+        },
+        "quarantine_prefix": {
+          "default": "",
+          "description": "Prefix for quarantine table names",
+          "title": "Quarantine Prefix",
+          "type": "string"
+        },
+        "quarantine_suffix": {
+          "default": "_quarantine",
+          "description": "Suffix for quarantine table names",
+          "title": "Quarantine Suffix",
+          "type": "string"
+        },
+        "validation_prefix": {
+          "default": "",
+          "description": "Prefix for validation table names",
+          "title": "Validation Prefix",
+          "type": "string"
+        },
+        "validation_suffix": {
+          "default": "_validation",
+          "description": "Suffix for validation table names",
+          "title": "Validation Suffix",
+          "type": "string"
+        }
+      },
+      "title": "QuarantineConfig",
+      "type": "object"
+    },
+    "RemoteCatalogConfig": {
+      "description": "Configuration for remote Databricks catalog synchronization.\n\nAttributes:\n    table_tag_mode: How to apply table tags (\"append\", \"replace\", \"managed\").\n    managed_table_tags: List of tag keys to manage on tables.\n    column_tag_mode: How to apply column tags (\"append\", \"replace\", \"managed\").\n    managed_column_tags: List of tag keys to manage on columns.\n    table_property_mode: How to apply table properties (\"append\" or \"managed\").\n    managed_table_properties: List of property keys to manage on tables.",
+      "properties": {
+        "table_tag_mode": {
+          "default": "replace",
+          "description": "How to apply table tags to remote catalog",
+          "enum": [
+            "append",
+            "replace",
+            "managed"
+          ],
+          "title": "Table Tag Mode",
+          "type": "string"
+        },
+        "managed_table_tags": {
+          "description": "List of tag keys to manage on tables",
+          "items": {
+            "type": "string"
+          },
+          "title": "Managed Table Tags",
+          "type": "array"
+        },
+        "column_tag_mode": {
+          "default": "replace",
+          "description": "How to apply column tags to remote catalog",
+          "enum": [
+            "append",
+            "replace",
+            "managed"
+          ],
+          "title": "Column Tag Mode",
+          "type": "string"
+        },
+        "managed_column_tags": {
+          "description": "List of tag keys to manage on columns",
+          "items": {
+            "type": "string"
+          },
+          "title": "Managed Column Tags",
+          "type": "array"
+        },
+        "table_property_mode": {
+          "default": "append",
+          "description": "How to apply table properties to remote catalog",
+          "enum": [
+            "append",
+            "managed"
+          ],
+          "title": "Table Property Mode",
+          "type": "string"
+        },
+        "managed_table_properties": {
+          "description": "List of property keys to manage on tables",
+          "items": {
+            "type": "string"
+          },
+          "title": "Managed Table Properties",
+          "type": "array"
+        }
+      },
+      "title": "RemoteCatalogConfig",
+      "type": "object"
+    },
+    "SDPQuality": {
+      "description": "Spark Data Pruning (SDP) quality configuration.\n\nAttributes:\n    engine: Quality engine type (always \"sdp\").\n    level: Level at which quality is enforced (always \"row\" for SDP).\n    expect_all: Dictionary of SQL expressions that must pass.\n    expect_all_or_drop: Dictionary of SQL expressions; rows failing drop.\n    expect_all_or_fail: Dictionary of SQL expressions; job fails if any fail.\n    expect_all_or_quarantine: Dictionary of SQL expressions; failures quarantine rows.",
+      "properties": {
+        "engine": {
+          "const": "sdp",
+          "description": "Quality engine type",
+          "title": "Engine",
+          "type": "string"
+        },
+        "level": {
+          "const": "row",
+          "default": "row",
+          "description": "Quality enforcement level",
+          "title": "Level",
+          "type": "string"
+        },
+        "expect_all": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "SQL expressions that must pass",
+          "title": "Expect All",
+          "type": "object"
+        },
+        "expect_all_or_drop": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "SQL expressions; failing rows are dropped",
+          "title": "Expect All Or Drop",
+          "type": "object"
+        },
+        "expect_all_or_fail": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "SQL expressions; job fails if any expression fails",
+          "title": "Expect All Or Fail",
+          "type": "object"
+        },
+        "expect_all_or_quarantine": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "SQL expressions; failing rows are quarantined",
+          "title": "Expect All Or Quarantine",
+          "type": "object"
+        }
+      },
+      "required": [
+        "engine"
+      ],
+      "title": "SDPQuality",
+      "type": "object"
+    },
+    "Table": {
+      "description": "Table definition in Unity Catalog.\n\nRepresents a table in Databricks Unity Catalog with all its configuration,\nincluding schema, properties, quality checks, and constraints.\n\nAttributes:\n    origin_file_path: Path to the source YAML file defining this table.\n    table_type: Type of table (managed, external, view, streaming_table, etc.).\n    catalog: Unity Catalog name where the table resides.\n    schema_: Schema/database name where the table resides.\n    name: Table name.\n    description: Human-readable description of the table.\n    spark_conf: Spark configuration properties for the table.\n    table_properties: Databricks table properties.\n    path: Physical path for external tables or custom locations.\n    partition_cols: List of column names to use for partitioning.\n    cluster_by_auto: Enable automatic clustering optimization.\n    cluster_by: List of column names to use for explicit clustering (max 4).\n    row_filter: SQL expression to filter rows based on security policies.\n    columns: List of column definitions for the table.\n    quality: Data quality configuration (SDPQuality or DQXQuality).\n    constraints: List of constraints (primary key, foreign key).\n    tags: Metadata tags for the table.\n    raw_config: Original unparsed configuration (preserves placeholder variables).",
+      "properties": {
+        "table_type": {
+          "$ref": "#/$defs/TableType",
+          "default": "managed",
+          "description": "Type of table: managed, external, view, streaming_table, etc."
+        },
+        "catalog": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Unity Catalog name",
+          "title": "Catalog"
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schema/database name",
+          "title": "Schema"
+        },
+        "name": {
+          "description": "Table name",
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Human-readable description of the table",
+          "title": "Description"
+        },
+        "spark_conf": {
+          "additionalProperties": true,
+          "description": "Spark configuration properties",
+          "title": "Spark Conf",
+          "type": "object"
+        },
+        "table_properties": {
+          "additionalProperties": true,
+          "description": "Databricks table properties",
+          "title": "Table Properties",
+          "type": "object"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Physical path for external tables or custom locations",
+          "title": "Path"
+        },
+        "partition_cols": {
+          "description": "List of column names for partitioning",
+          "items": {
+            "type": "string"
+          },
+          "title": "Partition Cols",
+          "type": "array"
+        },
+        "cluster_by_auto": {
+          "default": false,
+          "description": "Enable automatic clustering optimization",
+          "title": "Cluster By Auto",
+          "type": "boolean"
+        },
+        "cluster_by": {
+          "description": "List of column names for explicit clustering (max 4)",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 4,
+          "title": "Cluster By",
+          "type": "array"
+        },
+        "row_filter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SQL expression to filter rows based on security policies",
+          "title": "Row Filter"
+        },
+        "columns": {
+          "description": "Column definitions for the table",
+          "items": {
+            "$ref": "#/$defs/Column"
+          },
+          "title": "Columns",
+          "type": "array"
+        },
+        "quality": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "dqx": "#/$defs/DQXQuality",
+                  "sdp": "#/$defs/SDPQuality"
+                },
+                "propertyName": "engine"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/SDPQuality"
+                },
+                {
+                  "$ref": "#/$defs/DQXQuality"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Data quality configuration using SDPQuality or DQXQuality",
+          "title": "Quality"
+        },
+        "constraints": {
+          "description": "Constraints like primary key or foreign key",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PrimaryKeyConstraint"
+              },
+              {
+                "$ref": "#/$defs/ForeignKeyConstraint"
+              }
+            ]
+          },
+          "title": "Constraints",
+          "type": "array"
+        },
+        "tags": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Metadata tags for the table",
+          "title": "Tags",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Table",
+      "type": "object"
+    },
+    "TableType": {
+      "enum": [
+        "external",
+        "external_shallow_clone",
+        "foreign",
+        "managed",
+        "managed_shallow_clone",
+        "materialized_view",
+        "metric_view",
+        "streaming_table",
+        "view"
+      ],
+      "title": "TableType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Base model for json schema generation.",
+  "properties": {
+    "kelp_project": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProjectConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Project-level configuration for the Kelp project."
+    },
+    "kelp_models": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Table"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "List of table models defined in the configuration.",
+      "title": "Kelp Models"
+    },
+    "kelp_metric_views": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/MetricView"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "List of metric views defined in the configuration.",
+      "title": "Kelp Metric Views"
+    },
+    "kelp_functions": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/KelpFunction"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "List of functions defined in the configuration.",
+      "title": "Kelp Functions"
+    },
+    "kelp_abacs": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/AbacPolicy"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "List of ABAC policies defined in the configuration.",
+      "title": "Kelp Abacs"
+    },
+    "vars": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Dictionary of variables that can be used in the configuration.",
+      "title": "Vars"
+    },
+    "vars_overwrite": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Path to a YAML file containing variables that overwrite the ones defined in the project file. May be added to .gitignore to set individual developer vars like schema names.",
+      "title": "Vars Overwrite"
+    },
+    "targets": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "List of target configurations for deployment or other purposes.",
+      "title": "Targets"
+    },
+    "targets_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Path to an external YAML file or folder containing target configurations. This allows separating target definitions from the main project file.",
+      "title": "Targets Path"
+    }
+  },
+  "title": "Kelp",
+  "type": "object"
+}
