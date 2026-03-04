@@ -20,6 +20,7 @@ kelp_project:
     +tags:
       kelp_managed: ""
 
+  # Functions configuration
   functions_path: "./kelp_metadata/functions"
   functions:
     +catalog: ${ catalog }
@@ -27,11 +28,19 @@ kelp_project:
     abac:
       +schema: ${ abac_schema }
 
+  # ABAC configuration
   abacs_path: "./kelp_metadata/abacs"
   abacs: {}
 
+  # Sources configuration
+  sources_path: "./kelp_metadata/sources"
+  sources:
+    +catalog: ${catalog}
+    +schema: ${landing_schema}
+
 vars:
   catalog: kelp_catalog
+  landing_schema: kelp_bronze
   function_schema: kelp_funcs
   abac_schema: kelp_abac
 

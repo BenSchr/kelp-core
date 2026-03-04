@@ -1,18 +1,15 @@
 kelp_models:
-  - name: silver_customer_profile
-    description: Enriched customer profile to validate demo functions and ABAC tags.
-    columns:
-      - name: customer_id
-        data_type: string
-        description: Normalized customer identifier for policy testing.
-        tags:
-          customer_id: ""
-      - name: full_name
-        data_type: string
-        description: Customer full name formatted from first and last name.
-      - name: country_standardized
-        data_type: string
-        description: Standardized country value derived from silver customers.
-      - name: source_user_id
-        data_type: string
-        description: Original user identifier from the silver customers table.
+- name: silver_customer_profile
+  description: Enriched customer profile to validate demo functions and ABAC tags.
+  columns:
+  - name: customer_id
+    data_type: string
+    description: Normalized customer identifier for policy testing.
+  - name: full_name
+    data_type: string
+    description: Customer full name formatted from first and last name.
+  - name: country_standardized
+    data_type: string
+    description: Standardized country value derived from silver customers.
+  - name: user_id
+    data_type: string

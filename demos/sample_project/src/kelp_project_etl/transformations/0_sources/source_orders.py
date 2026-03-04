@@ -1,17 +1,17 @@
 from pyspark import pipelines as dp
 from pyspark.sql import SparkSession
 
-spark = SparkSession.active()
+import kelp.pipelines as kp
 
-source_catalog = spark.conf.get("parameters.source_catalog")
-source_schema = spark.conf.get("parameters.source_schema")
+spark = SparkSession.active()
 
 
 @dp.temporary_view
 def source_orders():
     """
-    Reads the raw sample orders JSON data as a streaming source.
+    Reads the raw sample orders data from the landing volume.
     """
-    path = f"/Volumes/{source_catalog}/{source_schema}/landing_volume/orders/"
+    path = kp.source("landing_volume_orders")
+    options = kp.source_options("landing_volume_orders")
 
-    return spark.readStream.format("cloudFiles").option("cloudFiles.format", "parquet").load(path)
+    return spark.readStream.format("cloudFiles").options(**options).load(path)
