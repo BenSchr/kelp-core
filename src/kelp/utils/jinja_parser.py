@@ -138,6 +138,9 @@ def _attach_file_path(
     if parsed_yaml.get("kelp_abacs"):
         for abac in parsed_yaml["kelp_abacs"]:
             abac["origin_file_path"] = str(file_path)
+    if parsed_yaml.get("kelp_sources"):
+        for source in parsed_yaml["kelp_sources"]:
+            source["origin_file_path"] = str(file_path)
     return parsed_yaml
 
 

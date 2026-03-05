@@ -12,3 +12,5 @@ kelp_sources:
     description: "Raw order data in JSON format from the landing volume"
     options:
       cloudFiles.format: parquet
+  - name: test_table_source
+    table_name: test_table_source

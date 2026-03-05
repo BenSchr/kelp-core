@@ -51,6 +51,9 @@ def _update_settings_json(vscode_dir: Path, schema_filename: str) -> None:
             clean = strip_trailing_commas(f.read())
             settings = json.loads(clean)
     except (FileNotFoundError, json.JSONDecodeError) as e:
+        typer.echo(
+            "If there are trailing commas e.g. ',}' or ',]' in settings.json, please remove them to ensure proper JSON formatting.",
+        )
         raise ValueError(f"Error reading {settings_path}: {e}") from e
 
     # Ensure yaml.schemas exists
@@ -71,7 +74,7 @@ def _update_settings_json(vscode_dir: Path, schema_filename: str) -> None:
 
     # Check if schema needs to be added
     needs_update = schema_ref not in settings["yaml.schemas"]
-    typer.echo(settings)
+
     if needs_update:
         # Add the kelp schema (preserves all other schemas)
         settings["yaml.schemas"][schema_ref] = schema_config

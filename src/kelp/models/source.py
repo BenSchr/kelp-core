@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.json_schema import SkipJsonSchema
 
 
@@ -34,6 +34,7 @@ class Source(BaseModel):
         description="Source name (unique identifier)",
     )
     source_type: Literal["volume", "table", "raw_path"] = Field(
+        default="table",
         description="Type of source: volume, table, or raw_path",
     )
     path: str | None = Field(
@@ -64,6 +65,14 @@ class Source(BaseModel):
     description: str | None = Field(
         default=None,
         description="Human-readable description of the source",
+    )
+
+    # Model Config
+    model_config = ConfigDict(
+        validate_by_name=True,
+        validate_by_alias=True,
+        serialize_by_alias=True,
+        use_enum_values=True,
     )
 
     @property
