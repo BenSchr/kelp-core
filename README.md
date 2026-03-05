@@ -42,11 +42,11 @@ Kelp provides a metadata and transformation layer for Databricks Spark and Spark
 To install Kelp, you can use `uv`, `pip`, or the package manager of your choice. Below are the commands for both methods:
 
 ```
-uv add kelp-core==0.0.2
+uv add kelp-core==0.0.3
 ```
 
 ```
-pip install kelp-core==0.0.2
+pip install kelp-core==0.0.3
 ```
 
 
