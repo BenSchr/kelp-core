@@ -11,7 +11,7 @@ from kelp.catalog.uc_models import (
     DictDiff,
     TableDiff,
 )
-from kelp.models.table import ForeignKeyConstraint
+from kelp.models.model import ForeignKeyConstraint
 
 logger = logging.getLogger(__name__)
 

@@ -410,6 +410,52 @@ kelp_project:
       - "kelp_domain"
 ```
 
+## Metadata Governance Policies
+
+Kelp can enforce governance standards on your local YAML metadata via a separate policy system. When enabled, policies are evaluated on every `kelp init()` call and on demand via `kelp check-policies`.
+
+> **Note:** Policy checks operate on your **local YAML metadata** — they do not connect to Unity Catalog.
+
+### Enabling Policies
+
+Set `policies_path` to point at your policy YAML files, then flip the master switch:
+
+```yaml
+kelp_project:
+  policies_path: "./kelp_metadata/policies"
+  policy_config:
+    enabled: true
+```
+
+`policy_config` only carries the global `enabled` flag. All governance rules (required descriptions, tags, naming patterns, etc.) are defined in separate **policy YAML files** under `policies_path`.
+
+### Policy YAML Files
+
+Policy files use the `kelp_policies` key and scope rules to models via glob patterns:
+
+```yaml
+# kelp_metadata/policies/data_standards.yml
+kelp_policies:
+  - name: bronze_standards
+    applies_to: "bronze/*"          # Matches models in the bronze/ subdirectory
+    model:
+      require_description: true
+      require_tags:
+        - owner
+      severity: warn
+    column:
+      require_description: true
+      severity: error
+
+  - name: global_fallback
+    applies_to: "*"                 # Catch-all for any other models
+    model:
+      require_description: true
+      severity: warn
+```
+
+See the [Governance Policies](policies.md) guide for the full rule reference and advanced patterns.
+
 ## Complete Example
 
 Here's a complete `kelp_project.yml` with all sections:
@@ -484,6 +530,11 @@ kelp_project:
     managed_column_tags: []
     managed_table_properties: []
 
+  # Metadata governance policies (rules live in kelp_metadata/policies/)
+  policies_path: "./kelp_metadata/policies"
+  policy_config:
+    enabled: false
+
 # Global variables
 vars:
   environment: production
@@ -538,9 +589,8 @@ ctx = init(
 )
 
 # Access configuration
-print(ctx.project_config.models_path)
+print(ctx.project_settings.models_path)
 print(ctx.runtime_vars)
-print(ctx.catalog.table_index)
 ```
 
 ### CLI

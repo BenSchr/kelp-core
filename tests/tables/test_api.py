@@ -4,8 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kelp.models.table import Column, Table
-from kelp.service.table_manager import KelpTable
+from kelp.models.model import Column, Model
+from kelp.service.model_manager import KelpModel
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -18,8 +18,8 @@ def _make_kelp_table(
     schema_val: str = "id BIGINT, name STRING",
     schema_lite_val: str = "id BIGINT, name STRING",
     columns: list[Column] | None = None,
-) -> KelpTable:
-    root = Table(
+) -> KelpModel:
+    root = Model(
         name=name,
         catalog="catalog",
         schema_="schema",
@@ -29,11 +29,11 @@ def _make_kelp_table(
             Column(name="name", data_type="string"),
         ],
     )
-    kt = KelpTable(name=name)
+    kt = KelpModel(name=name)
     kt.fqn = fqn
     kt.schema = schema_val
     kt.schema_lite = schema_lite_val
-    kt.root_table = root
+    kt.root_model = root
     return kt
 
 
@@ -45,30 +45,30 @@ def _make_kelp_table(
 class TestGetTable:
     def test_returns_kelp_table(self, mocker: MagicMock) -> None:
         kt = _make_kelp_table()
-        mocker.patch("kelp.tables.api.TableManager.build_table", return_value=kt)
+        mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
 
-        from kelp.tables import get_table
+        from kelp.tables import get_model
 
-        result = get_table("orders")
-        assert isinstance(result, KelpTable)
+        result = get_model("orders")
+        assert isinstance(result, KelpModel)
         assert result.name == "orders"
 
     def test_not_kelp_sdp_table(self, mocker: MagicMock) -> None:
-        """Ensure we get KelpTable, not KelpSdpTable."""
+        """Ensure we get KelpModel, not KelpSdpModel."""
         kt = _make_kelp_table()
-        mocker.patch("kelp.tables.api.TableManager.build_table", return_value=kt)
+        mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
 
-        from kelp.service.table_manager import KelpSdpTable
-        from kelp.tables import get_table
+        from kelp.service.model_manager import KelpSdpModel
+        from kelp.tables import get_model
 
-        result = get_table("orders")
-        assert not isinstance(result, KelpSdpTable)
+        result = get_model("orders")
+        assert not isinstance(result, KelpSdpModel)
 
 
 class TestRef:
     def test_returns_fqn(self, mocker: MagicMock) -> None:
         kt = _make_kelp_table()
-        mocker.patch("kelp.tables.api.TableManager.build_table", return_value=kt)
+        mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
 
         from kelp.tables import ref
 
@@ -77,7 +77,7 @@ class TestRef:
     def test_returns_name_when_fqn_is_none(self, mocker: MagicMock) -> None:
         kt = _make_kelp_table()
         kt.fqn = None
-        mocker.patch("kelp.tables.api.TableManager.build_table", return_value=kt)
+        mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
 
         from kelp.tables import ref
 
@@ -87,7 +87,7 @@ class TestRef:
 class TestSchema:
     def test_returns_schema_ddl(self, mocker: MagicMock) -> None:
         kt = _make_kelp_table()
-        mocker.patch("kelp.tables.api.TableManager.build_table", return_value=kt)
+        mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
 
         from kelp.tables import schema
 
@@ -96,7 +96,7 @@ class TestSchema:
     def test_returns_none_when_no_schema(self, mocker: MagicMock) -> None:
         kt = _make_kelp_table()
         kt.schema = None
-        mocker.patch("kelp.tables.api.TableManager.build_table", return_value=kt)
+        mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
 
         from kelp.tables import schema
 
@@ -106,7 +106,7 @@ class TestSchema:
 class TestSchemaLite:
     def test_returns_schema_lite(self, mocker: MagicMock) -> None:
         kt = _make_kelp_table()
-        mocker.patch("kelp.tables.api.TableManager.build_table", return_value=kt)
+        mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
 
         from kelp.tables import schema_lite
 
@@ -121,7 +121,7 @@ class TestDdl:
             "get_ddl",
             return_value="CREATE TABLE IF NOT EXISTS catalog.schema.orders (...)",
         )
-        mocker.patch("kelp.tables.api.TableManager.build_table", return_value=kt)
+        mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
 
         from kelp.tables import ddl
 
@@ -135,7 +135,7 @@ class TestDdl:
         mock_get_ddl = mocker.patch.object(
             kt, "get_ddl", return_value="CREATE TABLE catalog.schema.orders (...)"
         )
-        mocker.patch("kelp.tables.api.TableManager.build_table", return_value=kt)
+        mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
 
         from kelp.tables import ddl
 
@@ -146,7 +146,7 @@ class TestDdl:
 class TestColumns:
     def test_returns_column_list(self, mocker: MagicMock) -> None:
         kt = _make_kelp_table()
-        mocker.patch("kelp.tables.api.TableManager.build_table", return_value=kt)
+        mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
 
         from kelp.tables import columns
 
@@ -155,21 +155,21 @@ class TestColumns:
         assert result[0].name == "id"
         assert result[1].name == "name"
 
-    def test_returns_empty_when_no_root_table(self, mocker: MagicMock) -> None:
+    def test_returns_empty_when_no_root_model(self, mocker: MagicMock) -> None:
         kt = _make_kelp_table()
-        kt.root_table = None
-        mocker.patch("kelp.tables.api.TableManager.build_table", return_value=kt)
+        kt.root_model = None
+        mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
 
         from kelp.tables import columns
 
         assert columns("orders") == []
 
     def test_returns_empty_when_no_columns(self, mocker: MagicMock) -> None:
-        root = Table(name="orders", catalog="catalog", schema_="schema", columns=[])
-        kt = KelpTable(name="orders")
+        root = Model(name="orders", catalog="catalog", schema_="schema", columns=[])
+        kt = KelpModel(name="orders")
         kt.fqn = "catalog.schema.orders"
-        kt.root_table = root
-        mocker.patch("kelp.tables.api.TableManager.build_table", return_value=kt)
+        kt.root_model = root
+        mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
 
         from kelp.tables import columns
 
@@ -181,11 +181,11 @@ class TestFunc:
         mock_function = MagicMock()
         mock_function.get_qualified_name.return_value = "catalog.schema.my_function"
 
-        mock_catalog = MagicMock()
-        mock_catalog.get_function.return_value = mock_function
+        mock_catalog_index = MagicMock()
+        mock_catalog_index.get.return_value = mock_function
 
         mock_context = MagicMock()
-        mock_context.catalog = mock_catalog
+        mock_context.catalog_index = mock_catalog_index
 
         mocker.patch("kelp.config.get_context", return_value=mock_context)
 
@@ -193,15 +193,15 @@ class TestFunc:
 
         result = func("my_function")
         assert result == "catalog.schema.my_function"
-        mock_catalog.get_function.assert_called_once_with("my_function")
+        mock_catalog_index.get.assert_called_once_with("functions", "my_function")
         mock_function.get_qualified_name.assert_called_once()
 
     def test_function_not_found(self, mocker: MagicMock) -> None:
-        mock_catalog = MagicMock()
-        mock_catalog.get_function.side_effect = KeyError("my_function")
+        mock_catalog_index = MagicMock()
+        mock_catalog_index.get.side_effect = KeyError("my_function")
 
         mock_context = MagicMock()
-        mock_context.catalog = mock_catalog
+        mock_context.catalog_index = mock_catalog_index
 
         mocker.patch("kelp.config.get_context", return_value=mock_context)
 

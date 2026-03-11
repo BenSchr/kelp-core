@@ -5,16 +5,20 @@ which handle YAML file patching and path resolution for tables and metric views.
 """
 
 from pathlib import Path
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 
+from kelp.meta.context import MetaContextStore
 from kelp.models.metric_view import MetricView
-from kelp.models.table import (
+from kelp.models.model import (
     Column,
     ForeignKeyConstraint,
     PrimaryKeyConstraint,
-    Table,
+)
+from kelp.models.model import (
+    Model as Table,
 )
 from kelp.service.yaml_manager import ServicePathConfig, YamlManager, YamlUpdateReport
 
@@ -48,7 +52,7 @@ class TestServicePathConfig:
         """Test creating ServicePathConfig from runtime context."""
         from kelp.config import init
 
-        init(project_root=str(simple_project_dir / "kelp_project.yml"))
+        init(project_file_path=str(simple_project_dir / "kelp_project.yml"))
 
         config = ServicePathConfig.from_context()
 
@@ -60,7 +64,7 @@ class TestServicePathConfig:
         """Test creating ServicePathConfig for metrics from context."""
         from kelp.config import init
 
-        init(project_root=str(simple_project_dir / "kelp_project.yml"))
+        init(project_file_path=str(simple_project_dir / "kelp_project.yml"))
 
         config = ServicePathConfig.from_context(
             service_root_key="metrics_path",
@@ -69,23 +73,17 @@ class TestServicePathConfig:
 
         assert config.service_root == Path("kelp_metadata/metrics")
 
-    def test_from_context_no_context_raises(self, monkeypatch):
+    def test_from_context_no_context_raises(self, monkeypatch, tmp_path: Path):
         """Test from_context raises error when auto-init fails."""
-        from unittest.mock import patch
-
-        from kelp.config.lifecycle import ContextStore
-
         # Ensure no context by clearing it
-        ContextStore.clear()
+        MetaContextStore.clear_all()
 
-        # Mock load_runtime_config to raise an error (simulating missing project file)
-        with (
-            patch(
-                "kelp.config.lifecycle.load_runtime_config",
-                side_effect=FileNotFoundError("No project file"),
-            ),
-            pytest.raises(FileNotFoundError, match="No project file"),
-        ):
+        # Simulate missing project file by running from an empty directory
+        empty_dir = tmp_path / "empty_project"
+        empty_dir.mkdir()
+        monkeypatch.chdir(empty_dir)
+
+        with pytest.raises(FileNotFoundError, match="Project root with"):
             ServicePathConfig.from_context()
 
 
@@ -95,7 +93,7 @@ class TestYamlUpdateReport:
     def test_yaml_update_report_creation(self):
         """Test creating YamlUpdateReport."""
         report = YamlUpdateReport(
-            table_name="test_table",
+            model_name="test_table",
             file_path=Path("/project/models/test.yml"),
             result_model={"name": "test_table"},
             changes_made=True,
@@ -104,7 +102,7 @@ class TestYamlUpdateReport:
             removed_fields=[],
         )
 
-        assert report.table_name == "test_table"
+        assert report.model_name == "test_table"
         assert report.changes_made is True
         assert "description" in report.added_fields
         assert "columns" in report.updated_fields
@@ -188,7 +186,7 @@ class TestYamlManagerHelpers:
 
     def test_serialize_constraints_primary_key(self):
         """Test _serialize_constraints with primary key."""
-        constraints = [
+        constraints: list[PrimaryKeyConstraint | ForeignKeyConstraint] = [
             PrimaryKeyConstraint(name="pk_test", columns=["id"]),
         ]
 
@@ -201,7 +199,7 @@ class TestYamlManagerHelpers:
 
     def test_serialize_constraints_foreign_key(self):
         """Test _serialize_constraints with foreign key."""
-        constraints = [
+        constraints: list[PrimaryKeyConstraint | ForeignKeyConstraint] = [
             ForeignKeyConstraint(
                 name="fk_customer",
                 columns=["customer_id"],
@@ -461,12 +459,31 @@ class TestYamlManagerPathResolution:
 
         assert resolved == Path("existing/table.yml")
 
+    def test_resolve_or_determine_path_origin_with_models_prefix(self):
+        """Test _resolve_or_determine_path strips models/ prefix for nested service_root."""
+        path_config = ServicePathConfig(
+            project_root=Path("/project"),
+            service_root=Path("kelp_metadata/models"),
+        )
+
+        resolved = YamlManager._resolve_or_determine_path(
+            name="bronze_customers",
+            origin_file_path="models/bronze/bronze_customers.yml",
+            schema="bronze",
+            catalog=None,
+            path_config=path_config,
+            explicit_path=None,
+            kind="table",
+        )
+
+        assert resolved == Path("bronze/bronze_customers.yml")
+
 
 class TestYamlManagerTableConversion:
     """Test table to model dict conversion."""
 
-    def test_table_to_model_dict_basic(self):
-        """Test table_to_model_dict with basic table."""
+    def test_model_to_dict_basic(self):
+        """Test model_to_dict with basic table."""
         table = Table(
             name="customers",
             description="Customer data",
@@ -474,14 +491,14 @@ class TestYamlManagerTableConversion:
         )
 
         with patch.object(YamlManager, "_get_hierarchy_defaults", return_value={}):
-            model = YamlManager.table_to_model_dict(table, include_hierarchy_defaults=False)
+            model = YamlManager.model_to_dict(table, include_hierarchy_defaults=False)
 
         assert model["name"] == "customers"
         assert model["description"] == "Customer data"
         assert len(model["columns"]) == 1
 
-    def test_table_to_model_dict_with_constraints(self):
-        """Test table_to_model_dict includes constraints."""
+    def test_model_to_dict_with_constraints(self):
+        """Test model_to_dict includes constraints."""
         table = Table(
             name="orders",
             columns=[Column(name="id", data_type="bigint")],
@@ -489,13 +506,13 @@ class TestYamlManagerTableConversion:
         )
 
         with patch.object(YamlManager, "_get_hierarchy_defaults", return_value={}):
-            model = YamlManager.table_to_model_dict(table, include_hierarchy_defaults=False)
+            model = YamlManager.model_to_dict(table, include_hierarchy_defaults=False)
 
         assert "constraints" in model
         assert len(model["constraints"]) == 1
 
-    def test_table_to_model_dict_excludes_defaults(self):
-        """Test table_to_model_dict excludes values matching defaults."""
+    def test_model_to_dict_excludes_defaults(self):
+        """Test model_to_dict excludes values matching defaults."""
         table = Table(
             name="customers",
             description="Default description",
@@ -506,10 +523,102 @@ class TestYamlManagerTableConversion:
         # _patch_model_dict checks against defaults from hierarchy, so the description
         # will only be excluded if matching defaults
         # For a table without hierarchy defaults, description is always included
-        model = YamlManager.table_to_model_dict(table, include_hierarchy_defaults=False)
+        model = YamlManager.model_to_dict(table, include_hierarchy_defaults=False)
 
         # When include_hierarchy_defaults=False, defaults dict is empty, so description is always included
         assert model["description"] == "Default description"
+
+    def test_patch_model_dict_preserves_templated_foreign_key_reference(self):
+        """Test templated local FK references are not overwritten during patching."""
+        source_model = Table(
+            name="orders",
+            constraints=[
+                ForeignKeyConstraint(
+                    name="fk_orders_customers",
+                    columns=["customer_id"],
+                    reference_table="prod.silver.customers",
+                    reference_columns=["id"],
+                ),
+            ],
+        )
+        model_dict = {
+            "name": "orders",
+            "constraints": [
+                {
+                    "name": "fk_orders_customers",
+                    "type": "foreign_key",
+                    "columns": ["customer_id"],
+                    "reference_table": "${ catalog }.silver.customers",
+                    "reference_columns": ["id"],
+                },
+            ],
+        }
+
+        YamlManager._patch_model_dict(model_dict, source_model, defaults={})
+
+        assert model_dict["constraints"][0]["reference_table"] == "${ catalog }.silver.customers"
+
+    def test_patch_model_dict_resolves_foreign_key_to_local_name(self, mocker: MagicMock):
+        """Test FK reference is stored as unqualified name when referenced model exists in local catalog.
+
+        When syncing from remote, if the referenced table exists in local metadata,
+        the YAML should store only the unqualified table name. DDL generation will
+        resolve it to FQN at runtime.
+        """
+        source_model = Table(
+            name="orders",
+            constraints=[
+                ForeignKeyConstraint(
+                    name="fk_orders_customers",
+                    columns=["customer_id"],
+                    reference_table="prod.silver.customers",
+                    reference_columns=["id"],
+                ),
+            ],
+        )
+        model_dict: dict[str, Any] = {"name": "orders"}
+
+        mock_ctx = MagicMock()
+        mock_model = MagicMock()
+        mock_model.catalog = "prod"
+        mock_model.schema_ = "silver"
+        mock_ctx.catalog_index.get.return_value = mock_model
+        mocker.patch("kelp.service.yaml_manager.get_context", return_value=mock_ctx)
+
+        YamlManager._patch_model_dict(model_dict, source_model, defaults={})
+
+        # Should store unqualified name in YAML when table is in local catalog
+        assert model_dict["constraints"][0]["reference_table"] == "customers"
+
+    def test_patch_model_dict_keeps_remote_fkn_when_not_in_local_catalog(self, mocker: MagicMock):
+        """Test that remote FK with FQN is kept if referenced table not in local metadata.
+
+        When syncing from remote, if the referenced table doesn't exist in local metadata,
+        the fully qualified name from remote should be written to YAML as-is.
+        """
+        source_model = Table(
+            name="orders",
+            constraints=[
+                ForeignKeyConstraint(
+                    name="fk_orders_vendors",
+                    columns=["vendor_id"],
+                    reference_table="external.analytics.vendors",
+                    reference_columns=["id"],
+                ),
+            ],
+        )
+        model_dict = {"name": "orders"}
+
+        mock_ctx = MagicMock()
+        # Simulate table not found in local catalog
+        mock_ctx.catalog_index.get.side_effect = KeyError("vendors not found")
+        mocker.patch("kelp.service.yaml_manager.get_context", return_value=mock_ctx)
+
+        YamlManager._patch_model_dict(model_dict, source_model, defaults={})
+
+        # Remote FQN should be preserved in YAML
+        # Maybe fix ty check later
+        assert model_dict["constraints"][0]["reference_table"] == "external.analytics.vendors"  # ty:ignore[invalid-argument-type]
 
 
 class TestYamlManagerMetricViewConversion:
@@ -574,11 +683,11 @@ class TestYamlManagerMetricViewConversion:
 class TestYamlManagerIntegration:
     """Integration tests for YamlManager patching operations."""
 
-    def test_patch_table_yaml_dry_run(self, tmp_path: Path, simple_project_dir: Path):
-        """Test patch_table_yaml in dry_run mode doesn't write files."""
+    def test_patch_model_yaml_dry_run(self, tmp_path: Path, simple_project_dir: Path):
+        """Test patch_model_yaml in dry_run mode doesn't write files."""
         from kelp.config import init
 
-        init(project_root=str(simple_project_dir / "kelp_project.yml"))
+        init(project_file_path=str(simple_project_dir / "kelp_project.yml"))
 
         table = Table(
             name="test_table",
@@ -593,7 +702,7 @@ class TestYamlManagerIntegration:
             hierarchy_config={"bronze": {"+schema": "bronze"}},
         )
 
-        report = YamlManager.patch_table_yaml(
+        report = YamlManager.patch_model_yaml(
             table,
             path_config=path_config,
             relative_file_path="test.yml",
@@ -604,8 +713,8 @@ class TestYamlManagerIntegration:
         # File should not be written in dry_run mode
         assert not (tmp_path / "models" / "test.yml").exists()
 
-    def test_patch_table_yaml_creates_new_file(self, tmp_path: Path):
-        """Test patch_table_yaml creates new YAML file."""
+    def test_patch_model_yaml_creates_new_file(self, tmp_path: Path):
+        """Test patch_model_yaml creates new YAML file."""
         table = Table(
             name="new_table",
             description="New table",
@@ -618,7 +727,7 @@ class TestYamlManagerIntegration:
         )
 
         with patch.object(YamlManager, "_get_hierarchy_defaults", return_value={}):
-            report = YamlManager.patch_table_yaml(
+            report = YamlManager.patch_model_yaml(
                 table,
                 path_config=path_config,
                 relative_file_path="new_table.yml",

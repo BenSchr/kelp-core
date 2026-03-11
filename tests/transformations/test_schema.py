@@ -27,7 +27,7 @@ from pyspark.sql.types import (
 )
 
 from kelp import init
-from kelp.models.table import Column
+from kelp.models.model import Column
 from kelp.transformations.schema import apply_schema
 
 # ---------------------------------------------------------------------------
@@ -402,7 +402,7 @@ class TestExplicitSchema:
 
 
 class TestKelpCatalogLookup:
-    def test_resolves_schema_from_table_name(self, spark: SparkSession, mocker: MagicMock) -> None:
+    def test_resolves_schema_from_model_name(self, spark: SparkSession, mocker: MagicMock) -> None:
         mocker.patch(
             "kelp.transformations.schema._get_kelp_columns",
             return_value=[
@@ -453,7 +453,7 @@ class TestKelpCatalogLookup:
     def test_schema_from_metadata_catalog_drop_add_reorder(
         self, spark: SparkSession, simple_project_dir: Path
     ) -> None:
-        init(project_root=str(simple_project_dir / "kelp_project.yml"))
+        init(project_file_path=str(simple_project_dir / "kelp_project.yml"))
         df = spark.createDataFrame(
             [("2025-01-15 10:30:00", "1", "extra_val", "Alice")],
             ["created_at", "id", "extra", "name"],

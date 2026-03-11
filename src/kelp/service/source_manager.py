@@ -27,7 +27,7 @@ class SourceManager:
             KeyError: If the source name is not found in the catalog.
         """
         ctx = get_context()
-        return ctx.catalog.get_source(name)
+        return ctx.catalog_index.get("sources", name)
 
     @classmethod
     def get_path(cls, name: str) -> str:
@@ -35,7 +35,7 @@ class SourceManager:
 
         Returns the fully qualified path for the source, which differs based on
         the source type:
-        - For table sources: returns catalog.schema.table_name
+        - For table sources: returns catalog.schema.model_name
         - For volume sources: returns the volume path
         - For raw_path sources: returns the path value
 

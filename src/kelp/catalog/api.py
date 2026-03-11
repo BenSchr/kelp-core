@@ -1,7 +1,7 @@
 import logging
 
 from kelp.catalog.uc_adapter import UnityCatalogAdapter
-from kelp.config.lifecycle import get_context
+from kelp.config import get_context
 
 logger = logging.getLogger(f"{__name__}")
 
@@ -28,18 +28,19 @@ def sync_catalog(
     Raises:
         Exception: If catalog synchronization fails (see UnityCatalogAdapter for details).
     """
-    tables = get_context().catalog.get_tables()
+    ctx = get_context()
+    tables = ctx.catalog_index.get_all("models")
     uc_adapter = UnityCatalogAdapter()
     logger.info("Starting remote catalog sync for all tables & metric views...")
     queries: list[str] = []
     if sync_functions:
-        queries.extend(uc_adapter.sync_all_functions(get_context().catalog.get_functions()))
+        queries.extend(uc_adapter.sync_all_functions(ctx.catalog_index.get_all("functions")))
     if sync_tables:
         queries.extend(uc_adapter.sync_all_tables(tables))
     if sync_metric_views:
-        queries.extend(uc_adapter.sync_all_metric_views(get_context().catalog.get_metric_views()))
+        queries.extend(uc_adapter.sync_all_metric_views(ctx.catalog_index.get_all("metric_views")))
     if sync_abacs:
-        queries.extend(uc_adapter.sync_all_abac_policies(get_context().catalog.get_abacs()))
+        queries.extend(uc_adapter.sync_all_abac_policies(ctx.catalog_index.get_all("abacs")))
 
     return queries
 
@@ -50,7 +51,9 @@ def sync_functions(function_names: list[str] | None = None) -> list[str]:
     Functions are pre-applied entities and are synced via CREATE OR REPLACE DDL.
     """
     function_names = function_names or []
-    functions = [f for f in get_context().catalog.get_functions() if f.name in function_names]
+    functions = [
+        f for f in get_context().catalog_index.get_all("functions") if f.name in function_names
+    ]
     uc_adapter = UnityCatalogAdapter()
     queries = uc_adapter.sync_all_functions(functions)
     return queries
@@ -73,7 +76,9 @@ def create_metric_views(view_names: list[str] | None = None) -> list[str]:
         Exception: If metric view creation fails (see UnityCatalogAdapter for details).
     """
     view_names = view_names or []
-    metric_views = [mv for mv in get_context().catalog.get_metric_views() if mv.name in view_names]
+    metric_views = [
+        mv for mv in get_context().catalog_index.get_all("metric_views") if mv.name in view_names
+    ]
     uc_adapter = UnityCatalogAdapter()
     logger.info("Starting remote catalog sync for all metric views...")
     queries = uc_adapter.create_all_metric_views(metric_views)
@@ -97,7 +102,9 @@ def sync_metric_views(view_names: list[str] | None = None) -> list[str]:
         Exception: If metric view sync fails (see UnityCatalogAdapter for details).
     """
     view_names = view_names or []
-    metric_views = [mv for mv in get_context().catalog.get_metric_views() if mv.name in view_names]
+    metric_views = [
+        mv for mv in get_context().catalog_index.get_all("metric_views") if mv.name in view_names
+    ]
     uc_adapter = UnityCatalogAdapter()
     logger.info("Starting sync for metric views...")
     queries = uc_adapter.sync_all_metric_views(metric_views)
@@ -107,13 +114,13 @@ def sync_metric_views(view_names: list[str] | None = None) -> list[str]:
 def sync_abac_policies(policy_names: list[str] | None = None) -> list[str]:
     """Synchronize specified ABAC policies to the remote catalog."""
     policy_names = policy_names or []
-    policies = [p for p in get_context().catalog.get_abacs() if p.name in policy_names]
+    policies = [p for p in get_context().catalog_index.get_all("abacs") if p.name in policy_names]
     uc_adapter = UnityCatalogAdapter()
     queries = uc_adapter.sync_abac_policies(policies)
     return queries
 
 
-def sync_tables(table_names: list[str] | None = None) -> list[str]:
+def sync_tables(model_names: list[str] | None = None) -> list[str]:
     """Synchronize specified tables to the remote catalog.
 
     Synchronizes tables from the local catalog to Databricks Unity Catalog,
@@ -121,7 +128,7 @@ def sync_tables(table_names: list[str] | None = None) -> list[str]:
     If no specific table names are provided, all tables are synchronized.
 
     Args:
-        table_names: List of table names to sync. If None, syncs all tables.
+        model_names: List of table names to sync. If None, syncs all tables.
 
     Returns:
         List of SQL queries executed for synchronization.
@@ -130,8 +137,8 @@ def sync_tables(table_names: list[str] | None = None) -> list[str]:
         KeyError: If a specified table name is not found in the catalog.
         Exception: If table sync fails (see UnityCatalogAdapter for details).
     """
-    table_names = table_names or []
-    tables = [t for t in get_context().catalog.get_tables() if t.name in table_names]
+    model_names = model_names or []
+    tables = [t for t in get_context().catalog_index.get_all("models") if t.name in model_names]
     uc_adapter = UnityCatalogAdapter()
     queries = uc_adapter.sync_tables(tables)
     return queries

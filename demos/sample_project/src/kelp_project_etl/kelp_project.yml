@@ -1,16 +1,20 @@
 # yaml-language-server: $schema=/workspaces/kelp/.vscode/kelp_json_schema.json
 kelp_project:
   models_path: "./kelp_metadata/models"
+
   models:
     +catalog: ${ catalog }
     bronze:
       +schema: kelp_bronze
+
     silver:
       +schema: kelp_silver
     gold:
       +schema: kelp_gold
     +tags:
       kelp_managed: ""
+      domain: "sales"
+      owner: "analytics-team"
 
   # Metric Views configuration
   metrics_path: "./kelp_metadata/metrics"
@@ -19,6 +23,8 @@ kelp_project:
     +schema: kelp_gold
     +tags:
       kelp_managed: ""
+      domain: "sales"
+      owner: "analytics-team"
 
   # Functions configuration
   functions_path: "./kelp_metadata/functions"
@@ -37,6 +43,11 @@ kelp_project:
   sources:
     +catalog: ${catalog}
     +schema: ${landing_schema}
+
+  # Governance policies configuration
+  policies_path: "./kelp_metadata/policies"
+  policy_config:
+    enabled: false
 
 vars:
   catalog: kelp_catalog

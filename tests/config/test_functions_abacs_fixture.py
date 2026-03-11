@@ -9,13 +9,13 @@ def test_functions_abacs_fixture_loads(functions_abacs_project_dir: Path) -> Non
     """Fixture project should load models, functions, and ABACs with resolved vars."""
     project_file = functions_abacs_project_dir / "kelp_project.yml"
 
-    ctx = init(project_root=str(project_file))
+    ctx = init(project_file_path=str(project_file))
 
-    customers = ctx.catalog.get_table("customers")
-    normalize_email = ctx.catalog.get_function("normalize_email")
-    mask_ssn = ctx.catalog.get_function("mask_ssn")
-    format_greeting = ctx.catalog.get_function("format_greeting")
-    policy = ctx.catalog.get_abac("mask_ssn_policy")
+    customers = ctx.catalog_index.get("models", "customers")
+    normalize_email = ctx.catalog_index.get("functions", "normalize_email")
+    mask_ssn = ctx.catalog_index.get("functions", "mask_ssn")
+    format_greeting = ctx.catalog_index.get("functions", "format_greeting")
+    policy = ctx.catalog_index.get("abacs", "mask_ssn_policy")
 
     assert customers.catalog == "dev_data_catalog"
     assert customers.schema_ == "dev_data_schema"

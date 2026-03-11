@@ -1,0 +1,81 @@
+kelp_policies:
+  # Bronze layer: ingestion from source — warn on violations, require basic metadata
+  - name: bronze_layer
+    applies_to: "models/bronze/*"
+    model:
+      require_description: true
+      require_tags:
+        - owner
+        - domain
+      require_constraints:
+        - primary_key
+      naming_pattern: "^bronze_.*"
+      severity: warn
+    column:
+      require_description: true
+      require_tags:
+        - data_classification
+      severity: warn
+
+  # Silver layer: cleaned and conformed data — enforce stricter standards
+  - name: silver_layer
+    applies_to: "models/silver/*"
+    model:
+      require_description: true
+      require_tags:
+        - owner
+        - domain
+      require_constraints:
+        - primary_key
+      naming_pattern: "^silver_.*"
+      severity: error
+    column:
+      require_description: true
+      require_tags:
+        - data_classification
+      naming_patterns_by_type:
+        - data_type: BOOLEAN
+          pattern: "^(is_|has_|can_).*"
+        - data_type: TIMESTAMP
+          pattern: ".*_at$"
+      severity: error
+
+  # Gold layer: analytics-ready — strictest metadata requirements
+  - name: gold_layer
+    applies_to: "models/gold/*"
+    model:
+      require_description: true
+      require_any_tag: true
+      require_tags:
+        - owner
+        - domain
+      require_constraints:
+        - primary_key
+      naming_pattern: "^gold_.*"
+      severity: error
+    column:
+      require_description: true
+      require_tags:
+        - data_classification
+        - owner
+      naming_patterns_by_type:
+        - data_type: BOOLEAN
+          pattern: "^(is_|has_|can_).*"
+        - data_type: TIMESTAMP
+          pattern: ".*_at$"
+        - data_type: DATE
+          pattern: ".*_date$"
+      severity: error
+
+  # Catch-all fallback for any models not matched above
+  - name: global_fallback
+    applies_to: "*"
+    model:
+      require_description: true
+      severity: warn
+      require_tags:
+        - test
+
+    column:
+      require_description: true
+      severity: warn

@@ -1,21 +1,27 @@
 import json
+import logging
 
 import yaml
 from databricks.sdk import WorkspaceClient
 
 from kelp.models.metric_view import MetricView
-from kelp.models.table import Table
+from kelp.models.model import Model
+
+logger = logging.getLogger(__name__)
 
 
 def get_table_from_dbx_sdk(
     full_table: str,
     w: WorkspaceClient | None = None,
     profile: str | None = None,
-) -> Table:
+) -> Model | None:
     """Retrieve table metadata from Databricks SDK and convert to Kelp Table format."""
     w = w or WorkspaceClient(profile=profile)
-    info = w.tables.get(full_table)
-
+    try:
+        info = w.tables.get(full_table)
+    except Exception:  # noqa: BLE001
+        # if message starts with not found
+        return None
     table_tags = {}
     for tag in w.entity_tag_assignments.list("tables", full_table):
         table_tags[tag.tag_key] = tag.tag_value
@@ -91,7 +97,7 @@ def get_table_from_dbx_sdk(
                 }
                 table_obj["constraints"].append(fk_constraint)
 
-    return Table(**table_obj)
+    return Model(**table_obj)
 
 
 def get_metric_view_from_dbx_sdk(

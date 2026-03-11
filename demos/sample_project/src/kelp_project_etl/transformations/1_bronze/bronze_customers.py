@@ -1,5 +1,5 @@
-from pyspark import pipelines as dp
 from pyspark.sql import SparkSession
+
 from kelp import pipelines as kp
 
 spark = SparkSession.active()

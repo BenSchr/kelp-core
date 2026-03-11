@@ -52,6 +52,7 @@ nav:
       - Functions: guides/functions.md
       - ABAC Policies: guides/abacs.md
       - Metric Views: guides/metric_views.md
+      - Governance Policies: guides/policies.md
   - Reference:
       - Kelp: reference/kelp.md
       - Catalog: reference/catalog.md
@@ -59,16 +60,18 @@ nav:
       - Pipelines: reference/pipelines.md
       - Sources: reference/sources.md
       - Transformations: reference/transformations.md
+      - MetaFramework: reference/meta.md
+      - Policies: reference/policies.md
       - Config Models:
           - abac: reference/models/abac.md
-          - catalog: reference/models/catalog.md
           - function: reference/models/function.md
           - jsonschema: reference/models/jsonschema.md
           - metric_view: reference/models/metric_view.md
+          - model: reference/models/table.md
+          - policy: reference/models/policy.md
+          - policy_definition: reference/models/policy_definition.md
           - project_config: reference/models/project_config.md
-          - runtime_context: reference/models/runtime_context.md
           - source: reference/models/source.md
-          - table: reference/models/table.md
 plugins:
   - search
   - offline

@@ -1,4 +1,4 @@
 ::: kelp.tables
 
-::: kelp.service.table_manager.KelpTable
-::: kelp.service.table_manager.KelpSdpTable
+::: kelp.service.model_manager.KelpModel
+::: kelp.service.model_manager.KelpSdpModel

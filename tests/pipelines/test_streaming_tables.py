@@ -14,7 +14,7 @@ def test_materialized_view_merges_metadata_params() -> None:
     }
 
     with (
-        patch("kelp.pipelines.streaming_tables.TableManager.build_sdp_table") as mock_build,
+        patch("kelp.pipelines.streaming_tables.ModelManager.build_sdp_model") as mock_build,
         patch("kelp.pipelines.streaming_tables.dp.materialized_view") as mock_dp_mv,
     ):
         mock_build.return_value = mock_sdp_table
@@ -42,7 +42,7 @@ def test_materialized_view_supports_no_parentheses_form() -> None:
     mock_sdp_table.params.return_value = {"name": "catalog.schema.inline_mv"}
 
     with (
-        patch("kelp.pipelines.streaming_tables.TableManager.build_sdp_table") as mock_build,
+        patch("kelp.pipelines.streaming_tables.ModelManager.build_sdp_model") as mock_build,
         patch("kelp.pipelines.streaming_tables.dp.materialized_view") as mock_dp_mv,
     ):
         mock_build.return_value = mock_sdp_table

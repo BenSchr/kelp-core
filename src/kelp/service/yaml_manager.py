@@ -8,11 +8,19 @@ from pathlib import Path
 import yaml
 
 from kelp.config import get_context
+from kelp.meta.context import MetaRuntimeContext
 from kelp.models.metric_view import MetricView
-from kelp.models.table import Column, ForeignKeyConstraint, PrimaryKeyConstraint, Table
+from kelp.models.model import Column, ForeignKeyConstraint, Model, PrimaryKeyConstraint
+from kelp.models.project_config import ProjectConfig
 from kelp.utils.dict_parser import apply_cfg_hierarchy_to_dict_recursive
 
 logger = logging.getLogger(__name__)
+
+
+def _get_project_config(ctx: MetaRuntimeContext | None) -> ProjectConfig:
+    if ctx is None:
+        raise RuntimeError("RuntimeContext required for ServicePathConfig.from_context()")
+    return ctx.project_settings
 
 
 @dataclass
@@ -32,7 +40,7 @@ class ServicePathConfig:
 
     Example:
         config = ServicePathConfig.from_context()
-        report = YamlManager.patch_table_yaml(table, path_config=config)
+        report = YamlManager.patch_model_yaml(table, path_config=config)
     """
 
     project_root: Path
@@ -57,18 +65,19 @@ class ServicePathConfig:
             RuntimeError: If context is not initialized or required config is missing.
         """
         ctx = get_context()
-        if not ctx or not ctx.project_config:
+        project_config = _get_project_config(ctx)
+        if not ctx or not project_config:
             raise RuntimeError("RuntimeContext required for ServicePathConfig.from_context()")
 
         project_root = Path(ctx.project_root)
-        service_root = Path(getattr(ctx.project_config, service_root_key, ""))
+        service_root = Path(getattr(project_config, service_root_key, ""))
 
         if not service_root:
             raise RuntimeError(
                 f"Project config missing '{service_root_key}' for service path resolution",
             )
 
-        hierarchy_config = getattr(ctx.project_config, hierarchy_config_key, None)
+        hierarchy_config = getattr(project_config, hierarchy_config_key, None)
 
         return ServicePathConfig(
             project_root=project_root,
@@ -86,7 +95,7 @@ class ServicePathConfig:
 class YamlUpdateReport:
     """Report summarizing the changes made during a YAML patch operation."""
 
-    table_name: str
+    model_name: str
     file_path: Path
     result_model: dict
     changes_made: bool
@@ -96,7 +105,7 @@ class YamlUpdateReport:
 
 
 class YamlManager:
-    """Service for writing and patching table YAML files."""
+    """Service for writing and patching model YAML files."""
 
     @classmethod
     def patch_metric_view_yaml(
@@ -172,7 +181,7 @@ class YamlManager:
             cls._write_yaml_document(full_file_path, document)
 
         return YamlUpdateReport(
-            table_name=source_metric_view.name,
+            model_name=source_metric_view.name,
             file_path=full_file_path,
             result_model=model,
             changes_made=changes_made,
@@ -182,9 +191,9 @@ class YamlManager:
         )
 
     @classmethod
-    def patch_table_yaml(
+    def patch_model_yaml(
         cls,
-        source_table: Table,
+        source_model: Model,
         *,
         path_config: ServicePathConfig | None = None,
         relative_file_path: str | Path | None = None,
@@ -199,7 +208,7 @@ class YamlManager:
         - Detecting and writing changed files
 
         Args:
-            source_table: Table sourced from Databricks metadata.
+            source_model: Model sourced from Databricks metadata.
             path_config: Service path configuration (project root, service root, hierarchy config).
                         If not provided, auto-discovers from runtime context (requires context to be initialized).
             relative_file_path: Optional explicit path override. If provided, uses this path directly.
@@ -210,19 +219,19 @@ class YamlManager:
         Example:
             # With explicit config
             config = ServicePathConfig.from_context()
-            report = YamlManager.patch_table_yaml(table, path_config=config)
+            report = YamlManager.patch_model_yaml(table, path_config=config)
 
             # With auto-discovered config (requires context)
-            report = YamlManager.patch_table_yaml(table)
+            report = YamlManager.patch_model_yaml(table)
         """
         if path_config is None:
             path_config = ServicePathConfig.from_context()
 
         resolved_file_path = cls._resolve_or_determine_path(
-            name=source_table.name,
-            origin_file_path=source_table.origin_file_path,
-            schema=source_table.schema_,
-            catalog=source_table.catalog,
+            name=source_model.name,
+            origin_file_path=source_model.origin_file_path,
+            schema=source_model.schema_,
+            catalog=source_model.catalog,
             path_config=path_config,
             explicit_path=relative_file_path,
             kind="table",
@@ -230,7 +239,7 @@ class YamlManager:
         if relative_file_path is None:
             logger.debug(
                 "Determined file path for table %s: %s",
-                source_table.name,
+                source_model.name,
                 resolved_file_path,
             )
 
@@ -240,7 +249,7 @@ class YamlManager:
         if not isinstance(models, list):
             models = []
 
-        model_name = source_table.name
+        model_name = source_model.name
         model_index = cls._find_model_index(models, model_name)
         if model_index is None:
             model = {"name": model_name}
@@ -252,7 +261,7 @@ class YamlManager:
             original_model = copy.deepcopy(model)
 
         defaults = cls._get_hierarchy_defaults(resolved_file_path, path_config)
-        cls._patch_model_dict(model, source_table, defaults)
+        cls._patch_model_dict(model, source_model, defaults)
 
         # Detect changes
         changes_made = original_model is None or model != original_model
@@ -263,13 +272,13 @@ class YamlManager:
             document["kelp_models"] = models
             logger.debug(
                 "Writing updated YAML for table %s to %s",
-                source_table.name,
+                source_model.name,
                 full_file_path,
             )
             cls._write_yaml_document(full_file_path, document)
 
         return YamlUpdateReport(
-            table_name=source_table.name,
+            model_name=source_model.name,
             file_path=full_file_path,
             result_model=model,
             changes_made=changes_made,
@@ -279,19 +288,19 @@ class YamlManager:
         )
 
     @classmethod
-    def table_to_model_dict(
+    def model_to_dict(
         cls,
-        source_table: Table,
+        source_model: Model,
         include_hierarchy_defaults: bool = True,
     ) -> dict:
-        """Convert a Table object to a YAML model dict.
+        """Convert a Model object to a YAML model dict.
 
-        Serializes a Table into a model dictionary suitable for YAML output in kelp_models.
+        Serializes a Model into a model dictionary suitable for YAML output in kelp_models.
         Used by all model serialization use cases: CLI generation, file patching, etc.
         Provides unified handling of model fields (description, tags, constraints, columns).
 
         Args:
-            source_table: Table to convert to model dict.
+            source_model: Model to convert to model dict.
             include_hierarchy_defaults: If True, applies project config hierarchy defaults
                 to reduce redundant field values. Set to False for standalone display use
             if changes_made and not dry_run:
@@ -301,29 +310,29 @@ class YamlManager:
 
         Example:
             # For CLI generation (no context needed)
-            model = YamlManager.table_to_model_dict(table, include_hierarchy_defaults=False)
+            model = YamlManager.model_to_dict(table, include_hierarchy_defaults=False)
             content = {"kelp_models": [model]}
 
             # For file patching (with context)
-            model = YamlManager.table_to_model_dict(table, include_hierarchy_defaults=True)
+            model = YamlManager.model_to_dict(table, include_hierarchy_defaults=True)
         """
-        model = {"name": source_table.name}
+        model = {"name": source_model.name}
 
         # Get hierarchy defaults if requested and available
         defaults = {}
-        if include_hierarchy_defaults and source_table.origin_file_path:
+        if include_hierarchy_defaults and source_model.origin_file_path:
             defaults = cls._get_hierarchy_defaults(
-                Path(source_table.origin_file_path),
+                Path(source_model.origin_file_path),
                 ServicePathConfig.from_context(),
             )
 
         # Patch using standard logic (handles all patchable fields)
-        cls._patch_model_dict(model, source_table, defaults)
+        cls._patch_model_dict(model, source_model, defaults)
 
         return model
 
     @classmethod
-    def _patch_model_dict(cls, model: dict, source_table: Table, defaults: dict) -> None:
+    def _patch_model_dict(cls, model: dict, source_model: Model, defaults: dict) -> None:
         """Patch a single model dict in-place.
 
         Always updates fields from source. When a field has a default value in hierarchy config,
@@ -331,19 +340,24 @@ class YamlManager:
         """
         # Only write description if it differs from default
         default_description = defaults.get("description")
-        if source_table.description != default_description:
-            cls._set_or_remove(model, "description", source_table.description)
+        if source_model.description != default_description:
+            cls._set_or_remove(model, "description", source_model.description)
         elif "description" in model:
             # Remove if matches default (no need to write it)
             model.pop("description", None)
 
         # Filter tags to exclude those matching defaults
-        filtered_tags = cls._filter_tags(source_table.tags, defaults.get("tags"))
+        filtered_tags = cls._filter_tags(source_model.tags, defaults.get("tags"))
         cls._set_or_remove(model, "tags", filtered_tags)
 
         # Only write constraints if no default or differs from default
         default_constraints = defaults.get("constraints")
-        serialized_constraints = cls._serialize_constraints(source_table.constraints)
+        serialized_constraints = cls._serialize_constraints(source_model.constraints)
+        serialized_constraints = cls._normalize_foreign_key_references(serialized_constraints)
+        serialized_constraints = cls._preserve_local_foreign_key_variables(
+            serialized_constraints,
+            model.get("constraints"),
+        )
         if serialized_constraints != default_constraints:
             cls._set_or_remove(model, "constraints", serialized_constraints)
         elif "constraints" in model:
@@ -353,7 +367,7 @@ class YamlManager:
         if not isinstance(existing_columns, list):
             existing_columns = []
 
-        model["columns"] = cls._patch_columns(existing_columns, source_table.columns)
+        model["columns"] = cls._patch_columns(existing_columns, source_model.columns)
 
     @classmethod
     def metric_view_to_model_dict(
@@ -499,6 +513,105 @@ class YamlManager:
         return result
 
     @classmethod
+    def _normalize_foreign_key_references(cls, constraints: list[dict]) -> list[dict]:
+        """Extract unqualified FK reference names for cleaner YAML storage.
+
+        When a referenced table FQN exists in local metadata, stores only the
+        unqualified table name in YAML. The Model loader will resolve to FQN
+        when creating the Model object, so consumers see resolved references
+        without needing resolution logic.
+
+        When a referenced table is NOT in local metadata, keeps the remote FQN value.
+        """
+        normalized: list[dict] = []
+        for constraint in constraints:
+            if not isinstance(constraint, dict):
+                normalized.append(constraint)
+                continue
+
+            updated = copy.deepcopy(constraint)
+            if updated.get("type") == "foreign_key":
+                reference_table = updated.get("reference_table")
+                if isinstance(reference_table, str):
+                    updated["reference_table"] = cls._extract_unqualified_reference_name(
+                        reference_table
+                    )
+            normalized.append(updated)
+        return normalized
+
+    @classmethod
+    def _preserve_local_foreign_key_variables(
+        cls,
+        new_constraints: list[dict],
+        existing_constraints: list | None,
+    ) -> list[dict]:
+        """Preserve local templated FK reference_table values when patching.
+
+        Mirrors metric view preservation logic: if local YAML already has a
+        templated reference (for example ``${ catalog }.schema.table``), keep it
+        instead of overwriting with rendered remote values.
+        """
+        if not isinstance(existing_constraints, list):
+            return new_constraints
+
+        existing_fk_by_name: dict[str, str] = {}
+        for constraint in existing_constraints:
+            if not isinstance(constraint, dict):
+                continue
+            if constraint.get("type") != "foreign_key":
+                continue
+            name = constraint.get("name")
+            reference_table = constraint.get("reference_table")
+            if isinstance(name, str) and isinstance(reference_table, str):
+                existing_fk_by_name[name] = reference_table
+
+        patched_constraints: list[dict] = []
+        for constraint in new_constraints:
+            if not isinstance(constraint, dict):
+                patched_constraints.append(constraint)
+                continue
+
+            updated = copy.deepcopy(constraint)
+            if updated.get("type") == "foreign_key":
+                name = updated.get("name")
+                if isinstance(name, str):
+                    local_reference = existing_fk_by_name.get(name)
+                    if isinstance(local_reference, str) and "${" in local_reference:
+                        updated["reference_table"] = local_reference
+
+            patched_constraints.append(updated)
+
+        return patched_constraints
+
+    @classmethod
+    def _extract_unqualified_reference_name(cls, reference_table: str) -> str:
+        """Extract unqualified table name if table exists in local catalog.
+
+        Args:
+            reference_table: Referenced table name, optionally qualified.
+
+        Returns:
+            Unqualified table name if table exists in local metadata,
+            otherwise the original FQN value (for external tables).
+        """
+        if "." not in reference_table:
+            return reference_table
+
+        reference_name = reference_table.split(".")[-1]
+        try:
+            ctx = get_context(init=False)
+        except Exception:  # noqa: BLE001
+            return reference_table
+
+        try:
+            ctx.catalog_index.get("models", reference_name)
+            # Table found in local catalog, store unqualified name in YAML
+            return reference_name
+        except Exception:  # noqa: BLE001
+            # Not in local catalog, keep the external FQN
+            return reference_table
+
+    @classmethod
     def _detect_changes(
         cls,
         original: dict | None,
@@ -578,7 +691,33 @@ class YamlManager:
             return Path(explicit_path)
 
         if origin_file_path:
-            return Path(origin_file_path)
+            # Strip service_root prefix from origin_file_path to avoid duplication
+            # e.g., "models/silver/table.yml" -> "silver/table.yml"
+            # or "kelp_metadata/models/silver/table.yml" -> "silver/table.yml"
+            path_obj = Path(origin_file_path)
+
+            # If absolute and under service_root_absolute, normalize to service-root-relative path.
+            if path_obj.is_absolute():
+                try:
+                    return path_obj.relative_to(path_config.service_root_absolute)
+                except ValueError:
+                    return path_obj
+
+            # For relative origin paths, support both:
+            # - full service root prefix: kelp_metadata/models/...
+            # - service root basename prefix: models/...
+            prefixes: list[Path] = [path_config.service_root]
+            if path_config.service_root.name:
+                prefixes.append(Path(path_config.service_root.name))
+
+            for prefix in prefixes:
+                try:
+                    return path_obj.relative_to(prefix)
+                except ValueError:
+                    continue
+
+            # origin_file_path doesn't start with known prefixes, use as-is
+            return path_obj
 
         return cls._determine_new_file_path_common(
             name=name,

@@ -4,8 +4,6 @@ from typing import Annotated
 
 import typer
 
-from kelp.models.jsonschema import generate_json_schema
-
 
 def _find_project_root() -> Path:
     """Find the project root directory (directory containing kelp_project.yml).
@@ -21,6 +19,17 @@ def _find_project_root() -> Path:
 
 
 def strip_trailing_commas(s: str) -> str:
+    """Remove trailing commas in JSON before closing brackets.
+
+    Removes commas that appear just before a closing } or ].
+    Handles nested cases by applying repeatedly until no more matches.
+
+    Args:
+        s: JSON string with potential trailing commas.
+
+    Returns:
+        Cleaned JSON string without trailing commas.
+    """
     # Remove commas that appear *just before* a closing } or ]
     # Example: {"a":1,} -> {"a":1}
     #          [1,2,]   -> [1,2]
@@ -42,8 +51,10 @@ def _update_settings_json(vscode_dir: Path, schema_filename: str) -> None:
         vscode_dir: Path to .vscode directory.
         schema_filename: Name of the schema file (e.g., "kelp_json_schema.json").
     """
+    from kelp.cli.output import print_error, print_info, print_message, print_success
+
     settings_path = vscode_dir / "settings.json"
-    typer.echo(f"Updating VS Code settings at: {settings_path}")
+    print_message(f"Updating VS Code settings at: {settings_path}")
     # Load existing settings or create empty dict
 
     try:
@@ -51,8 +62,8 @@ def _update_settings_json(vscode_dir: Path, schema_filename: str) -> None:
             clean = strip_trailing_commas(f.read())
             settings = json.loads(clean)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        typer.echo(
-            "If there are trailing commas e.g. ',}' or ',]' in settings.json, please remove them to ensure proper JSON formatting.",
+        print_error(
+            "If there are trailing commas e.g. ',}' or ',]' in settings.json, please remove them to ensure proper JSON formatting."
         )
         raise ValueError(f"Error reading {settings_path}: {e}") from e
 
@@ -84,11 +95,9 @@ def _update_settings_json(vscode_dir: Path, schema_filename: str) -> None:
             json.dump(settings, f, indent=4)
             f.write("\n")  # Add trailing newline for proper file formatting
 
-        typer.secho(
-            f"✓ Updated {settings_path} with YAML schema configuration", fg=typer.colors.GREEN
-        )
+        print_success(f"✓ Updated {settings_path} with YAML schema configuration")
     else:
-        typer.secho(f"• YAML schema already configured in {settings_path}", fg=typer.colors.BLUE)
+        print_info(f"• YAML schema already configured in {settings_path}")
 
 
 def json_schema(
@@ -129,6 +138,9 @@ def json_schema(
         dry_run: Preview output without writing files.
         vscode: Enable VS Code integration (create .vscode dir, update settings.json).
     """
+    from kelp.cli.output import print_message, print_success, print_warning
+    from kelp.models.jsonschema import generate_json_schema
+
     # Determine output path
     if output is None:
         if vscode:
@@ -147,12 +159,10 @@ def json_schema(
     json_schema_data = generate_json_schema()
 
     if dry_run:
-        typer.echo(json.dumps(json_schema_data, indent=2))
-        typer.secho(f"• dry-run: skipped writing {output}", fg=typer.colors.YELLOW)
+        print_message(json.dumps(json_schema_data, indent=2))
+        print_warning(f"• dry-run: skipped writing {output}")
         if vscode and vscode_dir:
-            typer.secho(
-                f"• dry-run: would update {vscode_dir / 'settings.json'}", fg=typer.colors.YELLOW
-            )
+            print_warning(f"• dry-run: would update {vscode_dir / 'settings.json'}")
         return
 
     # Create .vscode directory if needed
@@ -166,7 +176,7 @@ def json_schema(
     with output.open("w") as f:
         json.dump(json_schema_data, f, indent=2)
 
-    typer.secho(f"✓ JSON schema created: {output}", fg=typer.colors.GREEN)
+    print_success(f"✓ JSON schema created: {output}")
 
     # Update settings.json if vscode flag is enabled
     if vscode and vscode_dir:

@@ -1,4 +1,4 @@
-"""Tests for kelp.models.table module.
+"""Tests for kelp.models.model module.
 
 This module tests the Table Pydantic model and related classes:
 - Table: Main table definition model
@@ -11,7 +11,7 @@ This module tests the Table Pydantic model and related classes:
 import pytest
 from pydantic import ValidationError
 
-from kelp.models.table import (
+from kelp.models.model import (
     Column,
     DQXQuality,
     ForeignKeyConstraint,
@@ -19,8 +19,10 @@ from kelp.models.table import (
     GeneratedIdentityColumnConfig,
     PrimaryKeyConstraint,
     SDPQuality,
-    Table,
     TableType,
+)
+from kelp.models.model import (
+    Model as Table,
 )
 
 

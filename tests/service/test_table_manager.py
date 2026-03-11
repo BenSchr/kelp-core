@@ -1,12 +1,12 @@
-"""Tests for kelp.service.table_manager module.
+"""Tests for kelp.service.model_manager module.
 
-This module tests the TableManager, KelpTable, KelpSdpTable, and SparkSchemaBuilder classes
+This module tests the ModelManager, KelpModel, KelpSdpModel, and SparkSchemaBuilder classes
 which handle table metadata and schema generation.
 """
 
 from pathlib import Path
 
-from kelp.models.table import (
+from kelp.models.model import (
     Column,
     DQXQuality,
     ForeignKeyConstraint,
@@ -14,17 +14,19 @@ from kelp.models.table import (
     GeneratedIdentityColumnConfig,
     PrimaryKeyConstraint,
     SDPQuality,
-    Table,
 )
-from kelp.service.table_manager import KelpSdpTable, KelpTable, SparkSchemaBuilder, TableManager
+from kelp.models.model import (
+    Model as Table,
+)
+from kelp.service.model_manager import KelpModel, KelpSdpModel, ModelManager, SparkSchemaBuilder
 
 
-class TestKelpTable:
-    """Test the KelpTable dataclass."""
+class TestKelpModel:
+    """Test the KelpModel dataclass."""
 
     def test_kelp_table_basic_creation(self):
-        """Test creating a basic KelpTable."""
-        table = KelpTable(
+        """Test creating a basic KelpModel."""
+        table = KelpModel(
             name="test_table",
             fqn="catalog.schema.test_table",
             schema="col1 string, col2 int",
@@ -36,11 +38,11 @@ class TestKelpTable:
 
     def test_kelp_table_get_dqx_check_obj_with_dqx_quality(self):
         """Test get_dqx_check_obj returns DQX quality object."""
-        root_table = Table(
+        root_model = Table(
             name="test",
             quality=DQXQuality(engine="dqx", checks=[{"name": "test_check"}]),
         )
-        kelp_table = KelpTable(name="test", root_table=root_table)
+        kelp_table = KelpModel(name="test", root_model=root_model)
 
         dqx_obj = kelp_table.get_dqx_check_obj()
 
@@ -50,11 +52,11 @@ class TestKelpTable:
 
     def test_kelp_table_get_dqx_check_obj_with_sdp_quality(self):
         """Test get_dqx_check_obj returns None for SDP quality."""
-        root_table = Table(
+        root_model = Table(
             name="test",
             quality=SDPQuality(engine="sdp"),
         )
-        kelp_table = KelpTable(name="test", root_table=root_table)
+        kelp_table = KelpModel(name="test", root_model=root_model)
 
         dqx_obj = kelp_table.get_dqx_check_obj()
 
@@ -62,19 +64,19 @@ class TestKelpTable:
 
     def test_kelp_table_get_dqx_check_obj_no_quality(self):
         """Test get_dqx_check_obj returns None when no quality defined."""
-        kelp_table = KelpTable(name="test")
+        kelp_table = KelpModel(name="test")
 
         dqx_obj = kelp_table.get_dqx_check_obj()
 
         assert dqx_obj is None
 
 
-class TestKelpSdpTable:
-    """Test the KelpSdpTable dataclass."""
+class TestKelpSdpModel:
+    """Test the KelpSdpModel dataclass."""
 
     def test_kelp_sdp_table_params(self):
         """Test params method excludes quality parameters."""
-        table = KelpSdpTable(
+        table = KelpSdpModel(
             name="test_table",
             fqn="catalog.schema.test_table",
             schema="col1 string",
@@ -94,7 +96,7 @@ class TestKelpSdpTable:
 
     def test_kelp_sdp_table_params_raw(self):
         """Test params_raw includes all quality parameters."""
-        table = KelpSdpTable(
+        table = KelpSdpModel(
             name="test_table",
             fqn="catalog.schema.test_table",
             expect_all={"rule1": "col1 IS NOT NULL"},
@@ -107,7 +109,7 @@ class TestKelpSdpTable:
 
     def test_kelp_sdp_table_params_cst(self):
         """Test params_cst excludes quarantine parameters."""
-        table = KelpSdpTable(
+        table = KelpSdpModel(
             name="test_table",
             fqn="catalog.schema.test_table",
             expect_all_or_quarantine={"rule": "test"},
@@ -122,7 +124,7 @@ class TestKelpSdpTable:
 
     def test_kelp_sdp_table_get_sdp_params(self):
         """Test get_sdp_params returns all non-None parameters."""
-        table = KelpSdpTable(
+        table = KelpSdpModel(
             name="test",
             fqn="catalog.schema.test",
             comment="Test table",
@@ -141,7 +143,7 @@ class TestKelpSdpTable:
 
     def test_kelp_sdp_table_get_sdp_params_with_exclude(self):
         """Test get_sdp_params respects exclude list."""
-        table = KelpSdpTable(
+        table = KelpSdpModel(
             name="test",
             fqn="catalog.schema.test",
             comment="Test",
@@ -351,8 +353,8 @@ class TestSparkSchemaBuilder:
         assert "TBLPROPERTIES ('delta.enableChangeDataFeed'='true')" in ddl
 
 
-class TestTableManager:
-    """Test the TableManager class methods."""
+class TestModelManager:
+    """Test the ModelManager class methods."""
 
     def test_get_spark_schema_basic(self):
         """Test getting basic Spark schema."""
@@ -364,7 +366,7 @@ class TestTableManager:
             ],
         )
 
-        schema = TableManager.get_spark_schema(table)
+        schema = ModelManager.get_spark_schema(table)
 
         assert "col1 string" in schema
         assert "col2 int" in schema
@@ -377,13 +379,13 @@ class TestTableManager:
             constraints=[PrimaryKeyConstraint(name="pk", columns=["id"])],
         )
 
-        schema = TableManager.get_spark_schema(table, include_constraints=True)
+        schema = ModelManager.get_spark_schema(table, include_constraints=True)
 
         assert "CONSTRAINT pk PRIMARY KEY (id)" in schema
 
-    def test_build_qualified_table_name_full(self):
+    def test_build_qualified_model_name_full(self):
         """Test building fully qualified table name."""
-        fqn = TableManager.build_qualified_table_name(
+        fqn = ModelManager.build_qualified_model_name(
             catalog="my_catalog",
             schema="my_schema",
             name="my_table",
@@ -391,9 +393,9 @@ class TestTableManager:
 
         assert fqn == "my_catalog.my_schema.my_table"
 
-    def test_build_qualified_table_name_no_catalog(self):
+    def test_build_qualified_model_name_no_catalog(self):
         """Test building qualified name without catalog."""
-        fqn = TableManager.build_qualified_table_name(
+        fqn = ModelManager.build_qualified_model_name(
             catalog=None,
             schema="my_schema",
             name="my_table",
@@ -401,9 +403,9 @@ class TestTableManager:
 
         assert fqn == "my_schema.my_table"
 
-    def test_build_qualified_table_name_only_name(self):
+    def test_build_qualified_model_name_only_name(self):
         """Test building name without qualifiers."""
-        fqn = TableManager.build_qualified_table_name(
+        fqn = ModelManager.build_qualified_model_name(
             catalog=None,
             schema=None,
             name="my_table",
@@ -411,7 +413,7 @@ class TestTableManager:
 
         assert fqn == "my_table"
 
-    def test_get_qualified_tablename_from_table(self):
+    def test_get_qualified_name_from_model(self):
         """Test getting qualified name from Table object."""
         table = Table(
             name="test_table",
@@ -419,11 +421,11 @@ class TestTableManager:
             schema_="test_schema",
         )
 
-        fqn = TableManager.get_qualified_tablename_from_table(table)
+        fqn = ModelManager.get_qualified_name_from_model(table)
 
         assert fqn == "test_catalog.test_schema.test_table"
 
-    def test_get_qualified_tablename_from_table_with_overrides(self):
+    def test_get_qualified_name_from_model_with_overrides(self):
         """Test getting qualified name with overrides."""
         table = Table(
             name="test_table",
@@ -431,7 +433,7 @@ class TestTableManager:
             schema_="original_schema",
         )
 
-        fqn = TableManager.get_qualified_tablename_from_table(
+        fqn = ModelManager.get_qualified_name_from_model(
             table,
             catalog="override_catalog",
             schema="override_schema",
@@ -439,15 +441,15 @@ class TestTableManager:
 
         assert fqn == "override_catalog.override_schema.test_table"
 
-    def test_build_validation_table_name(self, simple_project_dir: Path):
+    def test_build_validation_model_name(self, simple_project_dir: Path):
         """Test building validation table name."""
         from kelp.config import init
 
-        ctx = init(project_root=str(simple_project_dir / "kelp_project.yml"))
+        ctx = init(project_file_path=str(simple_project_dir / "kelp_project.yml"))
 
-        validation_name = TableManager.build_validation_table_name(
+        validation_name = ModelManager.build_validation_model_name(
             ctx=ctx,
-            table_name="orders",
+            model_name="orders",
             schema="sales",
             catalog="prod",
         )
@@ -455,15 +457,15 @@ class TestTableManager:
         # Default suffix is "_validation"
         assert validation_name == "prod.sales.orders_validation"
 
-    def test_build_quarantine_table_name(self, simple_project_dir: Path):
+    def test_build_quarantine_model_name(self, simple_project_dir: Path):
         """Test building quarantine table name."""
         from kelp.config import init
 
-        ctx = init(project_root=str(simple_project_dir / "kelp_project.yml"))
+        ctx = init(project_file_path=str(simple_project_dir / "kelp_project.yml"))
 
-        quarantine_name = TableManager.build_quarantine_table_name(
+        quarantine_name = ModelManager.build_quarantine_model_name(
             ctx=ctx,
-            table_name="orders",
+            model_name="orders",
             schema="sales",
             catalog="prod",
         )

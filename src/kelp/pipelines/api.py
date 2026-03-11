@@ -1,23 +1,23 @@
+from kelp.service.model_manager import KelpSdpModel, ModelManager
 from kelp.service.source_manager import SourceManager
-from kelp.service.table_manager import KelpSdpTable, TableManager
 
 
-def get_table(name: str) -> KelpSdpTable:
-    """Get the KelpSdpTable object for a given table name.
+def get_model(name: str) -> KelpSdpModel:
+    """Get the KelpSdpModel object for a given table name.
 
-    Retrieves a KelpSdpTable instance with all computed properties including
+    Retrieves a KelpSdpModel instance with all computed properties including
     fully qualified name, schema, quality checks, and partition information.
 
     Args:
         name: Table name to retrieve.
 
     Returns:
-        KelpSdpTable: Table object with all properties and computed values.
+        KelpSdpModel: Table object with all properties and computed values.
 
     Raises:
         KeyError: If the table name is not found in the catalog.
     """
-    return TableManager.build_sdp_table(name)
+    return ModelManager.build_sdp_model(name)
 
 
 def target(name: str) -> str:
@@ -36,7 +36,7 @@ def target(name: str) -> str:
     Returns:
         Fully qualified target table name.
     """
-    return TableManager.build_sdp_table(name).target_table or name
+    return ModelManager.build_sdp_model(name).target_table or name
 
 
 def ref(name: str) -> str:
@@ -53,7 +53,7 @@ def ref(name: str) -> str:
     Returns:
         Fully qualified source table name (catalog.schema.name).
     """
-    return TableManager.build_sdp_table(name).fqn or name
+    return ModelManager.build_sdp_model(name).fqn or name
 
 
 def schema(name: str) -> str | None:
@@ -68,7 +68,7 @@ def schema(name: str) -> str | None:
     Returns:
         Spark schema DDL string, or None if not available.
     """
-    return TableManager.build_sdp_table(name).schema
+    return ModelManager.build_sdp_model(name).schema
 
 
 def schema_lite(name: str) -> str | None:
@@ -83,7 +83,7 @@ def schema_lite(name: str) -> str | None:
     Returns:
         Raw Spark schema DDL string, or None if not available.
     """
-    return TableManager.build_sdp_table(name).schema_lite
+    return ModelManager.build_sdp_model(name).schema_lite
 
 
 def params(name: str, exclude: list[str] | None = None) -> dict[str, str]:
@@ -104,7 +104,7 @@ def params(name: str, exclude: list[str] | None = None) -> dict[str, str]:
         KeyError: If the table name is not found in the catalog.
     """
     exclude = exclude or []
-    return TableManager.build_sdp_table(name).params(exclude=exclude)
+    return ModelManager.build_sdp_model(name).params(exclude=exclude)
 
 
 def params_cst(name: str, exclude: list[str] | None = None) -> dict[str, str]:
@@ -124,7 +124,7 @@ def params_cst(name: str, exclude: list[str] | None = None) -> dict[str, str]:
         KeyError: If the table name is not found in the catalog.
     """
     exclude = exclude or []
-    return TableManager.build_sdp_table(name).params_cst(exclude=exclude)
+    return ModelManager.build_sdp_model(name).params_cst(exclude=exclude)
 
 
 def func(name: str) -> str:
@@ -153,7 +153,7 @@ def source(name: str) -> str:
     Returns the path for a source (volume, table, or raw path) that can be used
     in pipelines for reading or writing data.
 
-    For table sources: returns the fully qualified name (catalog.schema.table_name)
+    For table sources: returns the fully qualified name (catalog.schema.model_name)
     For volume sources: returns the volume path (/Volumes/catalog/schema/volume)
     For raw_path sources: returns the configured path
 

@@ -6,7 +6,7 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import expr
 
 from kelp.pipelines.utils import merge_params
-from kelp.service.table_manager import TableManager
+from kelp.service.model_manager import ModelManager
 
 # -----------------------
 # Helpers
@@ -162,23 +162,23 @@ def table(
 
     def outer(decorated: Callable[..., DataFrame]) -> None:
 
-        table_name = name or getattr(decorated, "__name__", "unknown")
-        sdp_table = TableManager.build_sdp_table(table_name, soft_handle=True)
+        model_name = name or getattr(decorated, "__name__", "unknown")
+        sdp_table = ModelManager.build_sdp_model(model_name, soft_handle=True)
         meta_params = sdp_table.params_raw(exclude=exclude_params or [])
 
         params = merge_params(params_passed, meta_params, passed_kwargs)
 
-        fqn = str(params.get("name") or table_name)
+        fqn = str(params.get("name") or model_name)
         expect_all = params.pop("expect_all", None)
         expect_all_or_drop = params.pop("expect_all_or_drop", None)
         expect_all_or_fail = params.pop("expect_all_or_fail", None)
         expect_all_or_quarantine = params.pop("expect_all_or_quarantine", None)
 
-        # validation_table_name = table_def.get_validation_table_name()
-        # quarantine_table_name = table_def.get_quarantine_table_name()
-        validation_table_name = sdp_table.validation_table
-        quarantine_table_name = sdp_table.quarantine_table
-        if validation_table_name is None or quarantine_table_name is None:
+        # validation_model_name = table_def.get_validation_model_name()
+        # quarantine_model_name = table_def.get_quarantine_model_name()
+        validation_model_name = sdp_table.validation_table
+        quarantine_model_name = sdp_table.quarantine_table
+        if validation_model_name is None or quarantine_model_name is None:
             raise ValueError("Validation or quarantine table name is missing.")
 
         dqx_obj = sdp_table.get_dqx_check_obj()
@@ -224,21 +224,21 @@ def table(
 
             if dqx_obj.sdp_quarantine:
                 dp.table(
-                    name=validation_table_name,
+                    name=validation_model_name,
                     private=True,
                 )(validty_func)  # ty:ignore[no-matching-overload]
 
                 @dp.table(**params)
                 def valid_table():
-                    df = spark.readStream.table(validation_table_name)
+                    df = spark.readStream.table(validation_model_name)
                     return dq_engine.get_valid(df)
 
                 @dp.table(
-                    name=quarantine_table_name,
+                    name=quarantine_model_name,
                     comment=f"Quarantined rows from {fqn}",
                 )
                 def invalid_table():
-                    df = spark.readStream.table(validation_table_name)
+                    df = spark.readStream.table(validation_model_name)
                     return dq_engine.get_invalid(df)
             else:
                 dp.table(**params)(validty_func)
@@ -262,7 +262,7 @@ def table(
             )
 
             dp.table(
-                name=validation_table_name,
+                name=validation_model_name,
                 private=True,
                 partition_cols=[quarantine_col],
             )(validty_func)  # ty:ignore[no-matching-overload]
@@ -273,7 +273,7 @@ def table(
             @dp.table(**params)
             def valid_table():
                 return (
-                    spark.readStream.table(validation_table_name)
+                    spark.readStream.table(validation_model_name)
                     .filter(f"{quarantine_col} = false")
                     .drop(quarantine_col)
                 )
@@ -281,12 +281,12 @@ def table(
             # Quarantined table with invalid rows only.
 
             @dp.table(
-                name=quarantine_table_name,
+                name=quarantine_model_name,
                 comment=f"Quarantined rows from {fqn}",
             )
             def invalid_table():
                 return (
-                    spark.readStream.table(validation_table_name)
+                    spark.readStream.table(validation_model_name)
                     .filter(f"{quarantine_col} = true")
                     .drop(quarantine_col)
                 )
@@ -367,7 +367,7 @@ def create_streaming_table(
         expect_all_or_fail=expect_all_or_fail,
     )
 
-    meta_params = TableManager.build_sdp_table(name, soft_handle=True).params_cst(
+    meta_params = ModelManager.build_sdp_model(name, soft_handle=True).params_cst(
         exclude=exclude_params or []
     )
 
@@ -434,8 +434,8 @@ def materialized_view(
     passed_kwargs = kwargs
 
     def outer(decorated: Callable[..., DataFrame]) -> None:
-        table_name = name or getattr(decorated, "__name__", "unknown")
-        sdp_table = TableManager.build_sdp_table(table_name, soft_handle=True)
+        model_name = name or getattr(decorated, "__name__", "unknown")
+        sdp_table = ModelManager.build_sdp_model(model_name, soft_handle=True)
         meta_params = sdp_table.params(exclude=exclude_params or [])
         params = merge_params(params_passed, meta_params, passed_kwargs)
         dp.materialized_view(**params)(decorated)

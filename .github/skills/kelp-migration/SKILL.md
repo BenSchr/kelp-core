@@ -33,17 +33,12 @@ ASSESS → PLAN → EXTRACT → CONVERT → VALIDATE → ITERATE
 
 ### 1. Assess Current State
 
-**Inventory the codebase:**
-```bash
-# Find all pipeline files
-find . -name "*.py" -path "*/transformations/*" -o -path "*/pipelines/*"
-
-# Count transformation patterns
-grep -r "@dp.table\|@dp.streaming_table\|@dp.materialized_view" --include="*.py"
-
-# Find hardcoded references
-grep -r "catalog\." --include="*.py" | grep -v "spark.catalog"
-```
+**Inventory the codebase manually or with IDE search:**
+- Count total pipeline files and table decorators (@dp.table, @dp.streaming_table, etc.)
+- Identify layers (bronze/silver/gold or custom)
+- Document inline quality checks (SDP expectations)
+- Note hardcoded catalog/schema references
+- Catalog existing custom transformation logic
 
 **Document findings:**
 - Total number of tables/views
@@ -76,48 +71,26 @@ Choose 2-3 tables that are:
 
 #### Pattern A: From Unity Catalog
 
-If tables already exist in Unity Catalog:
+If tables already exist in Unity Catalog, use the Databricks SDK to fetch table details and metadata:
 
-```python
-# Script: extract_catalog_metadata.py
-from databricks.sdk import WorkspaceClient
-import yaml
+1. Connect to your workspace using `WorkspaceClient()`
+2. List tables in the catalog: `w.tables.list(catalog_name=..., schema_name=...)`
+3. For each table, retrieve full schema information
+4. Generate YAML files mapping table names to column definitions
 
-w = WorkspaceClient()
-
-catalog_name = "your_catalog"
-schema_name = "your_schema"
-
-tables = w.tables.list(catalog_name=catalog_name, schema_name=schema_name)
-
-for table in tables:
-    # Get table details
-    table_info = w.tables.get(full_name=f"{catalog_name}.{schema_name}.{table.name}")
-    
-    # Generate YAML
-    model = {
-        "name": table.name,
-        "description": table_info.comment or "",
-        "columns": [
-            {
-                "name": col.name,
-                "data_type": col.type_text,
-                "description": col.comment or ""
-            }
-            for col in table_info.columns
-        ]
-    }
-    
-    # Write to file
-    with open(f"kelp_metadata/models/{schema_name}/{table.name}.yml", "w") as f:
-        yaml.dump({"kelp_models": [model]}, f, sort_keys=False)
-```
+**Key fields to extract:**
+- `table.name` → YAML model name
+- `table.comment` → description
+- `table.columns[].name` → column name
+- `table.columns[].type_text` → data_type
+- `table.columns[].comment` → column description
+- Primary and foreign key constraints (if defined)
 
 #### Pattern B: From Spark Schema in Code
 
-Extract from existing PySpark code:
+Extract schema definitions from existing PySpark code:
 
-**Original Code:**
+**Original Code (contains inline schema):**
 ```python
 @dp.table(
     name="silver_customers",
@@ -125,15 +98,11 @@ Extract from existing PySpark code:
 )
 def silver_customers():
     df = spark.readStream.table("bronze.customers")
-    schema = StructType([
-        StructField("user_id", StringType(), False),
-        StructField("email", StringType(), True),
-        StructField("full_name", StringType(), True)
-    ])
+    # Schema is either checked/enforced or inferred
     return df
 ```
 
-**Extract to YAML:**
+**Extract column definitions to YAML:**
 ```yaml
 kelp_models:
   - name: silver_customers
@@ -141,14 +110,19 @@ kelp_models:
     columns:
       - name: user_id
         data_type: string
-        description: ""
+        description: "User identifier"
       - name: email
         data_type: string
-        description: ""
+        description: "User email address"
       - name: full_name
         data_type: string
-        description: ""
+        description: "User full name"
 ```
+
+**How to find columns:**
+- Read inline StructType definitions
+- Query existing table schema: `SHOW COLUMNS FROM bronze.customers`
+- Use Databricks table metadata viewer in UC browser
 
 #### Pattern C: From SDP Expectations
 
@@ -381,60 +355,26 @@ kelp_models:
 ### 5. Validate Migration
 
 **Pre-Migration Checklist:**
-```bash
-# 1. Backup original code
-git checkout -b feature/kelp-migration
-cp -r transformations transformations.backup
+- Backup original code to a feature branch (`git checkout -b feature/kelp-migration`)
+- Install kelp-core (instructions in README)
+- Initialize project with `kelp init .`
+- Create directory structure: `kelp_metadata/models/`
 
-# 2. Install kelp-core
-uv add kelp-core
-
-# 3. Initialize project
-kelp init .
-
-# 4. Validate configuration
-uv run kelp validate
-```
-
-**Post-Migration Validation:**
+**Post-Migration Validation Approach:**
 
 **A. Schema Parity:**
-```python
-# Compare schemas
-original_table = spark.read.table("catalog.schema.original_table")
-kelp_table = spark.read.table(kp.ref("migrated_table"))
-
-assert original_table.schema == kelp_table.schema, "Schema mismatch!"
-```
+Compare original and migrated table schemas side-by-side. Use IDE or Databricks SQL to verify columns, data types, and nullability are identical.
 
 **B. Data Parity:**
-```python
-# Compare record counts
-original_count = spark.read.table("catalog.schema.original").count()
-kelp_count = spark.read.table(kp.ref("migrated_table")).count()
-
-assert original_count == kelp_count, f"Count mismatch: {original_count} vs {kelp_count}"
-```
+Query both original and migrated tables and verify row counts match. Sample data to ensure no unexpected transformations were introduced.
 
 **C. Quality Checks:**
-```bash
-# Check quarantine tables created
-uv run python -c "
-from kelp import init
-ctx = init()
-tables = ctx.list_tables()
-for t in tables:
-    if t.quality and 'expect_all_or_quarantine' in t.quality:
-        print(f'{t.name} has quarantine enabled')
-"
-```
+Verify quarantine tables (`*_validation`, `*_quarantine`) are created for tables with expectations. Monitor their contents.
 
 **D. Catalog Metadata:**
-```bash
-# Sync and verify
-uv run kelp catalog sync
-uv run kelp catalog diff  # Should show no changes after sync
-```
+- Run `uv run kelp validate` to check YAML configuration
+- Use `uv run kelp generate-ddl` to preview generated DDL
+- Verify tags, descriptions, and parameters match your requirements
 
 ### 6. Incremental Migration Pattern
 
@@ -462,191 +402,88 @@ kelp_models:
     # Same schema as silver_customers
 ```
 
-**Validation Script:**
-```python
-# Compare outputs
-old_df = spark.read.table("silver.customers")
-new_df = spark.read.table("silver.customers_kelp")
+**Validation Approach:**
 
-# Schema check
-assert old_df.schema == new_df.schema
-
-# Data check
-diff_count = old_df.exceptAll(new_df).count()
-assert diff_count == 0, f"Found {diff_count} differing records"
-
-print("✅ Migration validated successfully")
-```
+1. Run both tables in parallel for 1-2 weeks
+2. Query both original and migrated tables and compare schema (use `DESCRIBE TABLE`)
+3. Verify row counts match
+4. Sample data to ensure transformations are identical
 
 **Cutover:**
-1. Validate parallel run for 1-2 weeks
+1. Validation successful? Rename `silver_customers_kelp` → `silver_customers` in YAML
 2. Update downstream consumers to use kelp version
-3. Rename `silver_customers_kelp` → `silver_customers` in YAML
-4. Deprecate old pipeline
-5. Monitor for 1 week before removing old code
+3. Deprecate old pipeline
+4. Monitor for 1 week before removing old code
 
 ### 7. Refactor Complex Transformations
 
 **Pattern: Extract Business Logic**
 
-**Before (Monolithic):**
-```python
-@dp.table(name="gold.customer_360")
-def customer_360():
-    customers = spark.read.table("silver.customers")
-    orders = spark.read.table("silver.orders")
-    events = spark.read.table("silver.events")
-    
-    # 50+ lines of transformation logic...
-    result = customers.join(orders, ...).join(events, ...)
-    # ... complex aggregations ...
-    
-    return result
-```
+For monolithic transformation tables with 50+ lines of logic:
 
-**After (Modular with Kelp):**
-```python
-from kelp import pipelines as kp
-from kelp.transformations import apply_function
+**Strategy:**
+1. Identify distinct transformation steps (joins, aggregations, enrichments)
+2. Extract each into a separate reusable function with clear purpose
+3. Use `kp.ref()` to reference input tables
+4. Use `kp.function()` or `kp.params()` to inject shared logic
 
+**Example structure:**
+```python
 @kp.table()
 def gold_customer_360():
     """Comprehensive customer view."""
+    # Use helper functions for distinct steps
     customers = spark.read.table(kp.ref("silver_customers"))
     orders = spark.read.table(kp.ref("silver_orders"))
     events = spark.read.table(kp.ref("silver_events"))
     
-    # Use composable transformations
     df = join_customer_data(customers, orders, events)
     df = calculate_customer_metrics(df)
-    df = apply_function(df, kp.function("calculate_ltv"))
     
     return df
 
 def join_customer_data(customers, orders, events):
-    """Separate function for joining logic."""
-    # Extraction logic here
-    return result
+    """Join step isolated."""
+    return customers.join(orders, ...).join(events, ...)
 
 def calculate_customer_metrics(df):
-    """Separate function for metric calculations."""
-    # Calculation logic here
-    return df
+    """Metric calculation isolated."""
+    return df.withColumn("ltv", ...)
 ```
 
-**YAML (with reusable function):**
-```yaml
-# functions/customer_functions.yml
-kelp_functions:
-  - name: calculate_ltv
-    description: "Calculate customer lifetime value"
-    language: python
-    source_file: "python/calculate_ltv.py"
-```
-
-## Migration Helpers
-
-### Automated Extraction Script
-
-```python
-#!/usr/bin/env python3
-"""
-Extract metadata from existing SDP code to kelp YAML.
-Usage: python extract_metadata.py <pipeline_file.py>
-"""
-import ast
-import yaml
-import sys
-from pathlib import Path
-
-def extract_table_metadata(python_file: str) -> dict:
-    """Parse Python file and extract SDP decorator metadata."""
-    with open(python_file) as f:
-        tree = ast.parse(f.read())
-    
-    metadata = []
-    
-    for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef):
-            # Find @dp.table decorator
-            for decorator in node.decorator_list:
-                if (isinstance(decorator, ast.Call) and
-                    hasattr(decorator.func, 'attr') and
-                    decorator.func.attr == 'table'):
-                    
-                    # Extract parameters
-                    table_info = {
-                        "name": node.name,
-                        "description": ast.get_docstring(node) or "",
-                        "columns": []
-                    }
-                    
-                    # Extract expectations
-                    for keyword in decorator.keywords:
-                        if keyword.arg == 'expect':
-                            quality = {"engine": "sdp", "expect_all_or_fail": {}}
-                            # Parse expect dict
-                            # ... (implementation details)
-                            table_info["quality"] = quality
-                    
-                    metadata.append(table_info)
-    
-    return {"kelp_models": metadata}
-
-if __name__ == "__main__":
-    file_path = sys.argv[1]
-    metadata = extract_table_metadata(file_path)
-    
-    # Output YAML
-    output_file = f"kelp_metadata/models/{Path(file_path).stem}.yml"
-    Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-    
-    with open(output_file, "w") as f:
-        yaml.dump(metadata, f, sort_keys=False, default_flow_style=False)
-    
-    print(f"✅ Generated {output_file}")
-```
-
-### Bulk Find-Replace Patterns
-
-```bash
-# Replace hardcoded table references
-find ./transformations -name "*.py" -type f -exec sed -i \
-  's/spark\.readStream\.table("\([^"]*\)\.\([^"]*\)\.\([^"]*\)")/spark.readStream.table(kp.ref("\3"))/g' {} +
-
-# Replace @dp.table with @kp.table
-find ./transformations -name "*.py" -type f -exec sed -i \
-  's/@dp\.table/@kp.table/g' {} +
-
-# Add kelp import
-find ./transformations -name "*.py" -type f -exec sed -i \
-  '/from pyspark import pipelines as dp/a from kelp import pipelines as kp' {} +
-```
+**Key Benefits:**
+- Easier to test and debug each transformation step
+- Reusable functions can be shared across tables
+- Schema changes can be isolated to metadata
+- Quality checks defined in YAML, not in code
 
 ## Backwards Compatibility
 
 **Maintain Both Patterns During Migration:**
 
+Kelp-decorated tables coexist with native SDP tables. Old decorators still work:
+
 ```python
-# kelp_project.yml can coexist with native SDP
 from pyspark import pipelines as dp
 from kelp import pipelines as kp
 
-# Old style still works
+# Old style (native SDP)
 @dp.table(name="bronze.legacy_table")
 def legacy_table():
     return spark.readStream.table("source.data")
 
-# New style uses kelp
+# New style (kelp with metadata)
 @kp.table()
 def modern_table():
-    return spark.readStream.table(kp.ref("legacy_table"))  # Can still reference legacy
+    return spark.readStream.table(kp.ref("legacy_table"))
 ```
 
-**Gradual Adoption:**
-- Start with net-new tables using kelp
-- Migrate existing tables opportunistically during updates
-- No need for big-bang migration
+Kelp tables can reference legacy tables via fully qualified names. No need for a big-bang migration.
+
+**Adoption Strategy:**
+- Start with net-new tables using kelp decorators and YAML metadata
+- Migrate existing tables opportunistically during regular updates
+- No breaking changes; parallel patterns coexist during transition
 
 ## Common Migration Challenges
 
@@ -742,7 +579,7 @@ def silver_customers():
 
 1. **Migrate Layer by Layer**: Start with bronze, then silver, then gold
 2. **Run in Parallel**: Keep old and new pipelines running during validation
-3. **Automate What You Can**: Use extraction scripts for bulk metadata
+3. **Extract Systematically**: Use Databricks SDK or IDE search to locate all references
 4. **Test Thoroughly**: Schema parity, data parity, count checks
 5. **Document Changes**: Update README with migration status
 6. **Incremental Cutover**: One table at a time, not all at once
@@ -766,7 +603,6 @@ def silver_customers():
 - [ ] Run parallel for validation period
 
 **Post-Migration:**
-- [ ] Sync to catalog: `uv run kelp catalog sync`
 - [ ] Update documentation
 - [ ] Monitor quarantine tables
 - [ ] Deprecate old code

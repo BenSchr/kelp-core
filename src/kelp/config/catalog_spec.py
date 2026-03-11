@@ -10,8 +10,9 @@ from typing import Any
 from kelp.models.abac import AbacPolicy
 from kelp.models.function import KelpFunction
 from kelp.models.metric_view import MetricView
+from kelp.models.model import Model
+from kelp.models.policy_definition import Policy
 from kelp.models.source import Source
-from kelp.models.table import Table
 
 
 @dataclass(frozen=True)
@@ -49,9 +50,9 @@ CATALOG_PARSE_SPECS: tuple[CatalogParseSpec, ...] = (
         root_key="kelp_models",
         project_config_key="models",
         path_attr="models_path",
-        model_class=Table,
+        model_class=Model,
         catalog_attr="models",
-        model_label="Table",
+        model_label="Model",
         preprocess=_noop_preprocess,
     ),
     CatalogParseSpec(
@@ -88,6 +89,15 @@ CATALOG_PARSE_SPECS: tuple[CatalogParseSpec, ...] = (
         model_class=Source,
         catalog_attr="sources",
         model_label="Source",
+        preprocess=_noop_preprocess,
+    ),
+    CatalogParseSpec(
+        root_key="kelp_policies",
+        project_config_key="policies",
+        path_attr="policies_path",
+        model_class=Policy,
+        catalog_attr="policies",
+        model_label="Policy",
         preprocess=_noop_preprocess,
     ),
 )

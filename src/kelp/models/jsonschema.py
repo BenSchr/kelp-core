@@ -1,11 +1,10 @@
-import kelp
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from kelp.models import AbacPolicy, KelpFunction, MetricView, Source
+from kelp.models import AbacPolicy, KelpFunction, MetricView, Policy, Source
+from kelp.models.model import Model
 from kelp.models.project_config import ProjectConfig
-from kelp.models.table import Table
 
 
 class JsonSchemaModel(BaseModel):
@@ -17,7 +16,7 @@ class JsonSchemaModel(BaseModel):
         default=None,
         description="Project-level configuration for the Kelp project.",
     )
-    kelp_models: list[Table] | None = Field(
+    kelp_models: list[Model] | None = Field(
         default=None,
         description="List of table models defined in the configuration.",
     )
@@ -32,6 +31,10 @@ class JsonSchemaModel(BaseModel):
     kelp_functions: list[KelpFunction] | None = Field(
         default=None,
         description="List of functions defined in the configuration.",
+    )
+    kelp_policies: list[Policy] | None = Field(
+        default=None,
+        description="List of policies defined in the configuration.",
     )
     kelp_abacs: list[AbacPolicy] | None = Field(
         default=None,

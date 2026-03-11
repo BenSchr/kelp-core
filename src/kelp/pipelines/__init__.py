@@ -1,7 +1,7 @@
 from kelp.config import init
 from kelp.pipelines.api import (
     func,
-    get_table,
+    get_model,
     params,
     params_cst,
     ref,
@@ -18,7 +18,7 @@ __all__ = [
     "apply_schema",
     "create_streaming_table",
     "func",
-    "get_table",
+    "get_model",
     "init",
     "materialized_view",
     "params",

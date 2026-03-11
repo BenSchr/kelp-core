@@ -3,6 +3,8 @@ from typing import Literal
 from pydantic import BaseModel, Field
 from pydantic.json_schema import SkipJsonSchema
 
+from kelp.models.policy import PolicyConfig
+
 
 class QuarantineConfig(BaseModel):
     """Configuration for table quarantine and validation.
@@ -153,6 +155,10 @@ class ProjectConfig(BaseModel):
         default_factory=dict,
         description="Configuration hierarchy for sources",
     )
+    policies_path: str | None = Field(
+        default=None,
+        description="Path to policy definitions",
+    )
     quarantine_config: QuarantineConfig = Field(
         default_factory=QuarantineConfig,
         description="Configuration for table quarantine and validation",
@@ -160,6 +166,10 @@ class ProjectConfig(BaseModel):
     remote_catalog_config: RemoteCatalogConfig = Field(
         default_factory=RemoteCatalogConfig,
         description="Configuration for remote catalog synchronization",
+    )
+    policy_config: PolicyConfig = Field(
+        default_factory=PolicyConfig,
+        description="Metadata governance policy configuration",
     )
     runtime_vars: SkipJsonSchema[dict] = Field(
         default_factory=dict,

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from kelp.catalog.uc_diff import TableDiffCalculator
-from kelp.catalog.uc_models import Column, RemoteCatalogConfig, Table
-from kelp.models.table import ForeignKeyConstraint, PrimaryKeyConstraint, TableType
+from kelp.catalog.uc_models import Column, RemoteCatalogConfig
+from kelp.catalog.uc_models import Model as Table
+from kelp.models.model import ForeignKeyConstraint, PrimaryKeyConstraint, TableType
 
 
 class TestDictDiff:

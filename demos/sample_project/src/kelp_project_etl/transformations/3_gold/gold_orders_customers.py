@@ -7,7 +7,7 @@ spark = SparkSession.active()
 
 
 @dp.table(
-    name="gold_orders_customers_with_params", **kp.params("gold_orders_customers", exclude=["name"])
+    **kp.params("gold_orders_customers_with_params"),
 )
 def gold_orders_customers_with_params():
     """Gold materialized view: enriched orders joined with customers."""

@@ -19,36 +19,16 @@ class TableType(Enum):
     VIEW = "view"
 
 
-class Table(BaseModel):
-    """Table definition in Unity Catalog.
+class Model(BaseModel):
+    """Model definition in Unity Catalog.
 
-    Represents a table in Databricks Unity Catalog with all its configuration,
-    including schema, properties, quality checks, and constraints.
-
-    Attributes:
-        origin_file_path: Path to the source YAML file defining this table.
-        table_type: Type of table (managed, external, view, streaming_table, etc.).
-        catalog: Unity Catalog name where the table resides.
-        schema_: Schema/database name where the table resides.
-        name: Table name.
-        description: Human-readable description of the table.
-        spark_conf: Spark configuration properties for the table.
-        table_properties: Databricks table properties.
-        path: Physical path for external tables or custom locations.
-        partition_cols: List of column names to use for partitioning.
-        cluster_by_auto: Enable automatic clustering optimization.
-        cluster_by: List of column names to use for explicit clustering (max 4).
-        row_filter: SQL expression to filter rows based on security policies.
-        columns: List of column definitions for the table.
-        quality: Data quality configuration (SDPQuality or DQXQuality).
-        constraints: List of constraints (primary key, foreign key).
-        tags: Metadata tags for the table.
-        raw_config: Original unparsed configuration (preserves placeholder variables).
+    Represents a metadata model in Kelp with configuration that maps to
+    Databricks Unity Catalog objects.
     """
 
     origin_file_path: SkipJsonSchema[str] | None = Field(
         default=None,
-        description="Path to the source YAML file defining this table",
+        description="Path to the source YAML file defining this model",
     )
     table_type: TableType = Field(
         default=TableType.MANAGED,
@@ -65,11 +45,11 @@ class Table(BaseModel):
         description="Schema/database name",
     )
     name: str = Field(
-        description="Table name",
+        description="Model name",
     )
     description: str | None = Field(
         default=None,
-        description="Human-readable description of the table",
+        description="Human-readable description of the model",
     )
     spark_conf: dict = Field(
         default_factory=dict,
@@ -102,7 +82,7 @@ class Table(BaseModel):
     )
     columns: list[Column] = Field(
         default_factory=list,
-        description="Column definitions for the table",
+        description="Column definitions for the model",
     )
     quality: SDPQuality | DQXQuality | None = Field(
         default=None,
@@ -115,14 +95,13 @@ class Table(BaseModel):
     )
     tags: dict[str, str] = Field(
         default_factory=dict,
-        description="Metadata tags for the table",
+        description="Metadata tags for the model",
     )
     raw_config: SkipJsonSchema[dict] = Field(
         default_factory=dict,
         description="Original unparsed configuration preserving placeholder variables",
     )
 
-    # Model Config
     model_config = ConfigDict(
         validate_by_name=True,
         validate_by_alias=True,
@@ -131,7 +110,7 @@ class Table(BaseModel):
     )
 
     def get_qualified_name(self) -> str:
-        """Get the fully qualified table name including database/schema if applicable."""
+        """Get the fully qualified model name including database/schema if applicable."""
         parts = []
         if self.catalog:
             parts.append(self.catalog)
@@ -142,19 +121,7 @@ class Table(BaseModel):
 
 
 class Column(BaseModel):
-    """Column definition for a table.
-
-    Represents a column with its name, description, data type, nullability,
-    and optional generated column configuration.
-
-    Attributes:
-        name: Column name.
-        description: Human-readable description of the column.
-        data_type: SQL data type of the column.
-        nullable: Whether the column allows NULL values.
-        generated: Configuration for generated columns (identity or expression).
-        tags: Metadata tags for the column.
-    """
+    """Column definition for a model."""
 
     name: str = Field(
         description="Column name",
@@ -183,15 +150,6 @@ class Column(BaseModel):
 
 
 class GeneratedIdentityColumnConfig(BaseModel):
-    """Configuration for auto-incrementing identity columns.
-
-    Attributes:
-        type: Column type identifier (always "identity").
-        as_default: If True, identity is generated as default; if False, always generated.
-        start_with: Starting value for the identity sequence.
-        increment_by: Increment step for the identity sequence.
-    """
-
     type: Literal["identity"] = Field(
         description="Column type identifier",
     )
@@ -210,13 +168,6 @@ class GeneratedIdentityColumnConfig(BaseModel):
 
 
 class GeneratedExpressionColumnConfig(BaseModel):
-    """Configuration for expression-based generated columns.
-
-    Attributes:
-        type: Column type identifier (always "expression").
-        expression: SQL expression used to generate the column value.
-    """
-
     type: Literal["expression"] = Field(
         description="Column type identifier",
     )
@@ -226,25 +177,12 @@ class GeneratedExpressionColumnConfig(BaseModel):
 
 
 class Constraint(BaseModel):
-    """Base class for table constraints.
-
-    Attributes:
-        name: Constraint name.
-    """
-
     name: str = Field(
         description="Constraint name",
     )
 
 
 class PrimaryKeyConstraint(Constraint):
-    """Primary key constraint definition.
-
-    Attributes:
-        type: Constraint type identifier (always "primary_key").
-        columns: List of column names that form the primary key.
-    """
-
     type: str = Field(
         default="primary_key",
         description="Constraint type identifier",
@@ -256,15 +194,6 @@ class PrimaryKeyConstraint(Constraint):
 
 
 class ForeignKeyConstraint(Constraint):
-    """Foreign key constraint definition.
-
-    Attributes:
-        type: Constraint type identifier (always "foreign_key").
-        columns: List of local column names.
-        reference_table: Fully qualified name of the referenced table.
-        reference_columns: List of column names in the referenced table.
-    """
-
     type: str = Field(
         default="foreign_key",
         description="Constraint type identifier",
@@ -283,13 +212,6 @@ class ForeignKeyConstraint(Constraint):
 
 
 class Quality(BaseModel):
-    """Base class for data quality configuration.
-
-    Attributes:
-        engine: Quality engine type (e.g., "sdp", "dqx").
-        level: Level at which quality is enforced ("row" or "table").
-    """
-
     engine: str = Field(
         description="Quality engine type",
     )
@@ -300,17 +222,6 @@ class Quality(BaseModel):
 
 
 class SDPQuality(Quality):
-    """Spark Data Pruning (SDP) quality configuration.
-
-    Attributes:
-        engine: Quality engine type (always "sdp").
-        level: Level at which quality is enforced (always "row" for SDP).
-        expect_all: Dictionary of SQL expressions that must pass.
-        expect_all_or_drop: Dictionary of SQL expressions; rows failing drop.
-        expect_all_or_fail: Dictionary of SQL expressions; job fails if any fail.
-        expect_all_or_quarantine: Dictionary of SQL expressions; failures quarantine rows.
-    """
-
     engine: Literal["sdp"] = Field(
         description="Quality engine type",
     )
@@ -337,15 +248,6 @@ class SDPQuality(Quality):
 
 
 class DQXQuality(Quality):
-    """Databricks DQX quality checks configuration.
-
-    Attributes:
-        engine: Quality engine type (always "dqx").
-        sdp_expect_level: Action for quality violations in SDP layer.
-        sdp_quarantine: Whether to quarantine rows failing quality checks.
-        checks: List of quality check configurations.
-    """
-
     engine: Literal["dqx"] = Field(
         description="Quality engine type",
     )

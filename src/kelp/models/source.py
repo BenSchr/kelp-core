@@ -20,7 +20,7 @@ class Source(BaseModel):
         path: Physical path for volume or raw_path sources (e.g., '/Volumes/catalog/schema/volume').
         catalog: Catalog name for table or volume sources.
         schema_: Schema name for table or volume sources.
-        table_name: Table name for table sources.
+        model_name: Table name for table sources.
         volume_name: Volume name for volume sources (constructs path as /Volumes/catalog/schema/volume_name).
         options: Dictionary of options specific to this source (e.g., format, headers).
         description: Human-readable description of the source.
@@ -50,7 +50,7 @@ class Source(BaseModel):
         alias="schema",
         description="Schema name for table or volume sources",
     )
-    table_name: str | None = Field(
+    model_name: str | None = Field(
         default=None,
         description="Table name for table sources",
     )
@@ -80,11 +80,11 @@ class Source(BaseModel):
         """Get the fully qualified name for table sources.
 
         Returns:
-            Fully qualified name (catalog.schema.table_name) for table sources,
+            Fully qualified name (catalog.schema.model_name) for table sources,
             or None for other source types.
         """
-        if self.source_type == "table" and self.catalog and self.schema_ and self.table_name:
-            return f"{self.catalog}.{self.schema_}.{self.table_name}"
+        if self.source_type == "table" and self.catalog and self.schema_ and self.model_name:
+            return f"{self.catalog}.{self.schema_}.{self.model_name}"
         return None
 
     @property
@@ -120,7 +120,7 @@ class Source(BaseModel):
             fqn = self.fqn
             if not fqn:
                 raise ValueError(
-                    f"Table source '{self.name}' requires catalog, schema, and table_name"
+                    f"Table source '{self.name}' requires catalog, schema, and model_name"
                 )
             return fqn
         if self.source_type == "volume":

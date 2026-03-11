@@ -1,3 +1,3 @@
-from kelp.service.table_manager import KelpSdpTable, KelpTable
+from kelp.service.model_manager import KelpModel, KelpSdpModel
 
-__all__ = ["KelpSdpTable", "KelpTable"]
+__all__ = ["KelpModel", "KelpSdpModel"]

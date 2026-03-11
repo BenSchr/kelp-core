@@ -1,29 +1,29 @@
 ---
-title: kelp.models.table
+title: kelp.models.model
 ---
 
-# kelp.models.table
+# kelp.models.model
 
-Reference for the table configuration model.
+Reference for the core model and column configuration models.
 
-::: kelp.models.table.TableType
+::: kelp.models.model.TableType
 
-::: kelp.models.table.Table
+::: kelp.models.model.Model
 
-::: kelp.models.table.Column
+::: kelp.models.model.Column
 
-::: kelp.models.table.GeneratedIdentityColumnConfig
+::: kelp.models.model.GeneratedIdentityColumnConfig
 
-::: kelp.models.table.GeneratedExpressionColumnConfig
+::: kelp.models.model.GeneratedExpressionColumnConfig
 
-::: kelp.models.table.Constraint
+::: kelp.models.model.Constraint
 
-::: kelp.models.table.PrimaryKeyConstraint
+::: kelp.models.model.PrimaryKeyConstraint
 
-::: kelp.models.table.ForeignKeyConstraint
+::: kelp.models.model.ForeignKeyConstraint
 
-::: kelp.models.table.Quality
+::: kelp.models.model.Quality
 
-::: kelp.models.table.SDPQuality
+::: kelp.models.model.SDPQuality
 
-::: kelp.models.table.DQXQuality
+::: kelp.models.model.DQXQuality

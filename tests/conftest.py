@@ -1,10 +1,11 @@
 """Global pytest fixtures and configuration."""
 
+import os
 from pathlib import Path
 
 import pytest
 
-from kelp.config.lifecycle import ContextStore
+from kelp.meta.context import MetaContextStore
 
 
 @pytest.fixture(autouse=True)
@@ -14,12 +15,16 @@ def reset_context_and_env():
     Ensures test isolation by clearing the context store.
     """
     # Clear context before test
-    ContextStore.clear()
+    MetaContextStore.clear_all()
+    os.environ.pop("KELP_PROJECT_FILE", None)
+    os.environ.pop("KELP_TARGET", None)
 
     yield
 
     # Clear context after test
-    ContextStore.clear()
+    MetaContextStore.clear_all()
+    os.environ.pop("KELP_PROJECT_FILE", None)
+    os.environ.pop("KELP_TARGET", None)
 
 
 @pytest.fixture

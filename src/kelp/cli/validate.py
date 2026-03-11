@@ -2,8 +2,6 @@ from typing import Annotated
 
 import typer
 
-from kelp.config.settings import resolve_setting
-
 
 def _resolve_target(target: str | None) -> str | None:
     """Resolve a target from settings when not provided.
@@ -15,6 +13,8 @@ def _resolve_target(target: str | None) -> str | None:
         Resolved target or None if not set anywhere.
 
     """
+    from kelp.config.settings import resolve_setting
+
     return target or resolve_setting("target", default=None)
 
 
@@ -28,7 +28,8 @@ def validate(
 ) -> None:
     """Validate the Kelp project configuration and catalog."""
 
-    from kelp.config.lifecycle import init
+    from kelp.cli.output import print_error, print_message, print_success
+    from kelp.config import init
 
     log_level = "DEBUG" if debug else None
 
@@ -37,29 +38,32 @@ def validate(
     run_ctx = init(config_path, resolved_target, log_level=log_level)
     validated = bool(run_ctx)
     if validated:
-        typer.secho("✓ Configuration is valid!", fg=typer.colors.GREEN)
+        print_success("✓ Configuration is valid!")
     else:
-        typer.secho("✗ Configuration is invalid!", fg=typer.colors.RED)
+        print_error("✗ Configuration is invalid!")
         raise typer.Exit(code=1)
-    typer.echo(f"Project config loaded from: {run_ctx.project_config.project_file_path}")
-    typer.echo(f"Target environment: {run_ctx.target}")
-    typer.echo(f"Runtime variables: {run_ctx.runtime_vars}")
-    typer.echo(f"Relative models path: {run_ctx.project_config.models_path}")
-    typer.echo(f"Models found: {len(run_ctx.catalog.table_index)}")
 
-    if run_ctx.project_config.functions_path:
-        typer.echo(f"Relative functions path: {run_ctx.project_config.functions_path}")
-        typer.echo(f"Functions found: {len(run_ctx.catalog.function_index)}")
+    project_config = run_ctx.project_settings
 
-    if run_ctx.project_config.abacs_path:
-        typer.echo(f"Relative ABACs path: {run_ctx.project_config.abacs_path}")
-        typer.echo(f"ABAC policies found: {len(run_ctx.catalog.abac_index)}")
+    print_message(f"Project config loaded from: {run_ctx.project_file_path}")
+    print_message(f"Target environment: {run_ctx.target}")
+    print_message(f"Runtime variables: {run_ctx.runtime_vars}")
+    print_message(f"Relative models path: {project_config.models_path}")
+    print_message(f"Models found: {len(run_ctx.catalog_index.get_all('models'))}")
+
+    if project_config.functions_path:
+        print_message(f"Relative functions path: {project_config.functions_path}")
+        print_message(f"Functions found: {len(run_ctx.catalog_index.get_all('functions'))}")
+
+    if project_config.abacs_path:
+        print_message(f"Relative ABACs path: {project_config.abacs_path}")
+        print_message(f"ABAC policies found: {len(run_ctx.catalog_index.get_all('abacs'))}")
 
     # Show metrics info if metrics are configured
-    if run_ctx.project_config.metrics_path:
-        typer.echo(f"Relative metrics path: {run_ctx.project_config.metrics_path}")
-        typer.echo(f"Metric views found: {len(run_ctx.catalog.metrics_index)}")
+    if project_config.metrics_path:
+        print_message(f"Relative metrics path: {project_config.metrics_path}")
+        print_message(f"Metric views found: {len(run_ctx.catalog_index.get_all('metric_views'))}")
     # Show sources info if sources are configured
-    if run_ctx.project_config.sources_path:
-        typer.echo(f"Relative sources path: {run_ctx.project_config.sources_path}")
-        typer.echo(f"Sources found: {len(run_ctx.catalog.source_index)}")
+    if project_config.sources_path:
+        print_message(f"Relative sources path: {project_config.sources_path}")
+        print_message(f"Sources found: {len(run_ctx.catalog_index.get_all('sources'))}")

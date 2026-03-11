@@ -1,32 +1,35 @@
 kelp_models:
-  - name: bronze_customers
-    description: This is the bronze customers model
+- name: bronze_customers
+  description: This is the bronze customers model
+  columns:
+  - name: country
+    data_type: string
+    description: Customer country as provided by source (may contain 'unknown').
     tags:
-      domain: customers
-      stage: bronze
-    columns:
-      - name: country
-        data_type: string
-        description: Customer country as provided by source (may contain 'unknown').
-        tags:
-          geo: country
-      - name: first_name
-        data_type: string
-        description: Customer given name.
-      - name: last_name
-        data_type: string
-        description: Customer family name.
-      - name: user_id
-        data_type: string
-        description: Internal user identifier; used to link orders to customers.
-        tags:
-          business: customer_id
-      - name: _rescued_data
-        data_type: string
-        description: JSON blob of rescued/parsing errors from the bronze ingestion.
-        tags:
-          etl: _rescued
-    quality:
-      engine: sdp
-      expect_all_or_fail:
-        _rescued_data_is_null: _rescued_data IS NULL
+      data_classification: internal
+      geo: country
+  - name: first_name
+    data_type: string
+    description: Customer given name.
+    tags:
+      data_classification: pii
+  - name: last_name
+    data_type: string
+    description: Customer family name.
+    tags:
+      data_classification: pii
+  - name: user_id
+    data_type: string
+    description: Internal user identifier; used to link orders to customers.
+    tags:
+      business: customer_id
+      data_classification: pii
+  - name: _rescued_data
+    data_type: string
+    description: JSON blob of rescued/parsing errors from the bronze ingestion.
+    tags:
+      etl: _rescued
+  quality:
+    engine: sdp
+    expect_all_or_fail:
+      _rescued_data_is_null: _rescued_data IS NULL

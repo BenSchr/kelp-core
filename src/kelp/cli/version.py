@@ -1,4 +1,4 @@
-import typer
+from kelp.cli.output import print_message
 
 kelp_banner = """
 ⌜                                 ⌝
@@ -15,5 +15,5 @@ Metadata Toolkit for Databricks Spark and Declarative Pipelines
 
 def version() -> None:
     """Display the current version of Kelp."""
-    typer.echo(kelp_banner)
-    typer.echo("Kelp version: 0.0.0")
+    print_message(kelp_banner)
+    print_message("Kelp version: 0.0.3")

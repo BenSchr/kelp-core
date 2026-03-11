@@ -11,11 +11,11 @@ from kelp.catalog.uc_models import (
     ConstraintFKDiff,
     ConstraintPKDiff,
     DictDiff,
+    Model,
     RemoteCatalogConfig,
-    Table,
     TableDiff,
 )
-from kelp.models.table import ForeignKeyConstraint, PrimaryKeyConstraint
+from kelp.models.model import ForeignKeyConstraint, PrimaryKeyConstraint
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class TableDiffCalculator:
     def __init__(self, config: RemoteCatalogConfig) -> None:
         self._config = config
 
-    def calculate(self, local: Table, remote: Table) -> TableDiff:
+    def calculate(self, local: Model, remote: Model) -> TableDiff:
         """Return a TableDiff describing every change needed.
 
         Args:
@@ -70,7 +70,7 @@ class TableDiffCalculator:
         return diff
 
     @staticmethod
-    def _diff_description(local: Table, remote: Table) -> str | None:
+    def _diff_description(local: Model, remote: Model) -> str | None:
         """Return the new description if it changed, otherwise None."""
         if local.description != remote.description:
             return local.description
@@ -129,7 +129,7 @@ class TableDiffCalculator:
 
         return DictDiff(updates=updates, deletes=deletes)
 
-    def _diff_columns(self, local: Table, remote: Table) -> dict[str, ColumnDiff]:
+    def _diff_columns(self, local: Model, remote: Model) -> dict[str, ColumnDiff]:
         """Produce per-column diffs for description and tag changes.
 
         Columns present only remotely or only locally are skipped.
@@ -171,8 +171,8 @@ class TableDiffCalculator:
 
     def _diff_constraints(
         self,
-        local: Table,
-        remote: Table,
+        local: Model,
+        remote: Model,
     ) -> tuple[ConstraintPKDiff, ConstraintFKDiff]:
         """Compute primary-key and foreign-key constraint diffs.
 

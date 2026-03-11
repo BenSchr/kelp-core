@@ -171,7 +171,7 @@ def create_settings_resolver(
         SettingsResolver instance with sources in priority order.
 
     """
-    sources = [
+    sources: list[SourceResolver] = [
         InitSource(init_settings or {}),
         SparkSource(),  # Auto-detects Spark
         EnvSource(prefix=env_prefix),

@@ -1,6 +1,11 @@
 kelp_models:
   - name: silver_customers_cleaned
     description: This is the silver cleaned customer model
+    constraints:
+      - name: pk_silver_customers
+        type: primary_key
+        columns:
+          - user_id
     quality:
       engine: sdp
       expect_all_or_quarantine:
@@ -8,9 +13,17 @@ kelp_models:
     columns:
       - name: country
         data_type: string
+        tags:
+          data_classification: internal
       - name: first_name
         data_type: string
+        tags:
+          data_classification: pii
       - name: last_name
         data_type: string
+        tags:
+          data_classification: pii
       - name: user_id
         data_type: string
+        tags:
+          data_classification: pii

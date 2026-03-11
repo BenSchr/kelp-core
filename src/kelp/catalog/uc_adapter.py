@@ -8,14 +8,15 @@ from kelp.catalog.abac_ddl import generate_create_abac_policy_ddl
 from kelp.catalog.function_ddl import generate_create_function_ddl
 from kelp.catalog.metric_view_ddl import generate_create_metric_view_ddl
 from kelp.catalog.uc_diff import TableDiffCalculator
-from kelp.catalog.uc_models import RemoteCatalogConfig, Table
+from kelp.catalog.uc_models import Model, RemoteCatalogConfig
 from kelp.catalog.uc_query_builder import UCQueryBuilder
-from kelp.config.lifecycle import get_context
+from kelp.config import get_context
 from kelp.models.abac import AbacPolicy
 from kelp.models.function import KelpFunction
 from kelp.models.metric_view import MetricView as KelpMetricView
-from kelp.models.table import Table as KelpTable
-from kelp.service.table_manager import TableManager
+from kelp.models.model import Model as KelpModel
+from kelp.models.project_config import ProjectConfig
+from kelp.service.model_manager import ModelManager
 from kelp.utils.databricks import get_table_from_dbx_sdk
 
 logger = logging.getLogger(__name__)
@@ -48,10 +49,10 @@ class UnityCatalogAdapter:
             RemoteCatalogConfig instance mapped from project settings.
 
         """
-        ctx_config = get_context().project_config.remote_catalog_config
-        return ctx_config.model_copy(deep=True)
+        project_config: ProjectConfig = get_context().project_settings
+        return project_config.remote_catalog_config.model_copy(deep=True)
 
-    def _fetch_remote_table(self, fqn: str) -> Table | None:
+    def _fetch_remote_table(self, fqn: str) -> Model | None:
         """Fetch remote table state and convert to v2 model.
 
         Args:
@@ -63,11 +64,11 @@ class UnityCatalogAdapter:
         """
         return get_table_from_dbx_sdk(fqn)
 
-    def _get_fqn(self, table: KelpTable) -> str:
+    def _get_fqn(self, table: KelpModel) -> str:
         """Return the fully-qualified name for a Kelp Table."""
-        return TableManager.get_qualified_tablename_from_table(table)
+        return ModelManager.get_qualified_name_from_model(table)
 
-    def sync_table(self, table: KelpTable) -> list[str]:
+    def sync_table(self, table: KelpModel) -> list[str]:
         """Return SQL queries required to sync a single table.
 
         Args:
@@ -90,7 +91,7 @@ class UnityCatalogAdapter:
 
         return self._builder.build(fqn, diff, _table_type_value(remote.table_type))
 
-    def sync_tables(self, tables: list[KelpTable]) -> list[str]:
+    def sync_tables(self, tables: list[KelpModel]) -> list[str]:
         """Return SQL queries for all provided tables.
 
         Args:
@@ -105,7 +106,7 @@ class UnityCatalogAdapter:
             queries.extend(self.sync_table(table))
         return queries
 
-    def sync_all_tables(self, tables: list[KelpTable] | None = None) -> list[str]:
+    def sync_all_tables(self, tables: list[KelpModel] | None = None) -> list[str]:
         """Sync all tables from the current project context.
 
         Args:
@@ -116,7 +117,7 @@ class UnityCatalogAdapter:
             Ordered list of SQL statements to execute.
 
         """
-        catalog_tables = tables or get_context().catalog.get_tables()
+        catalog_tables = tables or get_context().catalog_index.get_all("models")
         return self.sync_tables(catalog_tables)
 
     def sync_function(self, function: KelpFunction) -> list[str]:
@@ -136,7 +137,7 @@ class UnityCatalogAdapter:
 
     def sync_all_functions(self, functions: list[KelpFunction] | None = None) -> list[str]:
         """Sync all functions from the current project context."""
-        catalog_functions = functions or get_context().catalog.get_functions()
+        catalog_functions = functions or get_context().catalog_index.get_all("functions")
         return self.sync_functions(catalog_functions)
 
     def sync_metric_view(self, metric_view: KelpMetricView) -> list[str]:
@@ -278,7 +279,7 @@ class UnityCatalogAdapter:
             Ordered list of SQL statements to execute.
 
         """
-        catalog_metrics = metric_views or get_context().catalog.get_metric_views()
+        catalog_metrics = metric_views or get_context().catalog_index.get_all("metric_views")
         return self.sync_metric_views(catalog_metrics)
 
     def create_metric_view(self, metric_view: KelpMetricView) -> str:
@@ -330,7 +331,7 @@ class UnityCatalogAdapter:
             List of SQL DDL statements to execute.
 
         """
-        catalog_metrics = metric_views or get_context().catalog.get_metric_views()
+        catalog_metrics = metric_views or get_context().catalog_index.get_all("metric_views")
         return self.create_metric_views(catalog_metrics)
 
     def sync_abac_policy(self, policy: AbacPolicy) -> list[str]:
@@ -346,7 +347,7 @@ class UnityCatalogAdapter:
 
     def sync_all_abac_policies(self, policies: list[AbacPolicy] | None = None) -> list[str]:
         """Sync all ABAC policies from the current project context."""
-        catalog_policies = policies or get_context().catalog.get_abacs()
+        catalog_policies = policies or get_context().catalog_index.get_all("abacs")
         return self.sync_abac_policies(catalog_policies)
 
 

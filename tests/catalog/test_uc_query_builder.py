@@ -10,7 +10,7 @@ from kelp.catalog.uc_models import (
     TableDiff,
 )
 from kelp.catalog.uc_query_builder import UCQueryBuilder
-from kelp.models.table import ForeignKeyConstraint, PrimaryKeyConstraint
+from kelp.models.model import ForeignKeyConstraint, PrimaryKeyConstraint
 
 
 class TestTableDescriptionQueries:

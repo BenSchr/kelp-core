@@ -8,8 +8,8 @@ from dataclasses import dataclass
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service import pipelines as sp
 
+from kelp.models.model import Model
 from kelp.models.project_config import QuarantineConfig
-from kelp.models.table import Table
 from kelp.utils.common import find_path_by_name
 from kelp.utils.databricks import get_table_from_dbx_sdk
 
@@ -42,11 +42,11 @@ class PipelineManager:
         """Initialize PipelineManager with optional WorkspaceClient or profile."""
         self.w = w or WorkspaceClient(profile=profile)
 
-    def fetch_pipeline_tables(
+    def fetch_pipeline_models(
         self,
         pipeline_id: str,
         quarantine_config: QuarantineConfig | None = None,
-    ) -> list[Table]:
+    ) -> list[Model]:
         """Fetch all relevant tables from a Databricks pipeline.
 
         Args:
@@ -54,13 +54,14 @@ class PipelineManager:
             quarantine_config: Optional config to filter out quarantine/validation tables
 
         Returns:
-            List of Table objects from the pipeline
+            List of Model objects from the pipeline
 
         """
         logger.info("Fetching tables from pipeline %s", pipeline_id)
 
         # Get pipeline updates
         updates = self._fetch_updates(pipeline_id)
+
         if not updates:
             logger.warning("No updates found for pipeline %s", pipeline_id)
             return []
@@ -80,18 +81,18 @@ class PipelineManager:
             logger.info("Filtered to %s relevant datasets", len(dataset_names))
 
         # Fetch table metadata from Databricks
-        tables = []
+        models = []
         for dataset_name in dataset_names:
             try:
-                table = get_table_from_dbx_sdk(dataset_name, w=self.w)
-                tables.append(table)
+                model = get_table_from_dbx_sdk(dataset_name, w=self.w)
+                models.append(model)
                 logger.debug("Fetched metadata for %s", dataset_name)
             except Exception as e:  # noqa: BLE001
                 logger.warning("Failed to fetch table %s: %s", dataset_name, e)
                 continue
 
-        logger.info("Successfully fetched %s tables", len(tables))
-        return tables
+        logger.info("Successfully fetched %s tables", len(models))
+        return models
 
     def _fetch_updates(self, pipeline_id: str) -> list[sp.UpdateInfo]:
         """Fetch pipeline updates, sorted by creation time descending."""

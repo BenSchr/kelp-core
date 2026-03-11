@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from kelp.catalog.uc_models import Column, RemoteCatalogConfig, Table
-from kelp.models.table import PrimaryKeyConstraint, TableType
+from kelp.catalog.uc_models import Column, RemoteCatalogConfig
+from kelp.catalog.uc_models import Model as Table
+from kelp.models.model import PrimaryKeyConstraint, TableType
 
 
 @pytest.fixture

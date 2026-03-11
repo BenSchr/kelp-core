@@ -95,7 +95,7 @@ def generate_create_metric_view_ddl(metric_view: MetricView) -> str:
         AS {
           "dimensions": [...],
           "metrics": [...],
-          "table": "catalog.schema.table_name"
+          "table": "catalog.schema.model_name"
         }
 
     """

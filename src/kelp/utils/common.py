@@ -1,13 +1,4 @@
-from importlib.util import find_spec
 from pathlib import Path
-
-
-def require_optional(pkg: str, extra: str | None = None) -> None:
-    if find_spec(pkg) is None:
-        hint = f"[{extra}]" if extra else ""
-        raise ImportError(
-            f"Optional dependency '{pkg}' is not installed.\nInstall through {__package__}{hint}\n",
-        )
 
 
 def find_path_by_name(

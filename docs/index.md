@@ -17,6 +17,7 @@ Kelp provides a metadata and transformation layer for Databricks Spark and Spark
 
 ### Metadata management
 - Define models, metric views, functions, ABAC policies, and data sources in readable, maintainable YAML
+- Enforce metadata governance with declarative policies (required descriptions, tags, and allowed/forbidden columns)
 - Keep local metadata synchronized with Unity Catalog for improved governance and discoverability
 - Centralize data location configuration (volumes, tables, raw paths) and reference them from any pipeline
 - Use variables and targets for environment-specific configuration
@@ -69,6 +70,7 @@ kelp_metadata/# (2)!
     metrics/**/*.yml
     functions/**/*.yml
     abacs/**/*.yml
+  policies/**/*.yml
 ```
 
 1. This is where your main project configuration file lives. Here you can set global settings, variables, and other configurations for your Kelp project.
@@ -93,6 +95,8 @@ kelp_metadata/
         mask_ssn.sql
     abacs/
       policies.yml
+    policies/
+      governance.yml
     sources/
       sources.yml
 ```
@@ -160,6 +164,27 @@ targets:
 3. You can override variables for each target.
 4. Functions often live in a separate security schema/catalog and can be configured independently.
 
+## Next Steps
+
+Explore Kelp's comprehensive guides to get the most out of the framework:
+
+> ⚠ Some links in the table below may not work in repository preview contexts.
+> Please use the docs website for reliable navigation: https://benschr.github.io/kelp-core/
+
+| Guide | Overview |
+|-------|----------|
+| [Spark Declarative Pipelines (SDP)](guides/sdp.md) | Integrate Kelp with Databricks SDP using decorators and the low-level API |
+| [Normal Spark (Non-SDP)](guides/normal_spark.md) | Use Kelp in standard Spark jobs with `kelp.tables`, DDL, and DQX |
+| [Sync Metadata with Your Catalog](guides/catalog.md) | Keep local metadata in sync with Unity Catalog |
+| [DataFrame Transformations](guides/transformations.md) | Use composable transformations like `apply_schema()` and `apply_func()` |
+| [Project Configuration](guides/project_config.md) | Master `kelp_project.yml` configuration, hierarchies, and targets |
+| [CLI Reference](guides/cli.md) | Command-line tools for project management and metadata sync |
+| [Functions](guides/functions.md) | Define reusable SQL and Python functions in Unity Catalog |
+| [ABAC Policies](guides/abacs.md) | Implement row and column access control |
+| [Governance Policies](guides/policies.md) | Enforce metadata quality rules for models and columns |
+| [Metric Views](guides/metric_views.md) | Define business metrics and dimensions |
+| [Sources](guides/sources.md) | Centralize data source configuration and reference in pipelines |
+
 ## JsonSchema for IDE Support
 
 Kelp can generate a JsonSchema file from your `kelp_project.yml` configuration. This schema can be used to enable autocompletion and validation in compatible IDEs when editing your YAML files.
@@ -175,23 +200,6 @@ You can also generate the JsonSchema without updating VSCode settings:
 ```
 kelp json-schema --output kelp_json_schema.json
 ```
-
-## Next Steps
-
-Explore Kelp's comprehensive guides to get the most out of the framework:
-
-| Guide | Overview |
-|-------|----------|
-| [Spark Declarative Pipelines (SDP)](guides/sdp.md) | Integrate Kelp with Databricks SDP using decorators and the low-level API |
-| [Normal Spark (Non-SDP)](guides/normal_spark.md) | Use Kelp in standard Spark jobs with `kelp.tables`, DDL, and DQX |
-| [Sync Metadata with Your Catalog](guides/catalog.md) | Keep local metadata in sync with Unity Catalog |
-| [DataFrame Transformations](guides/transformations.md) | Use composable transformations like `apply_schema()` and `apply_func()` |
-| [Project Configuration](guides/project_config.md) | Master `kelp_project.yml` configuration, hierarchies, and targets |
-| [CLI Reference](guides/cli.md) | Command-line tools for project management and metadata sync |
-| [Functions](guides/functions.md) | Define reusable SQL and Python functions in Unity Catalog |
-| [ABAC Policies](guides/abacs.md) | Implement row and column access control |
-| [Metric Views](guides/metric_views.md) | Define business metrics and dimensions |
-| [Sources](guides/sources.md) | Centralize data source configuration and reference in pipelines |
 
 ## Build Transformations
 
@@ -230,6 +238,7 @@ Kelp supports multiple metadata objects beyond tables:
 - **`kelp_functions`** - SQL/Python Unity Catalog functions (define once, use in code and ABAC)
 - **`kelp_metric_views`** - Business metrics for analytics and dashboards
 - **`kelp_abacs`** - Row filters and column masking (attribute-based access control)
+- **`kelp_policies`** - Metadata governance rules validated locally during init and via CLI
 
 Example function:
 
@@ -263,7 +272,36 @@ kelp_metric_views:
       source_table: ${ catalog }.gold.orders
 ```
 
-Learn more in the [Functions](guides/functions.md), [Metric Views](guides/metric_views.md), and [ABAC Policies](guides/abacs.md) guides.
+Learn more in the [Functions](guides/functions.md), [Metric Views](guides/metric_views.md), [ABAC Policies](guides/abacs.md), and [Governance Policies](guides/policies.md) guides.
+
+## Metadata Governance Policies
+
+Use metadata policies to keep model definitions consistent and audit-friendly across teams.
+
+```yaml
+kelp_project:
+  policy_config:
+    enabled: false  # (1)!
+    fast_exit: false
+
+kelp_policies:
+  - name: required_metadata
+    applies_to: "models/**"
+    model:
+      require_description: true
+      require_tags: [owner, domain]
+      severity: error
+```
+1. Enabling this flag will run policy checks on each metadata load, for most use cases it's recommended to run policies via the CLI instead of on every load for better performance.
+
+Run policy checks directly from the CLI:
+
+```bash
+uv run kelp check-policies
+uv run kelp check-policies --fast-exit
+```
+
+See the full policy options in the [Governance Policies guide](guides/policies.md).
 
 ## Use the Kelp CLI
 

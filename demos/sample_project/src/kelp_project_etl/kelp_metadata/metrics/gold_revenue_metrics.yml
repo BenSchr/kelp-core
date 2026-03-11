@@ -1,74 +1,66 @@
 kelp_metric_views:
-- name: revenue_metrics
-  description: Key revenue and order metrics for business analytics and dashboards2
-  tags:
-    domain: revenue
-    owner: analytics-team
-    purpose: dashboards
-  definition:
-    comment: Key revenue and order metrics for business analytics and dashboards2
-    version: 1.1
-    source: ${ catalog }.kelp_gold.gold_orders_customers
-    dimensions:
-    - name: order_state
-      expr: order_state
-      comment: order_state indicates the lifecycle state of an order (e.g., 'completed')
-      tags:
-        hello: abcd
-    - name: store
-      expr: store
-      comment: Store is the storefront identifier (remote metadata preserved)2
-    - name: country
-      expr: country
-      comment: Country is the customer's billing country
-    - name: product
-      expr: product
-      comment: Product is the product SKU or identifier
-    measures:
-    - name: total_revenue
-      expr: SUM(total_price)
-      comment: Total revenue (sum of item prices) for the grouping
-    - name: order_count
-      expr: COUNT(DISTINCT order_id)
-      comment: Count of unique orders in the grouping
-    - name: avg_order_value
-      expr: AVG(total_price)
-      comment: Average revenue per order
-    - name: total_quantity
-      expr: SUM(quantity)
-      comment: Total units sold for the grouping
-    - name: unique_customers
-      expr: COUNT(DISTINCT user_id)
-      comment: Distinct customers who placed orders
-- name: product_performance_metrics
-  description: Product-level performance metrics for inventory and sales analytics
-  tags:
-    domain: product
-    owner: analytics-team
-    purpose: inventory-management
-  definition:
-    comment: Product-level performance metrics for inventory and sales analytics
-    version: 1.1
-    source: ${ catalog }.kelp_gold.gold_orders_customers
-    dimensions:
-    - name: product
-      expr: product
-      comment: Product SKU or identifier
-    - name: store
-      expr: store
-      comment: Store identifier for per-store analysis
-      tags:
-        a: b
-    measures:
-    - name: units_sold
-      expr: SUM(quantity)
-      comment: Total units sold for the grouping
-    - name: revenue
-      expr: SUM(total_price)
-      comment: Total revenue for the grouping
-    - name: avg_unit_price
-      expr: AVG(price)
-      comment: Average selling price per unit
-    - name: order_frequency
-      expr: COUNT(DISTINCT order_id)
-      comment: Number of distinct orders (frequency)
+  - name: revenue_metrics
+    description: Key revenue and order metrics for business analytics and dashboards2
+    definition:
+      comment: Key revenue and order metrics for business analytics and dashboards2
+      version: 1.1
+      source: ${ catalog }.kelp_gold.gold_orders_customers
+      dimensions:
+        - name: order_state
+          expr: order_state
+          comment: order_state indicates the lifecycle state of an order (e.g., 'completed')
+          tags:
+            hello: abcd
+        - name: store
+          expr: store
+          comment: Store is the storefront identifier (remote metadata preserved)2
+        - name: country
+          expr: country
+          comment: Country is the customer's billing country
+        - name: product
+          expr: product
+          comment: Product is the product SKU or identifier
+      measures:
+        - name: total_revenue
+          expr: SUM(total_price)
+          comment: Total revenue (sum of item prices) for the grouping
+        - name: order_count
+          expr: COUNT(DISTINCT order_id)
+          comment: Count of unique orders in the grouping
+        - name: avg_order_value
+          expr: AVG(total_price)
+          comment: Average revenue per order
+        - name: total_quantity
+          expr: SUM(quantity)
+          comment: Total units sold for the grouping
+        - name: unique_customers
+          expr: COUNT(DISTINCT user_id)
+          comment: Distinct customers who placed orders
+  - name: product_performance_metrics
+    description: Product-level performance metrics for inventory and sales analytics
+    definition:
+      comment: Product-level performance metrics for inventory and sales analytics
+      version: 1.1
+      source: ${ catalog }.kelp_gold.gold_orders_customers
+      dimensions:
+        - name: product
+          expr: product
+          comment: Product SKU or identifier
+        - name: store
+          expr: store
+          comment: Store identifier for per-store analysis
+          tags:
+            a: b
+      measures:
+        - name: units_sold
+          expr: SUM(quantity)
+          comment: Total units sold for the grouping
+        - name: revenue
+          expr: SUM(total_price)
+          comment: Total revenue for the grouping
+        - name: avg_unit_price
+          expr: AVG(price)
+          comment: Average selling price per unit
+        - name: order_frequency
+          expr: COUNT(DISTINCT order_id)
+          comment: Number of distinct orders (frequency)

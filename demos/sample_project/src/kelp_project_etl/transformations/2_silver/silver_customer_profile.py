@@ -7,7 +7,7 @@ spark = SparkSession.active()
 # kp.init("../../kelp_metadata/kelp_project.yml")
 
 
-@kp.table(exclude_params=["schema"])
+@kp.table()
 def silver_customer_profile() -> DataFrame:
     """Create an enriched customer profile demonstrating function application.
 

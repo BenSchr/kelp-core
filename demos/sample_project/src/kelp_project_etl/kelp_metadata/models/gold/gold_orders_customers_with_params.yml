@@ -1,0 +1,46 @@
+kelp_models:
+  - name: gold_orders_customers_with_params
+    description:
+      "Gold materialized view: enriched orders joined with customer attributes
+      for analytics and reporting."
+
+    constraints:
+      - name: pk_1_2
+        type: primary_key
+        columns:
+          - order_id
+    columns:
+      - name: order_id
+        description: Primary order identifier used to join and deduplicate orders.
+        data_type: string
+        tags:
+          data_classification: internal
+      - name: order_state
+        description: Order lifecycle state (e.g., Pending, Shipped, Delivered).
+        data_type: string
+      - name: product
+        data_type: string
+      - name: quantity
+        data_type: bigint
+      - name: price
+        description: Unit price of the order line.
+        data_type: double
+        tags:
+          data_classification: internal
+      - name: total_price
+        description: "Derived column: price * quantity. Use for revenue computations."
+        data_type: double
+      - name: store
+        data_type: string
+      - name: user_id
+        description:
+          Identifier for the customer/user; links back to bronze/silver customer
+          tables.
+        data_type: string
+        tags:
+          data_classification: internal
+      - name: country
+        description: Customer country from the customer record; useful for geo rollups.
+        data_type: string
+        tags:
+          data_classification: internal

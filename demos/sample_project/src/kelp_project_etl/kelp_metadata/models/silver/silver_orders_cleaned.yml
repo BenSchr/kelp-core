@@ -1,6 +1,18 @@
 kelp_models:
   - name: silver_orders_cleaned
     description: This is the silver cleaned customer model
+    constraints:
+      - name: pk_silver_orders
+        type: primary_key
+        columns:
+          - order_id
+      - name: fk_orders_user
+        type: foreign_key
+        columns:
+          - user_id
+        reference_table: silver_customers_cleaned
+        reference_columns:
+          - user_id
     quality:
       engine: dqx
       sdp_expect_level: warn
@@ -19,10 +31,14 @@ kelp_models:
     columns:
       - name: order_id
         data_type: string
+        tags:
+          data_classification: internal
       - name: order_state
         data_type: string
       - name: price
         data_type: double
+        tags:
+          data_classification: internal
       - name: product
         data_type: string
       - name: quantity
@@ -31,3 +47,5 @@ kelp_models:
         data_type: string
       - name: user_id
         data_type: string
+        tags:
+          data_classification: pii

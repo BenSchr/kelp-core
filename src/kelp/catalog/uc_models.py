@@ -1,6 +1,6 @@
 """Dataclass models for Unity Catalog table sync (v2).
 
-Column, Table, and constraint definitions are re-exported from the core
+Column, Model, and constraint definitions are re-exported from the core
 Kelp models to avoid duplicate model definitions.
 """
 
@@ -8,17 +8,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from kelp.models.project_config import RemoteCatalogConfig
-from kelp.models.table import (
+from kelp.models.model import (
     Column,
     ForeignKeyConstraint,
+    Model,
     PrimaryKeyConstraint,
-    Table,
 )
+from kelp.models.project_config import RemoteCatalogConfig
 
 Constraint = PrimaryKeyConstraint | ForeignKeyConstraint
 
-_EXPORTED_MODELS = (Column, Table, RemoteCatalogConfig)
+_EXPORTED_MODELS = (Column, Model, RemoteCatalogConfig)
 
 __all__ = [
     "Column",
@@ -27,8 +27,8 @@ __all__ = [
     "ConstraintFKDiff",
     "ConstraintPKDiff",
     "DictDiff",
+    "Model",
     "RemoteCatalogConfig",
-    "Table",
     "TableDiff",
 ]
 

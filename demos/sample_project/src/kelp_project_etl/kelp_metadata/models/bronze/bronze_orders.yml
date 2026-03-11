@@ -2,15 +2,19 @@ kelp_models:
   - table_type: streaming_table
     name: bronze_orders
     description: This is the orders model
-    tags:
-      domain: orders
-      stage: bronze
+    constraints:
+      - name: pk_bronze_orders
+        type: primary_key
+        columns:
+          - order_id
+
     columns:
       - name: order_id
         description: Unique identifier for each order
         data_type: string
         tags:
           business: key
+          data_classification: internal
       - name: order_state
         data_type: string
         description: State of the order lifecycle (Pending, Shipped, etc.).
@@ -19,6 +23,7 @@ kelp_models:
         description: Unit price for the order line.
         tags:
           sensitivity: low
+          data_classification: internal
       - name: product
         data_type: string
         description: Product name or identifier.
@@ -31,6 +36,8 @@ kelp_models:
       - name: user_id
         data_type: string
         description: Identifier for the user who placed the order; can link to customers.
+        tags:
+          data_classification: pii
       - name: _rescued_data
         data_type: string
       - name: _errors

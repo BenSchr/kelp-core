@@ -74,6 +74,55 @@ uv run kelp json-schema \
   --dry-run
 ```
 
+### `kelp check-policies`
+
+Evaluate metadata governance policies against your local table catalog.
+
+```bash
+uv run kelp check-policies \
+  --config kelp_project.yml \
+  --target prod
+```
+
+**Options:**
+
+- `-c, --config` - Path to the `kelp_project.yml` file (optional, auto-discovers if not provided)
+- `--target` - Environment to check against (e.g., `dev`, `prod`)
+- `--severity` - Only display violations at this severity or above: `warn` or `error` (default: all)
+- `--fail-on` - Exit with code 1 when violations of this severity are found: `warn` or `error` (default: `error`)
+- `--debug` - Enable debug logging
+
+> **Note:** Policies must be enabled in your project settings for this command to run checks.
+> Set `policy_config.enabled: true` in `kelp_project.yml`.
+
+**Output when policies are disabled:**
+
+```
+⚠ Policy checks are disabled. Set 'policy_config.enabled: true' in kelp_project.yml to enable.
+```
+
+**Output with violations:**
+
+```
+⚠ [WARN]  catalog.schema.bronze_customers — Table 'catalog.schema.bronze_customers' is missing a description.
+✗ [ERROR] catalog.schema.silver_orders.order_id — Column 'order_id' in table '...' is missing a description.
+
+Policy check complete: 1 error(s), 1 warning(s) across 15 table(s).
+```
+
+**Output when all checks pass:**
+
+```
+✓ Policy check complete: no violations found (15 table(s) checked).
+```
+
+**Use in CI/CD:**
+
+```bash
+# Fail the pipeline on any policy error
+uv run kelp check-policies --target prod --fail-on error
+```
+
 **Options:**
 
 - `-o, --output` - Output path for the JSON schema file (default: `kelp_json_schema.json`)
@@ -90,16 +139,12 @@ kelp_project:
   # ... rest of configuration ...
 ```
 
-## Catalog Commands
+### `kelp sync-from-catalog`
 
-Catalog commands manage synchronization between local metadata files and your Databricks Unity Catalog.
-
-### `kelp catalog sync-from-catalog`
-
-Fetch table metadata from Databricks and generate a YAML model definition.
+Fetch table metadata from Databricks Unity Catalog and generate a YAML model definition.
 
 ```bash
-uv run kelp catalog sync-from-catalog \
+uv run kelp sync-from-catalog \
   "analytics_prod.core.customers" \
   --profile my-profile \
   --output customers.yml \
@@ -115,6 +160,7 @@ uv run kelp catalog sync-from-catalog \
 - `-p, --profile` - Databricks CLI profile to use
 - `-o, --output` - Path to output YAML file (optional - prints to stdout if not provided)
 - `--dry-run` - Preview output without writing
+- `--debug` - Enable debug logging
 
 **Output:**
 
@@ -127,22 +173,21 @@ kelp_models:
     schema: core
     description: Customer dimension table
     columns:
-      customer_id:
+      - name: customer_id
         data_type: INT
         description: Primary key
-      customer_name:
+      - name: customer_name
         data_type: STRING
-      email:
+      - name: email
         data_type: STRING
-    # ... additional metadata ...
 ```
 
-### `kelp catalog sync-from-pipeline`
+### `kelp sync-from-pipeline`
 
 Fetch table definitions from a Databricks Spark Declarative Pipeline.
 
 ```bash
-uv run kelp catalog sync-from-pipeline \
+uv run kelp sync-from-pipeline \
   --id abc123def456 \
   --config kelp_project.yml \
   --target prod \
@@ -152,17 +197,30 @@ uv run kelp catalog sync-from-pipeline \
 
 **Options:**
 
-- `--id` - Databricks pipeline ID to sync from
+- `--id` - Databricks pipeline ID to sync from (optional if auto-detected from config)
 - `-c, --config` - Path to `kelp_project.yml` (auto-detects if not provided)
 - `--target` - Environment for variable resolution
 - `-p, --profile` - Databricks CLI profile
 - `-o, --output` - Path to output sync report log
+- `--dry-run` - Preview changes without writing
+- `--debug` - Enable debug logging
 
-**Use Case:**
+**Output:**
 
-Bulk import table definitions from an existing SDP pipeline into your Kelp project.
+Fetches tables from pipeline and creates/updates YAML files. Shows real-time progress:
 
-## Sync Commands
+```
+Fetching tables from pipeline abc123def456...
+  • bronze_customers
+  • bronze_orders
+  • silver_customers_cleaned
+Fetched 3 tables from pipeline abc123def456
+
+✓ Sync complete: 3/3 tables synced
+  - 1 created
+  - 2 updated
+  - 0 unchanged
+```
 
 ### `kelp sync-local-catalog`
 
@@ -218,9 +276,81 @@ Dry-run report:
   Metric views checked: 3
 ```
 
+## Generate Commands
+
+### `kelp generate-ddl`
+
+Generate DDL (Data Definition Language) CREATE TABLE statements from metadata.
+
+```bash
+uv run kelp generate-ddl \
+  --config kelp_project.yml \
+  --target prod \
+  --output create_tables.sql \
+  --dry-run
+```
+
+**Options:**
+
+- `-c, --config` - Path to `kelp_project.yml` (auto-detects if not provided)
+- `--target` - Environment for variable resolution
+- `-o, --output` - Path to output SQL file (optional - prints to stdout if not provided)
+- `--dry-run` - Preview output without writing
+- `--debug` - Enable debug logging
+
+**Output:**
+
+Generates CREATE TABLE statements:
+
+```sql
+-- bronze/bronze_customers.yml
+CREATE TABLE IF NOT EXISTS kelp_catalog.kelp_bronze.bronze_customers (
+  user_id STRING NOT NULL COMMENT 'Internal user identifier',
+  first_name STRING COMMENT 'Customer given name',
+  last_name STRING COMMENT 'Customer family name',
+  country STRING COMMENT 'Customer country'
+) USING DELTA
+TBLPROPERTIES ('domain' = 'customers', 'stage' = 'bronze');
+```
+
+### `kelp generate-alter-statements`
+
+Generate ALTER TABLE statements to sync existing tables with metadata changes.
+
+```bash
+uv run kelp generate-alter-statements \
+  --config kelp_project.yml \
+  --target prod \
+  --profile my-profile \
+  --output alter_tables.sql \
+  --dry-run
+```
+
+**Options:**
+
+- `-c, --config` - Path to `kelp_project.yml` (auto-detects if not provided)
+- `--target` - Environment for variable resolution
+- `-p, --profile` - Databricks CLI profile for table introspection
+- `-o, --output` - Path to output SQL file (optional - prints to stdout if not provided)
+- `--dry-run` - Preview output without writing
+- `--debug` - Enable debug logging
+
+**Output:**
+
+Generates ALTER statements for metadata updates:
+
+```sql
+-- Update descriptions and tags
+ALTER TABLE kelp_catalog.kelp_bronze.bronze_customers 
+  SET TBLPROPERTIES ('owner' = 'analytics-team');
+
+ALTER TABLE kelp_catalog.kelp_bronze.bronze_customers 
+  ALTER COLUMN user_id COMMENT 'Internal user identifier';
+```
+
 ## Init Commands
 
-### `kelp init project`
+### `kelp init`
 
 Initialize a new Kelp project with default structure and configuration.
 
@@ -264,7 +394,7 @@ Default Databricks CLI profile:
 
 ```bash
 export KELP_PROFILE="my-workspace"
-uv run kelp catalog sync-from-catalog "analytics.core.customers"
+uv run kelp sync-from-catalog "analytics.core.customers"
 ```
 
 ## Common Workflows

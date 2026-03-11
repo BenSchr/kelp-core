@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 
 
 def _get_kelp_columns(name: str) -> list:
-    """Lazy import wrapper so callers that only use *schema=* never import kelp.tables."""
+    """Lazy import wrapper so callers that only use *schema=* never import kelp.models_api."""
     from kelp.tables import columns as kelp_columns
 
     return kelp_columns(name)
@@ -75,7 +75,7 @@ def apply_schema(
     Exactly **one** of *name* or *schema* must be provided.
 
     * If *name* is given the target schema is resolved from the Kelp metadata
-      catalog via :func:`kelp.tables.columns`.  When no columns are defined
+      catalog via :func:`kelp.models_api.columns`.  When no columns are defined
       the DataFrame is returned unchanged (pass-through).
     * If *schema* is given as a DDL string (e.g. ``"id INT, name STRING"``) or
       a :class:`~pyspark.sql.types.StructType` it is used directly.

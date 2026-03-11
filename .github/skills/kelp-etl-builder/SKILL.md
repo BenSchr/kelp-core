@@ -215,7 +215,7 @@ from kelp import init, get_context
 
 ctx = init()  # Auto-discover kelp_project.yml
 ctx = init(target="prod")  # Load prod target variables
-ctx = init(overwrite_vars={"catalog": "custom"})  # Override variables
+ctx = init(init_vars={"catalog": "custom"})  # Override variables
 ```
 
 ### 6. Validation and Testing
