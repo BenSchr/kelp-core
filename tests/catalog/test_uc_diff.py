@@ -328,6 +328,45 @@ class TestTablePropertiesDiff:
         # delta.autoOptimize should NOT be deleted (not in managed list)
         assert "delta.autoOptimize" not in diff.table_properties.deletes
 
+    def test_properties_managed_mode_ignores_unmanaged_local_keys(self):
+        """Test that managed mode only updates properties in the managed list."""
+        config = RemoteCatalogConfig(
+            table_property_mode="managed",
+            managed_table_properties=["delta.enableChangeDataFeed"],
+        )
+        differ = TableDiffCalculator(config)
+
+        local = Table(
+            name="test",
+            catalog="cat",
+            schema_="sch",
+            table_properties={
+                "delta.enableChangeDataFeed": "true",
+                "unmanaged.prop": "should_be_ignored",
+            },
+            columns=[],
+            table_type=TableType.MANAGED,
+        )
+        remote = Table(
+            name="test",
+            catalog="cat",
+            schema_="sch",
+            table_properties={
+                "delta.enableChangeDataFeed": "false",
+                "other.remote.prop": "value",
+            },
+            columns=[],
+            table_type=TableType.MANAGED,
+        )
+
+        diff = differ.calculate(local, remote)
+
+        # Only managed key should be in updates
+        assert diff.table_properties.updates == {"delta.enableChangeDataFeed": "true"}
+        assert "unmanaged.prop" not in diff.table_properties.updates
+        # Remote-only keys not in managed list should not be deleted
+        assert "other.remote.prop" not in diff.table_properties.deletes
+
 
 class TestColumnDiff:
     """Tests for column-level differences."""

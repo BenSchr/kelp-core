@@ -1,0 +1,36 @@
+kelp_models:
+  - name: products
+    description: Product catalog with complex table properties
+    table_type: managed
+    table_properties:
+      simple_string: enabled
+      list_of_strings:
+        - admin
+        - analyst
+        - viewer
+      list_of_dicts:
+        - name: rule_1
+          action: allow
+        - name: rule_2
+          action: deny
+      dict_with_mixed_types:
+        timeout: "30"
+        tags:
+          - critical
+          - production
+        nested:
+          key: value
+          count: "5"
+    columns:
+      - name: product_id
+        data_type: bigint
+        nullable: false
+        description: Product ID
+      - name: product_name
+        data_type: string
+        nullable: false
+        description: Product name
+      - name: price
+        data_type: decimal(10, 2)
+        nullable: false
+        description: Product price

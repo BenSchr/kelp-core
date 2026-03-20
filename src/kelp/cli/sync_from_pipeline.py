@@ -147,6 +147,7 @@ def sync_from_pipeline(
 
     # Create central path configuration for all sync operations
     path_config = ServicePathConfig.from_context()
+    remote_catalog_config = ctx.project_settings.remote_catalog_config
 
     # Sync all tables
     synced_count = 0
@@ -166,6 +167,7 @@ def sync_from_pipeline(
                 table,
                 path_config=path_config,
                 dry_run=dry_run,
+                remote_catalog_config=remote_catalog_config,
             )
             synced_count += 1
 

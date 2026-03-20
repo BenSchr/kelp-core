@@ -11,7 +11,7 @@ from kelp.config import get_context
 from kelp.meta.context import MetaRuntimeContext
 from kelp.models.metric_view import MetricView
 from kelp.models.model import Column, ForeignKeyConstraint, Model, PrimaryKeyConstraint
-from kelp.models.project_config import ProjectConfig
+from kelp.models.project_config import ProjectConfig, RemoteCatalogConfig
 from kelp.utils.dict_parser import apply_cfg_hierarchy_to_dict_recursive
 
 logger = logging.getLogger(__name__)
@@ -198,6 +198,7 @@ class YamlManager:
         path_config: ServicePathConfig | None = None,
         relative_file_path: str | Path | None = None,
         dry_run: bool = False,
+        remote_catalog_config: RemoteCatalogConfig | None = None,
     ) -> YamlUpdateReport:
         """Patch or create a model YAML file with metadata from a source table.
 
@@ -261,7 +262,7 @@ class YamlManager:
             original_model = copy.deepcopy(model)
 
         defaults = cls._get_hierarchy_defaults(resolved_file_path, path_config)
-        cls._patch_model_dict(model, source_model, defaults)
+        cls._patch_model_dict(model, source_model, defaults, remote_catalog_config)
 
         # Detect changes
         changes_made = original_model is None or model != original_model
@@ -292,6 +293,7 @@ class YamlManager:
         cls,
         source_model: Model,
         include_hierarchy_defaults: bool = True,
+        remote_catalog_config: RemoteCatalogConfig | None = None,
     ) -> dict:
         """Convert a Model object to a YAML model dict.
 
@@ -327,16 +329,30 @@ class YamlManager:
             )
 
         # Patch using standard logic (handles all patchable fields)
-        cls._patch_model_dict(model, source_model, defaults)
+        cls._patch_model_dict(model, source_model, defaults, remote_catalog_config)
 
         return model
 
     @classmethod
-    def _patch_model_dict(cls, model: dict, source_model: Model, defaults: dict) -> None:
+    def _patch_model_dict(
+        cls,
+        model: dict,
+        source_model: Model,
+        defaults: dict,
+        remote_catalog_config: RemoteCatalogConfig | None = None,
+    ) -> None:
         """Patch a single model dict in-place.
 
         Always updates fields from source. When a field has a default value in hierarchy config,
         only writes it to YAML if it differs from the default (to avoid redundancy).
+
+        Args:
+            model: Existing YAML model dict to patch in-place.
+            source_model: Source model with new values.
+            defaults: Hierarchy defaults for the model path.
+            remote_catalog_config: When provided, filters table_properties based on
+                table_property_mode (append: only update existing local keys;
+                managed: only sync keys in managed_table_properties list).
         """
         # Only write description if it differs from default
         default_description = defaults.get("description")
@@ -362,6 +378,23 @@ class YamlManager:
             cls._set_or_remove(model, "constraints", serialized_constraints)
         elif "constraints" in model:
             model.pop("constraints", None)
+
+        # Table properties: deserialize JSON-encoded values back to complex types
+        # and filter out defaults from hierarchy config
+        deserialized_props = Model.deserialize_property_values(source_model.table_properties)
+        default_props = defaults.get("table_properties")
+        if isinstance(default_props, dict) and default_props:
+            filtered_props = {k: v for k, v in deserialized_props.items() if k not in default_props}
+        else:
+            filtered_props = deserialized_props
+
+        # When syncing from remote, scope properties based on table_property_mode
+        if remote_catalog_config is not None:
+            filtered_props = cls._filter_properties_by_mode(
+                filtered_props, model, remote_catalog_config
+            )
+
+        cls._set_or_remove(model, "table_properties", filtered_props)
 
         existing_columns = model.get("columns")
         if not isinstance(existing_columns, list):
@@ -481,6 +514,39 @@ class YamlManager:
         if not isinstance(default_tags, dict) or not default_tags:
             return tags
         return {key: value for key, value in tags.items() if key not in default_tags}
+
+    @classmethod
+    def _filter_properties_by_mode(
+        cls,
+        source_props: dict,
+        existing_model: dict,
+        config: RemoteCatalogConfig,
+    ) -> dict:
+        """Filter table properties based on the remote catalog config mode.
+
+        Args:
+            source_props: Deserialized properties from the source model.
+            existing_model: Current YAML model dict (contains existing local properties).
+            config: Remote catalog configuration with table_property_mode.
+
+        Returns:
+            Filtered properties dict.
+
+            - append: Only keep properties whose keys already exist in the local model.
+            - managed: Only keep properties whose keys are in managed_table_properties.
+        """
+        mode = config.table_property_mode
+        existing_props = existing_model.get("table_properties")
+        existing_keys = set(existing_props.keys()) if isinstance(existing_props, dict) else set()
+
+        if mode == "append":
+            return {k: v for k, v in source_props.items() if k in existing_keys}
+
+        if mode == "managed":
+            managed_keys = set(config.managed_table_properties)
+            return {k: v for k, v in source_props.items() if k in managed_keys}
+
+        return source_props
 
     @classmethod
     def _serialize_constraints(

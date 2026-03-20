@@ -1,0 +1,27 @@
+kelp_models:
+- name: gold_product_summary
+  description: Gold product summary table created via normal Spark (non-SDP) with
+    complex table properties.
+  table_properties:
+    delta.enableChangeDataFeed: 'true'
+    delta.autoOptimize.optimizeWrite: 'true'
+    retention_policy:
+      archive_after_days: '90'
+      delete_after_days: '365'
+      notify:
+      - data-ops@company.com
+      - compliance@company.com
+  columns:
+  - name: product
+    data_type: string
+    nullable: false
+    description: Product name or identifier.
+  - name: total_quantity
+    data_type: bigint
+    description: Total quantity ordered across all orders.
+  - name: total_revenue
+    data_type: double
+    description: Total revenue (price * quantity) for the product.
+  - name: order_count
+    data_type: bigint
+    description: Number of distinct orders for the product.

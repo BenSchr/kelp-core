@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import json
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.json_schema import SkipJsonSchema
 
 
@@ -59,6 +60,51 @@ class Model(BaseModel):
         default_factory=dict,
         description="Databricks table properties",
     )
+
+    @field_validator("table_properties", mode="before")
+    @classmethod
+    def _serialize_complex_property_values(cls, v: dict) -> dict:
+        """Serialize complex property values (list, dict) to JSON strings.
+
+        Databricks table properties are string key-value pairs. When YAML
+        metadata contains complex types (lists or dicts) as property values,
+        they are serialised to JSON strings so downstream consumers
+        (DDL generation, catalog sync, SDP decorators) receive strings.
+        """
+        if not isinstance(v, dict):
+            return v
+        result: dict = {}
+        for key, value in v.items():
+            if isinstance(value, (dict, list)):
+                result[key] = json.dumps(value, separators=(",", ":"))
+            else:
+                result[key] = value
+        return result
+
+    @staticmethod
+    def deserialize_property_values(properties: dict) -> dict:
+        """Deserialize JSON-encoded property values back to complex types.
+
+        Used by the YAML writer to restore the original structure (list, dict)
+        so that the YAML output uses native YAML types instead of JSON strings.
+        """
+        if not isinstance(properties, dict):
+            return properties
+        result: dict = {}
+        for key, value in properties.items():
+            if isinstance(value, str):
+                try:
+                    parsed = json.loads(value)
+                except (json.JSONDecodeError, ValueError):
+                    parsed = value
+                if isinstance(parsed, (dict, list)):
+                    result[key] = parsed
+                else:
+                    result[key] = value
+            else:
+                result[key] = value
+        return result
+
     path: str | None = Field(
         default=None,
         description="Physical path for external tables or custom locations",

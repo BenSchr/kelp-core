@@ -25,9 +25,16 @@ resources:
           pipeline_task:
             pipeline_id: ${resources.pipelines.kelp_sample_sdp.id}
             full_refresh: false
-        - task_key: check_update_metadata
+        - task_key: create_spark_table
           depends_on:
             - task_key: kelp_sdp_pipeline
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/kelp_project_etl/notebooks/create_spark_table
+            source: WORKSPACE
+          environment_key: Default
+        - task_key: check_update_metadata
+          depends_on:
+            - task_key: create_spark_table
           condition_task:
             op: EQUAL_TO
             left: "{{job.parameters.update_metadata}}"

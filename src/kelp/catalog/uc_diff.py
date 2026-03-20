@@ -115,6 +115,8 @@ class TableDiffCalculator:
         deletes: list[str] = []
 
         for key in local_keys:
+            if mode == "managed" and not self._in_scope(key, managed):
+                continue
             if key not in remote_keys or local[key] != remote[key]:
                 updates[key] = local[key]
 

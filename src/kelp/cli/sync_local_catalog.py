@@ -99,6 +99,7 @@ def sync_local_catalog(
             service_root_key="metrics_path",
             hierarchy_config_key="metric_views",
         )
+    remote_catalog_config = project_config.remote_catalog_config
 
     log_lines: list[str] = []
 
@@ -137,6 +138,7 @@ def sync_local_catalog(
             remote,
             path_config=table_path_config,
             dry_run=dry_run,
+            remote_catalog_config=remote_catalog_config,
         )
         if report.changes_made:
             if dry_run:
