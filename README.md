@@ -44,11 +44,11 @@ Kelp provides a metadata and transformation layer for Databricks Spark and Spark
 To install Kelp, you can use `uv`, `pip`, or the package manager of your choice. Below are the commands for both methods:
 
 ```
-uv add kelp-core==0.0.4
+uv add kelp-core==0.0.5
 ```
 
 ```
-pip install kelp-core==0.0.4
+pip install kelp-core==0.0.5
 ```
 
 
@@ -70,7 +70,7 @@ kelp_metadata/# (2)!
     metrics/**/*.yml
     functions/**/*.yml
     abacs/**/*.yml
-  policies/**/*.yml
+    policies/**/*.yml
 ```
 
 1. This is where your main project configuration file lives. Here you can set global settings, variables, and other configurations for your Kelp project.
@@ -138,6 +138,8 @@ kelp_project:
   sources_path: "./kelp_metadata/sources"
   sources: {}
 
+  policies_path: "./kelp_metadata/policies"
+
 vars:
   default_catalog: my_catalog
   default_schema: my_schema
@@ -163,6 +165,24 @@ targets:
 2. This sets a tag on all models in this project.
 3. You can override variables for each target.
 4. Functions often live in a separate security schema/catalog and can be configured independently.
+
+## Sync your existing catalog metadata to Kelp
+
+If you have existing tables in Unity Catalog, you can sync their metadata (descriptions, tags, constraints) to your local YAML files to start managing them with Kelp. Use the following CLI command:
+
+```
+uv run kelp catalog sync-from-catalog "catalog.schema.table" --output models/table.yml
+```
+This command will pull the metadata for the specified table and save it to a YAML file in your project. You can then customize this YAML file with additional metadata or use it as a template for new tables.
+
+To sync metadata from all tables in Declarative Pipelines at once, use the sync-from-pipeline command:
+
+```
+uv run kelp catalog sync-from-pipeline --target <target_name> --id <optional_pipeline_id>
+```
+
+If no metadata gets detected try to (dry-)run the pipeline to refresh the sdp-history logs in Databricks.
+If you don't specify a pipeline id and use DABs, Kelp will try to auto-detect the ids from the local bundle metadata.
 
 ## Next Steps
 
