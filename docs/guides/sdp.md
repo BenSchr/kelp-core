@@ -235,7 +235,7 @@ kelp_models:
   - name: my_table
     # ...
     columns:
-      column1:
+      - name: column1
         description: This is column 1
         tags:
           - tag1 : "" # (1)!

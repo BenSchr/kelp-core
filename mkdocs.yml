@@ -75,7 +75,8 @@ nav:
 plugins:
   - search
   - offline
-  - autorefs
+  - autorefs:
+      resolve_closest: true
   - mkdocstrings:
       handlers:
         python:
@@ -100,6 +101,8 @@ plugins:
             signature_crossrefs: true
 
 markdown_extensions:
+  - admonition
+  - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span

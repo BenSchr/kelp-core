@@ -171,7 +171,7 @@ targets:
 If you have existing tables in Unity Catalog, you can sync their metadata (descriptions, tags, constraints) to your local YAML files to start managing them with Kelp. Use the following CLI command:
 
 ```
-uv run kelp catalog sync-from-catalog "catalog.schema.table" --output models/table.yml
+uv run kelp sync-from-catalog "catalog.schema.table" --output models/table.yml
 ```
 This command will pull the metadata for the specified table and save it to a YAML file in your project. You can then customize this YAML file with additional metadata or use it as a template for new tables.
 
@@ -312,6 +312,7 @@ kelp_policies:
       require_tags: [owner, domain]
       severity: error
 ```
+
 1. Enabling this flag will run policy checks on each metadata load, for most use cases it's recommended to run policies via the CLI instead of on every load for better performance.
 
 Run policy checks directly from the CLI:

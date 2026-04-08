@@ -54,5 +54,5 @@ and `fast_exit`).
 
 ## See Also
 
-- [Metadata Governance Policies Guide](/guides/policies.md) — Complete guide with examples
-- [Policy Models](/reference/models/policy.md)
+- [Metadata Governance Policies Guide](../guides/policies.md) — Complete guide with examples
+- [Policy Models](../reference/models/policy.md)

@@ -83,32 +83,6 @@ kelp_sources:
     description: "Cached API responses from external service"
 ```
 
-## Source Options
-
-All source types support an `options` dictionary for source-specific settings:
-
-```yaml
-kelp_sources:
-  - name: landing_json
-    source_type: volume
-    path: /Volumes/my_catalog/landing/api_data/
-    description: "API responses in JSON format"
-    options:
-      cloudFiles.format: json
-      cloudFiles.schemaLocation: /Volumes/checkpoints/api_data/
-      multiLine: "true"
-```
-
-Access options in your pipeline:
-
-```python
-import kelp.pipelines as kp
-
-path = kp.source("landing_json")
-options = kp.source_options("landing_json")
-
-df = spark.readStream.format("cloudFiles").options(**options).load(path)
-```
 
 ## Configuration
 
@@ -166,44 +140,32 @@ vars:
   landing_schema: landing_zone
 ```
 
-## Variable Interpolation
 
-Sources support Jinja2 variable interpolation using `${ variable_name }`:
+## Source Options
+
+All source types support an `options` dictionary for source-specific settings:
 
 ```yaml
 kelp_sources:
-  - name: landing
+  - name: landing_json
     source_type: volume
-    catalog: ${ catalog }
-    schema: ${ landing_schema }
-    volume_name: raw
-    description: "Landing zone for raw data"
-
-  - name: legacy_landing
-    source_type: volume
-    path: /Volumes/${ catalog }/${ landing_schema }/raw/
-    description: "Alternative path-based definition"
-
-vars:
-  catalog: my_catalog
-  landing_schema: landing_zone
-```
-  landing_schema: landing_zone
+    path: /Volumes/my_catalog/landing/api_data/
+    description: "API responses in JSON format"
+    options:
+      cloudFiles.format: json
+      cloudFiles.schemaLocation: /Volumes/checkpoints/api_data/
+      multiLine: "true"
 ```
 
-Variables can be overridden per target:
+Access options in your pipeline:
 
-```yaml
-targets:
-  dev:
-    vars:
-      catalog: my_catalog_dev
-      landing_schema: dev_landing
+```python
+import kelp.pipelines as kp
 
-  prod:
-    vars:
-      catalog: my_catalog_prod
-      landing_schema: prod_landing
+path = kp.source("landing_json")
+options = kp.source_options("landing_json")
+
+df = spark.readStream.format("cloudFiles").options(**options).load(path)
 ```
 
 ## Usage in Pipelines
@@ -296,157 +258,8 @@ uv run kelp validate
 # Sources found: 5
 ```
 
-## Best Practices
-
-### 1. Centralize Data Paths
-
-Instead of hardcoding paths in transformations:
-
-```python
-# ❌ Avoid
-path = "/Volumes/my_catalog/landing/customers/"
-```
-
-Use sources:
-
-```python
-# ✅ Preferred
-path = kp.source("landing_customers")
-```
-
-### 2. Use Descriptive Names
-
-Name sources to clearly indicate their purpose and format:
-
-```yaml
-# ✅ Good
-- name: landing_json_api_responses
-  source_type: volume
-  path: /Volumes/my_catalog/api_data/responses/
-
-# ❌ Vague
-- name: data_location
-  source_type: volume
-  path: /Volumes/my_catalog/api_data/responses/
-```
-
-### 3. Include Options in Source Definition
-
-Keep format and reader options with the source configuration:
-
-```yaml
-# ✅ Centralized
-- name: landing_multiline_json
-  source_type: volume
-  path: /Volumes/my_catalog/raw/
-  options:
-    cloudFiles.format: json
-    multiLine: "true"
-
-# ❌ Spread across code
-path = kp.source("landing_multiline_json")
-# Options defined separately in transformation code
-```
-
-### 4. Document Source Purpose
-
-Add clear descriptions to help team members understand each source:
-
-```yaml
-- name: landing_events
-  source_type: volume
-  path: /Volumes/${ catalog }/events/
-  description: "Event stream from product analytics"
-```
-
-## Examples
-
-### Complete Volume-based ETL
-
-Configuration:
-
-```yaml
-# kelp_metadata/sources/sources.yml
-kelp_sources:
-  - name: raw_events
-    source_type: volume
-    catalog: ${ catalog }
-    schema: ${ landing_schema }
-    volume_name: events
-    description: "Raw event data from analytics platform"
-    options:
-      cloudFiles.format: parquet
-
-  - name: reference_users
-    source_type: table
-    catalog: ${ catalog }
-    schema: reference
-    table_name: dim_users
-    description: "User reference dimension"
-
-vars:
-  catalog: my_catalog
-  landing_schema: landing_zone
-```
-
-Pipeline:
-
-```python
-import kelp.pipelines as kp
-from pyspark import pipelines as dp
-
-@dp.streaming_table
-def bronze_events():
-    path = kp.source("raw_events")
-    options = kp.source_options("raw_events")
-    
-    return (
-        spark.readStream
-        .format("cloudFiles")
-        .options(**options)
-        .load(path)
-    )
-
-@dp.streaming_table
-def silver_enriched_events():
-    events = spark.readStream.table(kp.ref("bronze_events"))
-    users = spark.read.table(kp.source("reference_users"))
-    
-    return events.join(
-        users,
-        on="user_id"
-    )
-```
-
-## API Reference
-
-### `kp.source(name: str) -> str`
-
-Get the path for a data source.
-
-**Arguments:**
-- `name` - Source name as defined in YAML
-
-**Returns:**
-- For table sources: fully qualified name (catalog.schema.table_name)
-- For volume/raw_path sources: the path string
-
-**Raises:**
-- `KeyError` if source not found in catalog
-- `ValueError` if source configuration is incomplete
-
-### `kp.source_options(name: str) -> dict`
-
-Get the options dictionary for a data source.
-
-**Arguments:**
-- `name` - Source name as defined in YAML
-
-**Returns:**
-- Dictionary of source-specific options (empty dict if no options defined)
-
-**Raises:**
-- `KeyError` if source not found in catalog
+## Reference
+- [Source Models](../reference/sources.md)
 
 ## See Also
 
