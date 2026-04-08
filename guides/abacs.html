@@ -1910,8 +1910,10 @@
 
 <h1 id="abac-policies">ABAC Policies<a class="headerlink" href="#abac-policies" title="Permanent link">&para;</a></h1>
 <p>This guide explains how to define and organize Attribute-Based Access Control (ABAC) policies in your Kelp project. ABAC policies implement row-level and column-level access control using Unity Catalog's fine-grained access control features.</p>
-<p>!!! note
-    ABAC policies reference <a href="functions.html">Functions</a> to implement masking and filtering logic. Ensure your functions are defined and synced before creating ABAC policies.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>ABAC policies reference <a href="functions.html">Functions</a> to implement masking and filtering logic. Ensure your functions are defined and synced before creating ABAC policies.</p>
+</div>
 <h2 id="configure-paths-and-defaults">Configure Paths and Defaults<a class="headerlink" href="#configure-paths-and-defaults" title="Permanent link">&para;</a></h2>
 <p>Add dedicated paths for ABAC policies to <code>kelp_project.yml</code>:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">kelp_project</span><span class="p">:</span>

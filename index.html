@@ -1922,7 +1922,7 @@ Kelp is a powerful framework designed to simplify the management of data pipelin
 </ol>
 <h2 id="sync-your-existing-catalog-metadata-to-kelp">Sync your existing catalog metadata to Kelp<a class="headerlink" href="#sync-your-existing-catalog-metadata-to-kelp" title="Permanent link">&para;</a></h2>
 <p>If you have existing tables in Unity Catalog, you can sync their metadata (descriptions, tags, constraints) to your local YAML files to start managing them with Kelp. Use the following CLI command:</p>
-<p><div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uv run kelp catalog sync-from-catalog &quot;catalog.schema.table&quot; --output models/table.yml
+<p><div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uv run kelp sync-from-catalog &quot;catalog.schema.table&quot; --output models/table.yml
 </span></code></pre></div>
 This command will pull the metadata for the specified table and save it to a YAML file in your project. You can then customize this YAML file with additional metadata or use it as a template for new tables.</p>
 <p>To sync metadata from all tables in Declarative Pipelines at once, use the sync-from-pipeline command:</p>
@@ -2061,7 +2061,7 @@ This command will create a <code>kelp_json_schema.json</code> file in your proje
 <p>Learn more in the <a href="guides/functions.html">Functions</a>, <a href="guides/metric_views.html">Metric Views</a>, <a href="guides/abacs.html">ABAC Policies</a>, and <a href="guides/policies.html">Governance Policies</a> guides.</p>
 <h2 id="metadata-governance-policies">Metadata Governance Policies<a class="headerlink" href="#metadata-governance-policies" title="Permanent link">&para;</a></h2>
 <p>Use metadata policies to keep model definitions consistent and audit-friendly across teams.</p>
-<p><div class="language-yaml highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nt">kelp_project</span><span class="p">:</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nt">kelp_project</span><span class="p">:</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">policy_config</span><span class="p">:</span>
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">  </span><span class="c1"># (1)!</span>
 </span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">    </span><span class="nt">fast_exit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
@@ -2074,7 +2074,9 @@ This command will create a <code>kelp_json_schema.json</code> file in your proje
 </span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="w">      </span><span class="nt">require_tags</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">owner</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">domain</span><span class="p p-Indicator">]</span>
 </span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="w">      </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">error</span>
 </span></code></pre></div>
-1. Enabling this flag will run policy checks on each metadata load, for most use cases it's recommended to run policies via the CLI instead of on every load for better performance.</p>
+<ol>
+<li>Enabling this flag will run policy checks on each metadata load, for most use cases it's recommended to run policies via the CLI instead of on every load for better performance.</li>
+</ol>
 <p>Run policy checks directly from the CLI:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>uv<span class="w"> </span>run<span class="w"> </span>kelp<span class="w"> </span>check-policies
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>uv<span class="w"> </span>run<span class="w"> </span>kelp<span class="w"> </span>check-policies<span class="w"> </span>--fast-exit

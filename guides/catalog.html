@@ -1563,8 +1563,10 @@
 <li><code>kelp_functions</code> - SQL/Python function registration (must be synced separately before pipelines run)</li>
 <li><code>kelp_abacs</code> - Row and column access control policies</li>
 </ul>
-<p>!!! note "Functions Sync Timing"
-    Functions must be synced <strong>before</strong> your SDP pipeline runs, since ABAC policies and user code reference them. The <code>sync_catalog()</code> command does <strong>NOT</strong> include functions by default. Functions are typically synced in a separate initialization step, while metadata (descriptions, tags, etc.) is synced after pipelines complete. Use <code>sync_functions()</code> to sync Unity Catalog functions.</p>
+<div class="admonition note">
+<p class="admonition-title">Functions Sync Timing</p>
+<p>Functions must be synced <strong>before</strong> your SDP pipeline runs, since ABAC policies and user code reference them. The <code>sync_catalog()</code> command does <strong>NOT</strong> include functions by default. Functions are typically synced in a separate initialization step, while metadata (descriptions, tags, etc.) is synced after pipelines complete. Use <code>sync_functions()</code> to sync Unity Catalog functions.</p>
+</div>
 <h2 id="sync-metadata-code">Sync Metadata Code<a class="headerlink" href="#sync-metadata-code" title="Permanent link">&para;</a></h2>
 <p>When you use Kelp's catalog sync feature, you can leverage metadata defined in your project to apply descriptions, tags, and constraints to your tables and metric views.</p>
 <p><code>sync_catalog()</code> generates SQL queries based on the differences between your local metadata and the remote catalog. You can review these queries before executing them to ensure they align with your expectations.</p>
