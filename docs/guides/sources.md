@@ -59,7 +59,7 @@ kelp_sources:
     source_type: table
     catalog: my_catalog
     schema: reference_data
-    table_name: countries
+    model_name: countries
     description: "Reference table of valid countries"
 ```
 
@@ -132,7 +132,7 @@ kelp_sources:
     source_type: table
     catalog: ${ catalog }
     schema: reference
-    table_name: product_categories
+    model_name: product_categories
     description: "Product categories reference table"
 
 vars:
