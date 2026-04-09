@@ -80,6 +80,18 @@ class TestPipelinesApi:
         assert result == "col1 string, col2 int"
 
     @patch("kelp.pipelines.api.ModelManager.build_sdp_model")
+    def test_schema_with_exclude(self, mock_build_sdp_model):
+        """Test schema passes exclude parameter to build_sdp_model."""
+        mock_table = MagicMock(spec=KelpSdpModel)
+        mock_table.schema = "col1 string, col2 int"
+        mock_build_sdp_model.return_value = mock_table
+
+        result = api.schema("test_table", exclude=["col2"])
+
+        assert result == "col1 string, col2 int"
+        mock_build_sdp_model.assert_called_once_with("test_table", exclude=["col2"])
+
+    @patch("kelp.pipelines.api.ModelManager.build_sdp_model")
     def test_schema_lite(self, mock_build_sdp_model):
         """Test schema_lite returns the lite schema."""
         mock_table = MagicMock(spec=KelpSdpModel)
@@ -89,6 +101,18 @@ class TestPipelinesApi:
         result = api.schema_lite("test_table")
 
         assert result == "col1 string, col2 int"
+
+    @patch("kelp.pipelines.api.ModelManager.build_sdp_model")
+    def test_schema_lite_with_exclude(self, mock_build_sdp_model):
+        """Test schema_lite passes exclude parameter to build_sdp_model."""
+        mock_table = MagicMock(spec=KelpSdpModel)
+        mock_table.schema_lite = "col1 string, col2 int"
+        mock_build_sdp_model.return_value = mock_table
+
+        result = api.schema_lite("test_table", exclude=["col2"])
+
+        assert result == "col1 string, col2 int"
+        mock_build_sdp_model.assert_called_once_with("test_table", exclude=["col2"])
 
     @patch("kelp.pipelines.api.ModelManager.build_sdp_model")
     def test_params(self, mock_build_sdp_model):

@@ -56,7 +56,7 @@ def ref(name: str) -> str:
     return ModelManager.build_sdp_model(name).fqn or name
 
 
-def schema(name: str) -> str | None:
+def schema(name: str, exclude: list[str] | None = None) -> str | None:
     """Get the Spark schema DDL for a table.
 
     Returns the full Spark schema definition including constraints and generated
@@ -64,14 +64,15 @@ def schema(name: str) -> str | None:
 
     Args:
         name: Table name.
+        exclude: Column names to exclude from the schema.
 
     Returns:
         Spark schema DDL string, or None if not available.
     """
-    return ModelManager.build_sdp_model(name).schema
+    return ModelManager.build_sdp_model(name, exclude=exclude).schema
 
 
-def schema_lite(name: str) -> str | None:
+def schema_lite(name: str, exclude: list[str] | None = None) -> str | None:
     """Get the raw Spark schema without constraints or generated columns.
 
     Returns the basic Spark schema definition without any modifications,
@@ -79,11 +80,12 @@ def schema_lite(name: str) -> str | None:
 
     Args:
         name: Table name.
+        exclude: Column names to exclude from the schema.
 
     Returns:
         Raw Spark schema DDL string, or None if not available.
     """
-    return ModelManager.build_sdp_model(name).schema_lite
+    return ModelManager.build_sdp_model(name, exclude=exclude).schema_lite
 
 
 def params(name: str, exclude: list[str] | None = None) -> dict[str, str]:

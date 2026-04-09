@@ -823,7 +823,7 @@ class TestComplexTableProperties:
             name=original_model_dict["name"],
             description=original_model_dict["description"],
             table_properties=original_model_dict["table_properties"],
-            columns=[Column(**c) for c in original_model_dict["columns"]],
+            columns=[Column(**c) for c in original_model_dict["columns"]],  # ty:ignore[invalid-argument-type]
         )
 
         # Values are now JSON strings inside the model

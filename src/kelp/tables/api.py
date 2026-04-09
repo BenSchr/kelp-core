@@ -20,14 +20,30 @@ def ref(name: str) -> str:
     return ModelManager.build_model(name).fqn or name
 
 
-def schema(name: str) -> str | None:
-    """Get the Spark schema DDL for a model."""
-    return ModelManager.build_model(name).schema
+def schema(name: str, exclude: list[str] | None = None) -> str | None:
+    """Get the Spark schema DDL for a model.
+
+    Args:
+        name: Model name.
+        exclude: Column names to exclude from the schema.
+
+    Returns:
+        Spark schema DDL string, or ``None`` if not available.
+    """
+    return ModelManager.build_model(name, exclude=exclude).schema
 
 
-def schema_lite(name: str) -> str | None:
-    """Get the raw Spark schema without constraints or generated columns."""
-    return ModelManager.build_model(name).schema_lite
+def schema_lite(name: str, exclude: list[str] | None = None) -> str | None:
+    """Get the raw Spark schema without constraints or generated columns.
+
+    Args:
+        name: Model name.
+        exclude: Column names to exclude from the schema.
+
+    Returns:
+        Spark schema DDL string, or ``None`` if not available.
+    """
+    return ModelManager.build_model(name, exclude=exclude).schema_lite
 
 
 def ddl(name: str, if_not_exists: bool = True) -> str | None:

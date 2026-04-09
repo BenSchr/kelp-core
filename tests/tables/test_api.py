@@ -102,6 +102,18 @@ class TestSchema:
 
         assert schema("orders") is None
 
+    def test_schema_with_exclude(self, mocker: MagicMock) -> None:
+        """Test schema passes exclude parameter to build_model."""
+        kt = _make_kelp_table(schema_val="id BIGINT, name STRING")
+        mock_build = mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
+
+        from kelp.tables import schema
+
+        result = schema("orders", exclude=["name"])
+
+        assert result == "id BIGINT, name STRING"
+        mock_build.assert_called_once_with("orders", exclude=["name"])
+
 
 class TestSchemaLite:
     def test_returns_schema_lite(self, mocker: MagicMock) -> None:
@@ -111,6 +123,18 @@ class TestSchemaLite:
         from kelp.tables import schema_lite
 
         assert schema_lite("orders") == "id BIGINT, name STRING"
+
+    def test_schema_lite_with_exclude(self, mocker: MagicMock) -> None:
+        """Test schema_lite passes exclude parameter to build_model."""
+        kt = _make_kelp_table(schema_lite_val="id BIGINT, name STRING")
+        mock_build = mocker.patch("kelp.tables.api.ModelManager.build_model", return_value=kt)
+
+        from kelp.tables import schema_lite
+
+        result = schema_lite("orders", exclude=["name"])
+
+        assert result == "id BIGINT, name STRING"
+        mock_build.assert_called_once_with("orders", exclude=["name"])
 
 
 class TestDdl:

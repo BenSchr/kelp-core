@@ -145,8 +145,12 @@ class ModelManager:
         model: Model,
         include_constraints: bool = False,
         add_generated: bool = False,
+        exclude: list[str] | None = None,
     ) -> str:
-        builder = SparkSchemaBuilder(model).add_columns(add_generated=add_generated)
+        builder = SparkSchemaBuilder(model).add_columns(
+            add_generated=add_generated,
+            exclude=exclude,
+        )
         if include_constraints:
             builder = builder.add_constraints()
         return builder.build_raw()
@@ -233,6 +237,7 @@ class ModelManager:
         model: Model | None = None,
         ctx: MetaRuntimeContext | None = None,
         soft_handle: bool = False,
+        exclude: list[str] | None = None,
     ) -> KelpSdpModel:
         ctx = ctx or get_context()
         if model is None:
@@ -252,9 +257,17 @@ class ModelManager:
         sdp_model.cluster_by = model.cluster_by
         sdp_model.row_filter = model.row_filter
         sdp_model.fqn = cls.get_qualified_name_from_model(model)
-        sdp_model.schema = cls.get_spark_schema(model, include_constraints=True, add_generated=True)
+        sdp_model.schema = cls.get_spark_schema(
+            model,
+            include_constraints=True,
+            add_generated=True,
+            exclude=exclude,
+        )
         sdp_model.schema_lite = cls.get_spark_schema(
-            model, include_constraints=False, add_generated=False
+            model,
+            include_constraints=False,
+            add_generated=False,
+            exclude=exclude,
         )
 
         if model.quality and isinstance(model.quality, SDPQuality):
@@ -283,6 +296,7 @@ class ModelManager:
         model_name: str,
         model: Model | None = None,
         ctx: MetaRuntimeContext | None = None,
+        exclude: list[str] | None = None,
     ) -> KelpModel:
         ctx = ctx or get_context()
         model = model or _get_model_from_context(ctx, model_name, soft_handle=False)
@@ -300,10 +314,16 @@ class ModelManager:
         kelp_model.row_filter = model.row_filter
         kelp_model.fqn = cls.get_qualified_name_from_model(model)
         kelp_model.schema = cls.get_spark_schema(
-            model, include_constraints=True, add_generated=True
+            model,
+            include_constraints=True,
+            add_generated=True,
+            exclude=exclude,
         )
         kelp_model.schema_lite = cls.get_spark_schema(
-            model, include_constraints=False, add_generated=False
+            model,
+            include_constraints=False,
+            add_generated=False,
+            exclude=exclude,
         )
         kelp_model.root_model = model
 
@@ -326,18 +346,33 @@ class SparkSchemaBuilder:
         self.model = model
         self.table_parts: list[str] = []
         self.outer_parts: list[str] = []
+        self._excluded_columns: set[str] = set()
 
-    def add_columns(self, add_generated: bool = False) -> SparkSchemaBuilder:
+    def add_columns(
+        self,
+        add_generated: bool = False,
+        exclude: list[str] | None = None,
+    ) -> SparkSchemaBuilder:
+        exclude_set = {c.lower() for c in (exclude or [])}
+        self._excluded_columns = exclude_set
         for col in self.model.columns:
+            if col.name.lower() in exclude_set:
+                continue
             self.table_parts.append(self._column_to_string(col, add_generated=add_generated))
         return self
 
     def add_constraints(self) -> SparkSchemaBuilder:
         for constraint in self.model.constraints:
             if isinstance(constraint, PrimaryKeyConstraint):
+                # Skip constraint if it references excluded columns
+                if any(c.lower() in self._excluded_columns for c in constraint.columns):
+                    continue
                 cols = ", ".join(constraint.columns)
                 self.table_parts.append(f"CONSTRAINT {constraint.name} PRIMARY KEY ({cols})")
             elif isinstance(constraint, ForeignKeyConstraint):
+                # Skip constraint if it references excluded columns
+                if any(c.lower() in self._excluded_columns for c in constraint.columns):
+                    continue
                 cols = ", ".join(constraint.columns)
                 # Resolve FK reference_table to FQN if it exists in local catalog
                 ref_table = constraint.reference_table

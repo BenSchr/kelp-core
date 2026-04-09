@@ -214,7 +214,7 @@ class TestMetricViewValidation:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError):
-            MetricView()  # type: ignore[call-arg]
+            MetricView()  # type: ignore[call-arg]  # ty:ignore[missing-argument]
 
     def test_metric_view_definition_accepts_any_dict(self):
         """Test that definition accepts arbitrary dictionary structure."""

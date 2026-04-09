@@ -162,30 +162,30 @@ def _resolve_schema(
             return parsed
         # Single type string like "INT" — wrap it so callers always get a StructType
         return StructType([StructField("value", parsed, nullable=True)])
+    if name is not None:
+        # Resolve from Kelp metadata — uses module-level import for testability
+        cols = _get_kelp_columns(name)  # type: ignore[arg-type]
+        if not cols:
+            return None
 
-    # Resolve from Kelp metadata — uses module-level import for testability
-    cols = _get_kelp_columns(name)  # type: ignore[arg-type]
-    if not cols:
-        return None
+        # Build a DDL string from Column definitions and parse
+        ddl_parts: list[str] = []
+        for col in cols:
+            if col.data_type is None:
+                logger.warning("Column '%s' has no data_type — skipping.", col.name)
+                continue
+            nullable_str = "" if col.nullable else " NOT NULL"
+            ddl_parts.append(f"{col.name} {col.data_type}{nullable_str}")
 
-    # Build a DDL string from Column definitions and parse
-    ddl_parts: list[str] = []
-    for col in cols:
-        if col.data_type is None:
-            logger.warning("Column '%s' has no data_type — skipping.", col.name)
-            continue
-        nullable_str = "" if col.nullable else " NOT NULL"
-        ddl_parts.append(f"{col.name} {col.data_type}{nullable_str}")
+        if not ddl_parts:
+            return None
 
-    if not ddl_parts:
-        return None
+        from pyspark.sql.types import _parse_datatype_string
 
-    from pyspark.sql.types import _parse_datatype_string
-
-    ddl_string = ", ".join(ddl_parts)
-    parsed = _parse_datatype_string(ddl_string)
-    if isinstance(parsed, StructType):
-        return parsed
+        ddl_string = ", ".join(ddl_parts)
+        parsed = _parse_datatype_string(ddl_string)
+        if isinstance(parsed, StructType):
+            return parsed
 
     return None
 

@@ -353,6 +353,176 @@ class TestSparkSchemaBuilder:
         assert "TBLPROPERTIES ('delta.enableChangeDataFeed'='true')" in ddl
 
 
+class TestSchemaExclude:
+    """Test column exclusion in schema generation."""
+
+    def test_get_spark_schema_excludes_single_column(self):
+        """Test excluding a single column from schema."""
+        table = Table(
+            name="test",
+            columns=[
+                Column(name="id", data_type="bigint", nullable=False),
+                Column(name="name", data_type="string"),
+                Column(name="email", data_type="string"),
+            ],
+        )
+
+        schema = ModelManager.get_spark_schema(table, exclude=["email"])
+
+        assert "id bigint NOT NULL" in schema
+        assert "name string" in schema
+        assert "email string" not in schema
+
+    def test_get_spark_schema_excludes_multiple_columns(self):
+        """Test excluding multiple columns from schema."""
+        table = Table(
+            name="test",
+            columns=[
+                Column(name="id", data_type="bigint"),
+                Column(name="name", data_type="string"),
+                Column(name="internal_id", data_type="string"),
+                Column(name="created_ts", data_type="timestamp"),
+            ],
+        )
+
+        schema = ModelManager.get_spark_schema(table, exclude=["internal_id", "created_ts"])
+
+        assert "id bigint" in schema
+        assert "name string" in schema
+        assert "internal_id" not in schema
+        assert "created_ts" not in schema
+
+    def test_schema_exclude_is_case_insensitive(self):
+        """Test that column exclude matching is case-insensitive."""
+        table = Table(
+            name="test",
+            columns=[
+                Column(name="ID", data_type="bigint"),
+                Column(name="Name", data_type="string"),
+            ],
+        )
+
+        schema = ModelManager.get_spark_schema(table, exclude=["id", "NAME"])
+
+        assert "ID" not in schema
+        assert "Name" not in schema
+
+    def test_schema_exclude_nonexistent_column_noop(self):
+        """Test excluding a non-existent column is a no-op."""
+        table = Table(
+            name="test",
+            columns=[
+                Column(name="id", data_type="bigint"),
+                Column(name="name", data_type="string"),
+            ],
+        )
+
+        schema = ModelManager.get_spark_schema(table, exclude=["nonexistent"])
+
+        assert "id bigint" in schema
+        assert "name string" in schema
+
+    def test_add_columns_with_complex_column_definitions(self):
+        """Test exclude with complex column definitions (NOT NULL, COMMENT, etc)."""
+        table = Table(
+            name="test",
+            columns=[
+                Column(
+                    name="id",
+                    data_type="bigint",
+                    nullable=False,
+                    description="Primary key",
+                ),
+                Column(name="status", data_type="string", description="Order status"),
+                Column(
+                    name="created_at",
+                    data_type="timestamp",
+                    description="Creation timestamp",
+                ),
+            ],
+        )
+
+        schema = ModelManager.get_spark_schema(table, exclude=["created_at"])
+
+        assert "id bigint NOT NULL COMMENT 'Primary key'" in schema
+        assert "status string COMMENT 'Order status'" in schema
+        assert "created_at" not in schema
+
+    def test_exclude_with_constraints_preserves_constraints(self):
+        """Test that non-referencing constraints are preserved when columns excluded."""
+        table = Table(
+            name="test",
+            columns=[
+                Column(name="id", data_type="bigint", nullable=False),
+                Column(name="email", data_type="string"),
+            ],
+            constraints=[
+                PrimaryKeyConstraint(name="pk_test", columns=["id"]),
+            ],
+        )
+
+        schema = ModelManager.get_spark_schema(table, include_constraints=True, exclude=["email"])
+
+        assert "id bigint NOT NULL" in schema
+        assert "email" not in schema
+        assert "CONSTRAINT pk_test PRIMARY KEY (id)" in schema
+
+    def test_exclude_column_affecting_constraint_omits_constraint(self):
+        """Test that constraints referencing excluded columns are omitted."""
+        table = Table(
+            name="orders",
+            columns=[
+                Column(name="id", data_type="bigint", nullable=False),
+                Column(name="customer_id", data_type="bigint", nullable=False),
+                Column(name="amount", data_type="double"),
+            ],
+            constraints=[
+                PrimaryKeyConstraint(name="pk_orders", columns=["id", "customer_id"]),
+            ],
+        )
+
+        schema = ModelManager.get_spark_schema(
+            table,
+            include_constraints=True,
+            exclude=["customer_id"],
+        )
+
+        assert "id bigint NOT NULL" in schema
+        assert "customer_id" not in schema
+        assert "amount double" in schema
+        # Constraint references excluded column so it should be omitted
+        assert "CONSTRAINT pk_orders" not in schema
+
+    def test_exclude_with_foreign_key_constraint(self):
+        """Test exclude behavior with foreign key constraints."""
+        table = Table(
+            name="orders",
+            columns=[
+                Column(name="id", data_type="bigint", nullable=False),
+                Column(name="customer_id", data_type="bigint"),
+                Column(name="notes", data_type="string"),
+            ],
+            constraints=[
+                ForeignKeyConstraint(
+                    name="fk_customer",
+                    columns=["customer_id"],
+                    reference_table="customers",
+                    reference_columns=["id"],
+                ),
+            ],
+        )
+
+        schema = ModelManager.get_spark_schema(
+            table,
+            include_constraints=True,
+            exclude=["notes"],
+        )
+
+        # Notes excluded, but FK constraint should remain
+        assert "notes" not in schema
+        assert "CONSTRAINT fk_customer FOREIGN KEY (customer_id)" in schema
+
+
 class TestModelManager:
     """Test the ModelManager class methods."""
 
