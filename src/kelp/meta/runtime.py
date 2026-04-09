@@ -72,6 +72,7 @@ def build_runtime_context(
     merged_raw_payload = load_yaml_files_with_jinja_parallel(
         all_metadata_files,
         jinja_context=runtime_vars,
+        base_dir=project_root,
     )
 
     raw_objects = {

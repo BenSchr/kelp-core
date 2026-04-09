@@ -298,6 +298,80 @@ def test_collect_yaml_files_discovers_deeply_nested_structure(tmp_path: Path) ->
     )
 
 
+def test_load_single_deeply_nested_file_preserves_full_path(tmp_path: Path) -> None:
+    """When loading a single file from a deeply nested folder, origin_file_path should preserve full path.
+
+    This is the bug: if only one file exists in a nested structure, the origin_file_path
+    gets reduced to just the filename (e.g., 'vip.yml' instead of 'bronze/customers/premium/vip.yml'),
+    which breaks hierarchy propagation that relies on the directory path.
+    """
+    models_dir = tmp_path / "models"
+    nested_dir = models_dir / "bronze" / "customers" / "premium"
+    nested_dir.mkdir(parents=True)
+
+    vip_file = nested_dir / "vip.yml"
+    vip_file.write_text("kelp_models:\n  - name: vip_customers\n", encoding="utf-8")
+
+    file_paths = collect_yaml_file_paths(nested_dir)
+    # Pass base_dir to preserve full folder structure
+    loaded = load_yaml_files_with_jinja_parallel(file_paths, jinja_context={}, base_dir=models_dir)
+
+    assert len(loaded["kelp_models"]) == 1
+    item = loaded["kelp_models"][0]
+
+    # With base_dir explicitly set to models_dir, origin_file_path should preserve
+    # the full relative path from models_dir
+    expected_path = str(Path("bronze") / "customers" / "premium" / "vip.yml")
+    assert item["origin_file_path"] == expected_path, (
+        f"Expected origin_file_path to include folder structure, got {item['origin_file_path']}"
+    )
+
+
+def test_hierarchy_with_single_nested_file_without_siblings(tmp_path: Path) -> None:
+    """Hierarchy defaults should apply even when file is single file in nested folder without siblings.
+
+    This demonstrates that passing base_dir to the loader fixes the hierarchy bug.
+    """
+    models_dir = tmp_path / "models"
+    nested_dir = models_dir / "bronze" / "customers" / "premium"
+    nested_dir.mkdir(parents=True)
+
+    vip_file = nested_dir / "vip.yml"
+    vip_file.write_text("kelp_models:\n  - name: vip_customers\n", encoding="utf-8")
+
+    file_paths = collect_yaml_file_paths(nested_dir)
+    # Pass base_dir to preserve full folder structure for hierarchy traversal
+    loaded = load_yaml_files_with_jinja_parallel(file_paths, jinja_context={}, base_dir=models_dir)
+
+    item = loaded["kelp_models"][0]
+
+    # Apply hierarchy with config for nested folders
+    cfg = {
+        "+schema": "root_schema",
+        "bronze": {
+            "+schema": "bronze_schema",
+            "customers": {
+                "+schema": "customers_schema",
+                "premium": {
+                    "+schema": "premium_schema",
+                },
+            },
+        },
+    }
+
+    result = apply_hierarchy_defaults(
+        item,
+        cfg,
+        origin_file_path=item["origin_file_path"],
+    )
+
+    # With the fix (base_dir parameter), hierarchy should now apply correctly
+    assert result["schema"] == "premium_schema", (
+        f"Expected 'premium_schema' but got '{result.get('schema')}'. "
+        f"origin_file_path='{item['origin_file_path']}'"
+    )
+
+
 def test_apply_hierarchy_defaults_root_level_item_gets_top_defaults_only() -> None:
     """A model at the root level should receive only top-level +defaults."""
     cfg = {
@@ -322,3 +396,45 @@ def test_apply_hierarchy_defaults_root_level_item_gets_top_defaults_only() -> No
     assert result["catalog"] == "root_catalog"
     # Root-level item should NOT pick up bronze schema
     assert result["schema"] == "root_schema"
+
+
+def test_apply_hierarchy_defaults_nested_single_folders_without_siblings() -> None:
+    """Hierarchy should apply to deeply nested single subfolders without siblings.
+
+    When a folder structure has only single subfolders (no siblings) and doesn't
+    match config keys exactly, the hierarchy should still traverse as far as it can.
+
+    This reproduces the issue where:
+    - File path: bronze/customers/premium/accounts.yml
+    - Config has: bronze.customers.premium with +schema defined
+    - But currently, if 'customers' doesn't exist as a direct key, traversal stops
+    """
+    cfg = {
+        "+schema": "root_schema",
+        "bronze": {
+            "+schema": "bronze_schema",
+            "customers": {
+                "+schema": "customers_schema",
+                "premium": {
+                    "+schema": "premium_schema",
+                },
+            },
+        },
+    }
+
+    item = {
+        "name": "vip_accounts",
+        "origin_file_path": "bronze/customers/premium/accounts.yml",
+    }
+
+    result = apply_hierarchy_defaults(
+        item,
+        cfg,
+        origin_file_path=item["origin_file_path"],
+    )
+
+    # The deepest matching folder should win
+    assert result["schema"] == "premium_schema", (
+        f"Expected 'premium_schema' but got '{result.get('schema')}'. "
+        "Hierarchy traversal may have stopped prematurely."
+    )

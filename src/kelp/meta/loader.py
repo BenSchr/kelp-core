@@ -83,6 +83,7 @@ def load_yaml_files_with_jinja_parallel(
     *,
     jinja_context: dict[str, Any] | None = None,
     origin_file_path_key: str = "origin_file_path",
+    base_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     """Load and deep-merge YAML files with Jinja rendering in parallel.
 
@@ -90,6 +91,10 @@ def load_yaml_files_with_jinja_parallel(
         file_paths: YAML file list to load.
         jinja_context: Variables available to Jinja rendering.
         origin_file_path_key: Metadata key storing source file path on objects.
+        base_dir: Optional explicit base directory for computing origin_file_path.
+                 If not provided, automatically computed from file paths (may truncate
+                 paths for single deeply nested files). Pass explicitly to preserve
+                 full folder structure in origin_file_path.
 
     Returns:
         Deep-merged YAML payload.
@@ -99,9 +104,12 @@ def load_yaml_files_with_jinja_parallel(
     if not files:
         return {}
 
-    base_dir = Path(commonpath([str(path) for path in files]))
-    if base_dir.is_file():
-        base_dir = base_dir.parent
+    if base_dir is None:
+        base_dir = Path(commonpath([str(path) for path in files]))
+        if base_dir.is_file():
+            base_dir = base_dir.parent
+    else:
+        base_dir = Path(base_dir)
 
     env = Environment(
         loader=FileSystemLoader(str(base_dir)),

@@ -20,7 +20,7 @@ class Source(BaseModel):
         path: Physical path for volume or raw_path sources (e.g., '/Volumes/catalog/schema/volume').
         catalog: Catalog name for table or volume sources.
         schema_: Schema name for table or volume sources.
-        model_name: Table name for table sources.
+        table_name: Name for table or view sources.
         volume_name: Volume name for volume sources (constructs path as /Volumes/catalog/schema/volume_name).
         options: Dictionary of options specific to this source (e.g., format, headers).
         description: Human-readable description of the source.
@@ -50,9 +50,9 @@ class Source(BaseModel):
         alias="schema",
         description="Schema name for table or volume sources",
     )
-    model_name: str | None = Field(
+    table_name: str | None = Field(
         default=None,
-        description="Table name for table sources",
+        description="Name for table or view sources",
     )
     volume_name: str | None = Field(
         default=None,
@@ -83,8 +83,8 @@ class Source(BaseModel):
             Fully qualified name (catalog.schema.model_name) for table sources,
             or None for other source types.
         """
-        if self.source_type == "table" and self.catalog and self.schema_ and self.model_name:
-            return f"{self.catalog}.{self.schema_}.{self.model_name}"
+        if self.source_type == "table" and self.catalog and self.schema_ and self.table_name:
+            return f"{self.catalog}.{self.schema_}.{self.table_name}"
         return None
 
     @property

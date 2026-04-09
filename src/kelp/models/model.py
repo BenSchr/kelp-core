@@ -4,7 +4,7 @@ import json
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.json_schema import SkipJsonSchema
 
 
@@ -147,6 +147,26 @@ class Model(BaseModel):
         default_factory=dict,
         description="Original unparsed configuration preserving placeholder variables",
     )
+
+    @model_validator(mode="after")
+    def _validate_catalog_requires_schema(self) -> Model:
+        """Validate that if catalog is set, schema must also be set.
+
+        This prevents the catalog value from being accidentally used as the schema.
+
+        Returns:
+            Model instance after validation.
+
+        Raises:
+            ValueError: If catalog is set but schema is not.
+
+        """
+        if self.catalog is not None and self.schema_ is None:
+            raise ValueError(
+                "If 'catalog' is specified, 'schema' must also be specified to prevent "
+                "the catalog value from being used as the schema."
+            )
+        return self
 
     model_config = ConfigDict(
         validate_by_name=True,
