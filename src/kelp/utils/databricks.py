@@ -10,6 +10,41 @@ from kelp.models.model import Model
 logger = logging.getLogger(__name__)
 
 
+def _parse_clustering_columns(raw_value: str | list[object] | None) -> list[str]:
+    """Parse Databricks clustering columns into a flat list of column names."""
+    if raw_value is None:
+        return []
+
+    parsed: object = raw_value
+    if isinstance(raw_value, str):
+        text = raw_value.strip()
+        if not text:
+            return []
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            # Fallback for non-JSON string formats
+            return [col.strip().strip('"').strip("'") for col in text.split(",") if col.strip()]
+
+    if not isinstance(parsed, list):
+        return []
+
+    columns: list[str] = []
+    for item in parsed:
+        if isinstance(item, str):
+            value = item.strip()
+            if value:
+                columns.append(value)
+        elif isinstance(item, list) and item:
+            first = item[0]
+            if isinstance(first, str):
+                value = first.strip()
+                if value:
+                    columns.append(value)
+
+    return columns
+
+
 def get_table_from_dbx_sdk(
     full_table: str,
     w: WorkspaceClient | None = None,
@@ -29,7 +64,7 @@ def get_table_from_dbx_sdk(
     table_obj = {}
     table_obj["name"] = info.name
     table_obj["catalog"] = info.catalog_name
-    table_obj["schema_"] = info.schema_name
+    table_obj["schema"] = info.schema_name
     table_obj["table_type"] = info.table_type.value.lower() if info.table_type else "unknown"
     table_obj["description"] = info.comment
     table_obj["tags"] = table_tags
@@ -41,15 +76,9 @@ def get_table_from_dbx_sdk(
         table_obj["cluster_by_auto"] = (
             info.properties.get("clusterByAuto", "false").lower() == "true"
         )
-        table_obj["cluster_by"] = [
-            col[0]
-            for col in info.properties.get("clusteringColumns", "[]")
-            .replace("[", "")
-            .replace("]", "")
-            .replace('"', "")
-            .split(",")
-            if col
-        ]
+        table_obj["cluster_by"] = _parse_clustering_columns(
+            info.properties.get("clusteringColumns", "[]")
+        )
     if info.columns:
         table_obj["partition_cols"] = [
             col.name

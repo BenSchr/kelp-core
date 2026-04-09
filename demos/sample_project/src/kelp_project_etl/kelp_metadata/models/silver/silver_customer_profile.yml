@@ -6,7 +6,8 @@ kelp_models:
         type: primary_key
         columns:
           - customer_id
-
+    cluster_by:
+      - customer_id
     columns:
       - name: customer_id
         data_type: string

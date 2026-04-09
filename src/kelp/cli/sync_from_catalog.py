@@ -15,6 +15,11 @@ def sync_from_catalog(
         "--profile",
         help="Databricks CLI profile to use",
     ),
+    include_properties: bool = typer.Option(
+        False,
+        "--include-properties",
+        help="Include all table properties in the output YAML (use with caution, may include many properties)",
+    ),
     output_file: str | None = typer.Option(
         None,
         "-o",
@@ -37,7 +42,13 @@ def sync_from_catalog(
         print_warning(f"⚠ Table not found in Databricks catalog: {table_path}")
         return
     # Use unified model serialization (no hierarchy defaults for standalone output)
+
     model_dict = YamlManager.model_to_dict(table, include_hierarchy_defaults=False)
+
+    if not include_properties:
+        # Remove table_properties to avoid overwhelming output with irrelevant properties
+        model_dict.pop("table_properties", None)
+
     content = {"kelp_models": [model_dict]}
 
     yaml_content = yaml.safe_dump(content, sort_keys=False, allow_unicode=True)

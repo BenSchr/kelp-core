@@ -262,6 +262,7 @@ class YamlManager:
             original_model = copy.deepcopy(model)
 
         defaults = cls._get_hierarchy_defaults(resolved_file_path, path_config)
+
         cls._patch_model_dict(model, source_model, defaults, remote_catalog_config)
 
         # Detect changes
@@ -318,8 +319,10 @@ class YamlManager:
             # For file patching (with context)
             model = YamlManager.model_to_dict(table, include_hierarchy_defaults=True)
         """
-        model = {"name": source_model.name}
-
+        # model = {"name": source_model.name}
+        model = source_model.model_dump(
+            exclude_unset=True, exclude_none=True, exclude_defaults=True, exclude={"table_type"}
+        )
         # Get hierarchy defaults if requested and available
         defaults = {}
         if include_hierarchy_defaults and source_model.origin_file_path:
@@ -387,7 +390,6 @@ class YamlManager:
             filtered_props = {k: v for k, v in deserialized_props.items() if k not in default_props}
         else:
             filtered_props = deserialized_props
-
         # When syncing from remote, scope properties based on table_property_mode
         if remote_catalog_config is not None:
             filtered_props = cls._filter_properties_by_mode(

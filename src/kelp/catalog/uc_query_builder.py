@@ -300,11 +300,12 @@ class UCQueryBuilder:
             return []
 
         if table_type in _NO_CLUSTER_TYPES:
-            logger.warning(
-                "CLUSTER BY not supported for %s tables; skipping %s",
-                table_type,
-                fqn,
-            )
+            # Silently ignore since clustering not returned properly by table info
+            # logger.warning(
+            #     "CLUSTER BY not supported for %s tables; skipping %s",
+            #     table_type,
+            #     fqn,
+            # )
             return []
 
         cluster_by_auto = diff.cluster_by_auto
@@ -348,11 +349,12 @@ class UCQueryBuilder:
                 queries.extend(self._add_foreign_key(fqn, fk))
 
         if queries and table_type in _NO_CONSTRAINT_TYPES:
-            logger.warning(
-                "Constraints not supported for %s tables; skipping constraint changes on %s",
-                table_type,
-                fqn,
-            )
+            # Silently ignore since constraints not returned properly by table info
+            # logger.warning(
+            #     "Constraints not supported for %s tables; skipping constraint changes on %s",
+            #     table_type,
+            #     fqn,
+            # )
             return []
 
         return queries

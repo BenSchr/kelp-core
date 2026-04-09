@@ -161,10 +161,12 @@ class Model(BaseModel):
             ValueError: If catalog is set but schema is not.
 
         """
+
         if self.catalog is not None and self.schema_ is None:
             raise ValueError(
                 "If 'catalog' is specified, 'schema' must also be specified to prevent "
                 "the catalog value from being used as the schema."
+                f"Current values - model: {self.name}, catalog: {self.catalog}, schema: {self.schema_}, origin_file_path: {self.origin_file_path}"
             )
         return self
 

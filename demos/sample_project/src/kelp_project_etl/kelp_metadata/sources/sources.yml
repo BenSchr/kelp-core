@@ -13,4 +13,4 @@ kelp_sources:
     options:
       cloudFiles.format: parquet
   - name: test_table_source
-    model_name: test_table_source
+    table_name: test_table_source

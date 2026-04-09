@@ -11,6 +11,7 @@ from kelp.meta.loader import collect_yaml_file_paths, load_yaml_files_with_jinja
 from kelp.meta.project import load_framework_settings, resolve_project_file_path
 from kelp.meta.settings import resolve_setting
 from kelp.meta.spec import MetaProjectSpec
+from kelp.meta.utils import _deep_merge_dicts
 
 
 def _collect_all_metadata_paths(
@@ -33,6 +34,53 @@ def _collect_all_metadata_paths(
 
     deduped = dict.fromkeys(sorted(file_paths))
     return list(deduped.keys())
+
+
+def _load_metadata_by_path(
+    spec: MetaProjectSpec,
+    *,
+    project_root: Path,
+    framework_settings: Any,
+    jinja_context: dict[str, Any],
+) -> dict[str, Any]:
+    """Load metadata files, processing each path separately to preserve folder structure.
+
+    Args:
+        spec: Framework project specification.
+        project_root: Project root directory path.
+        framework_settings: Framework settings containing metadata paths.
+        jinja_context: Jinja context for template rendering.
+
+    Returns:
+        Deep-merged metadata payload.
+
+    """
+    merged_payload: dict[str, Any] = {}
+
+    for object_spec in spec.object_specs:
+        setting_value = getattr(framework_settings, object_spec.path_attr, None)
+        if not setting_value:
+            continue
+
+        paths = [setting_value] if isinstance(setting_value, str) else list(setting_value)
+
+        for relative_path in paths:
+            absolute_path = project_root / relative_path
+            file_paths = collect_yaml_file_paths(absolute_path)
+            if not file_paths:
+                continue
+
+            # Load files with the metadata path as base, so origin_file_path
+            # is relative to that path (e.g., bronze/customers.yml, not
+            # kelp_metadata/models/bronze/customers.yml)
+            loaded = load_yaml_files_with_jinja_parallel(
+                file_paths,
+                jinja_context=jinja_context,
+                base_dir=absolute_path,
+            )
+            merged_payload = _deep_merge_dicts(merged_payload, loaded)
+
+    return merged_payload
 
 
 def build_runtime_context(
@@ -63,16 +111,14 @@ def build_runtime_context(
 
     project_root = Path(project_file_path).parent
 
-    all_metadata_files = _collect_all_metadata_paths(
+    # Load metadata from each path separately to preserve correct folder structure
+    # in origin_file_path (e.g., bronze/customers.yml instead of
+    # kelp_metadata/models/bronze/customers.yml)
+    merged_raw_payload = _load_metadata_by_path(
         spec,
         project_root=project_root,
         framework_settings=framework_settings,
-    )
-
-    merged_raw_payload = load_yaml_files_with_jinja_parallel(
-        all_metadata_files,
         jinja_context=runtime_vars,
-        base_dir=project_root,
     )
 
     raw_objects = {
