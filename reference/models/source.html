@@ -1432,10 +1432,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#kelp.models.source.Source.model_name" class="md-nav__link">
+  <a href="#kelp.models.source.Source.table_name" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;model_name
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;table_name
       
     </span>
   </a>
@@ -1653,10 +1653,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#kelp.models.source.Source.model_name" class="md-nav__link">
+  <a href="#kelp.models.source.Source.table_name" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;model_name
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;table_name
       
     </span>
   </a>
@@ -1901,18 +1901,18 @@ for data locations and connection options.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code><a class="autorefs autorefs-internal" title="            model_name
+            <td><code><a class="autorefs autorefs-internal" title="            table_name
 
 
   
       pydantic-field
-   (kelp.models.source.Source.model_name)" href="#kelp.models.source.Source.model_name">model_name</a></code></td>
+   (kelp.models.source.Source.table_name)" href="#kelp.models.source.Source.table_name">table_name</a></code></td>
             <td>
                   <code><span title="str">str</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Table name for table sources.</p>
+                <p>Name for table or view sources.</p>
               </div>
             </td>
           </tr>
@@ -1969,7 +1969,7 @@ for data locations and connection options.</p>
 
       <details><summary>Show JSON schema:</summary>
         <div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Source definition for Kelp projects.\n\nRepresents a data source (volume, table, or raw path) that can be referenced\nin pipelines using kp.source(). Sources provide a single point of configuration\nfor data locations and connection options.\n\nAttributes:\n    origin_file_path: Path to the source YAML file defining this source.\n    name: Source name (unique identifier).\n    source_type: Type of source (&#39;volume&#39;, &#39;table&#39;, &#39;raw_path&#39;).\n    path: Physical path for volume or raw_path sources (e.g., &#39;/Volumes/catalog/schema/volume&#39;).\n    catalog: Catalog name for table or volume sources.\n    schema_: Schema name for table or volume sources.\n    model_name: Table name for table sources.\n    volume_name: Volume name for volume sources (constructs path as /Volumes/catalog/schema/volume_name).\n    options: Dictionary of options specific to this source (e.g., format, headers).\n    description: Human-readable description of the source.&quot;</span><span class="p">,</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Source definition for Kelp projects.\n\nRepresents a data source (volume, table, or raw path) that can be referenced\nin pipelines using kp.source(). Sources provide a single point of configuration\nfor data locations and connection options.\n\nAttributes:\n    origin_file_path: Path to the source YAML file defining this source.\n    name: Source name (unique identifier).\n    source_type: Type of source (&#39;volume&#39;, &#39;table&#39;, &#39;raw_path&#39;).\n    path: Physical path for volume or raw_path sources (e.g., &#39;/Volumes/catalog/schema/volume&#39;).\n    catalog: Catalog name for table or volume sources.\n    schema_: Schema name for table or volume sources.\n    table_name: Name for table or view sources.\n    volume_name: Volume name for volume sources (constructs path as /Volumes/catalog/schema/volume_name).\n    options: Dictionary of options specific to this source (e.g., format, headers).\n    description: Human-readable description of the source.&quot;</span><span class="p">,</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Source name (unique identifier)&quot;</span><span class="p">,</span>
@@ -2026,7 +2026,7 @@ for data locations and connection options.</p>
 </span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Schema name for table or volume sources&quot;</span><span class="p">,</span>
 </span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="w">      </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Schema&quot;</span>
 </span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="w">    </span><span class="p">},</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="w">    </span><span class="nt">&quot;model_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="w">    </span><span class="nt">&quot;table_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="w">      </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 </span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="w">        </span><span class="p">{</span>
 </span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="w">          </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span>
@@ -2036,8 +2036,8 @@ for data locations and connection options.</p>
 </span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="w">        </span><span class="p">}</span>
 </span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="w">      </span><span class="p">],</span>
 </span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="w">      </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Table name for table sources&quot;</span><span class="p">,</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="w">      </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Model Name&quot;</span>
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Name for table or view sources&quot;</span><span class="p">,</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="w">      </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Table Name&quot;</span>
 </span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="w">    </span><span class="p">},</span>
 </span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="w">    </span><span class="nt">&quot;volume_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="w">      </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -2146,12 +2146,12 @@ for data locations and connection options.</p>
                 (<code><span title="str">str</span> | None</code>)
             </li>
             <li>
-              <code><a class="autorefs autorefs-internal" title="            model_name
+              <code><a class="autorefs autorefs-internal" title="            table_name
 
 
   
       pydantic-field
-   (kelp.models.source.Source.model_name)" href="#kelp.models.source.Source.model_name">model_name</a></code>
+   (kelp.models.source.Source.table_name)" href="#kelp.models.source.Source.table_name">table_name</a></code>
                 (<code><span title="str">str</span> | None</code>)
             </li>
             <li>
@@ -2342,21 +2342,21 @@ for data locations and connection options.</p>
 
 
 
-<h3 id="kelp.models.source.Source.model_name" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">model_name</span>
+<h3 id="kelp.models.source.Source.table_name" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">table_name</span>
 
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-pydantic-field"><code>pydantic-field</code></small>
   </span>
 
-<a href="#kelp.models.source.Source.model_name" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">model_name</span> <span class="o">=</span> <span class="kc">None</span>
+<a href="#kelp.models.source.Source.table_name" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">table_name</span> <span class="o">=</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Table name for table sources</p>
+        <p>Name for table or view sources</p>
 
     </div>
 
