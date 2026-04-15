@@ -141,6 +141,14 @@ kelp_models:
 ```
 
 When you use `expect_all_or_quarantine`, Kelp will automatically quarantine the data if any of the expectations fail. You can then investigate and fix the issues with the data before allowing it to be used in downstream pipeline components.
+Since expect_all_or_quarantine is not a SDP built-in expectaion you need to use the kelp decorator which abstracts the creation of the validation and quarantine tables and the necessary flow connections. You can use the `@kp.table` decorator as shown below, and Kelp will handle the rest.
+
+```python
+import kelp.pipelines as kp
+@kp.table
+def my_table():
+    # ...
+```
 
 This generates the following SDP chart:
 
@@ -151,6 +159,7 @@ flowchart LR
   validation --> quarantine("my_table_quarantine")
   table --> downstream("downstream_table")
 ```
+
 
 ### DQX Checks
 

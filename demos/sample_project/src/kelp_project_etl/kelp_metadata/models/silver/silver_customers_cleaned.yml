@@ -10,6 +10,7 @@ kelp_models:
       engine: sdp
       expect_all_or_quarantine:
         country_not_unknown: lower(country) != 'unknown'
+        country_not_null: country is not NULL
     columns:
       - name: country
         data_type: string

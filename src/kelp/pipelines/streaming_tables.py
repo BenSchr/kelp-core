@@ -252,7 +252,8 @@ def table(
 
             if not expect_all:
                 expect_all = {}
-            expect_all.update({"quarantine_col": f"{quarantine_col} = false"})
+            expect_all.update(expect_all_or_quarantine)
+            # expect_all.update({"quarantine_col": f"{quarantine_col} = false"})
 
             validty_func = _apply_expectations(
                 validity_wrapper,
