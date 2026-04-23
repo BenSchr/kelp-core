@@ -24,9 +24,8 @@ resources:
         schema: kelp_sdp_monitoring
       environment:
         dependencies:
-          - /Volumes/workspace/default/libs/kelp_core-0.0.6-py3-none-any.whl
+          - /Volumes/workspace/default/libs/kelp_core-0.0.7-py3-none-any.whl
           - databricks-labs-dqx
-
       # environment:
       #   dependencies:
       #     # We include every dependency defined by pyproject.toml by defining an editable environment

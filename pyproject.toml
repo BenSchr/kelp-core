@@ -1,6 +1,6 @@
 [project]
 name = "kelp-core"
-version = "0.0.6"
+version = "0.0.7"
 requires-python = ">=3.12"
 description = "Metadata Toolkit for Databricks Spark and Declarative Pipelines"
 dependencies = [
@@ -41,7 +41,7 @@ docs = [
 
 
 [build-system]
-requires = ["uv_build>=0.9.23,<0.10.0"]
+requires = ["uv_build>=0.9.23,<0.12"]
 build-backend = "uv_build"
 
 
