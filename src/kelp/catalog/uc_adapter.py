@@ -7,6 +7,7 @@ import logging
 from kelp.catalog.abac_ddl import generate_create_abac_policy_ddl
 from kelp.catalog.function_ddl import generate_create_function_ddl
 from kelp.catalog.metric_view_ddl import generate_create_metric_view_ddl
+from kelp.catalog.query_builders import UCQueryBuilderFactory
 from kelp.catalog.uc_diff import TableDiffCalculator
 from kelp.catalog.uc_models import Model, RemoteCatalogConfig
 from kelp.catalog.uc_query_builder import UCQueryBuilder
@@ -82,14 +83,15 @@ class UnityCatalogAdapter:
         remote = self._fetch_remote_table(fqn)
 
         if remote is None:
-            logger.warning("Table '%s' not found in Unity Catalog; skipping sync.", fqn)
+            logger.warning(
+                "Table '%s' not found in Unity Catalog; skipping sync.", fqn)
             return []
 
         local = table
         diff = self._differ.calculate(local, remote)
         logger.debug("Diff for '%s': %s", fqn, diff)
-
-        return self._builder.build(fqn, diff, _table_type_value(remote.table_type))
+        return UCQueryBuilderFactory().build(fqn=fqn, diff=diff, table_type=_table_type_value(remote.table_type))
+        # return self._builder.build(fqn, diff, _table_type_value(remote.table_type))
 
     def sync_tables(self, tables: list[KelpModel]) -> list[str]:
         """Return SQL queries for all provided tables.
@@ -193,7 +195,8 @@ class UnityCatalogAdapter:
 
             return normalized
 
-        local_def_normalized = _normalize_for_comparison(metric_view.definition)
+        local_def_normalized = _normalize_for_comparison(
+            metric_view.definition)
         remote_def_normalized = _normalize_for_comparison(remote.definition)
 
         # Check if definition changed (excluding comment and tags which are handled separately)
@@ -206,7 +209,8 @@ class UnityCatalogAdapter:
 
             ddl = generate_alter_metric_view_definition_ddl(metric_view)
             statements.append(ddl)
-            logger.info("Definition or description changed for metric view '%s'", fqn)
+            logger.info(
+                "Definition or description changed for metric view '%s'", fqn)
 
         # Check column tags (dimensions and measures)
         from kelp.catalog.metric_view_ddl import generate_alter_metric_view_column_tags_ddl
