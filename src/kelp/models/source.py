@@ -120,7 +120,7 @@ class Source(BaseModel):
             fqn = self.fqn
             if not fqn:
                 raise ValueError(
-                    f"Table source '{self.name}' requires catalog, schema, and model_name"
+                    f"Table source '{self.name}' requires catalog, schema, and table_name"
                 )
             return fqn
         if self.source_type == "volume":

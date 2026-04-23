@@ -247,8 +247,8 @@ kelp_models:
       - name: column1
         description: This is column 1
         tags:
-          - tag1 : "" # (1)!
-          - tag2 : "value"
+          tag1 : "" # (1)!
+          tag2 : "value"
 ```
 
 1. This will apply the tag `tag1` as key-only tag to `column1` in the catalog.
