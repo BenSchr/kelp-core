@@ -71,8 +71,15 @@ Generate a JSON schema for `kelp_project.yml` configuration validation.
 ```bash
 uv run kelp json-schema \
   --output kelp_json_schema.json \
-  --dry-run
+  --dry-run \
+  --vscode
 ```
+
+**Options:**
+
+- `-o, --output` - Output path for the JSON schema file (default: `kelp_json_schema.json`)
+- `--dry-run` - Preview output without writing to file
+- `--vscode` - Create/update VS Code `.vscode/settings.json` with YAML schema configuration
 
 ### `kelp check-policies`
 
@@ -90,6 +97,7 @@ uv run kelp check-policies \
 - `--target` - Environment to check against (e.g., `dev`, `prod`)
 - `--severity` - Only display violations at this severity or above: `warn` or `error` (default: all)
 - `--fail-on` - Exit with code 1 when violations of this severity are found: `warn` or `error` (default: `error`)
+- `--fast-exit/--no-fast-exit` - Stop policy evaluation on first violating policy per model (defaults to `policy_config.fast_exit` when not provided)
 - `--debug` - Enable debug logging
 
 > **Note:** Policies must be enabled in your project settings for this command to run checks.
@@ -158,9 +166,9 @@ uv run kelp sync-from-catalog \
 **Options:**
 
 - `-p, --profile` - Databricks CLI profile to use
+- `--include-properties` - Include all table properties in the output YAML (use with caution, may include many properties)
 - `-o, --output` - Path to output YAML file (optional - prints to stdout if not provided)
 - `--dry-run` - Preview output without writing
-- `--debug` - Enable debug logging
 
 **Output:**
 
@@ -333,6 +341,7 @@ uv run kelp generate-alter-statements \
 - `-p, --profile` - Databricks CLI profile for table introspection
 - `-o, --output` - Path to output SQL file (optional - prints to stdout if not provided)
 - `--dry-run` - Preview output without writing
+- `--silent` - Only output ALTER TABLE statements, suppressing other logs
 - `--debug` - Enable debug logging
 
 **Output:**
@@ -483,20 +492,6 @@ uv run kelp sync-local-catalog "analytics.metrics.customer_agg" --target prod
 ```
 
 **Solution:** Configure the profile with `databricks configure` or use `-p` to specify an existing profile.
-
-## Best Practices
-
-1. **Use `--dry-run` before applying changes** - Always preview with `--dry-run` before syncing or making changes.
-
-2. **Store JSON schema in version control** - Commit `kelp_json_schema.json` to enable IDE autocomplete for all team members.
-
-3. **Validate on deploy** - Include `kelp validate` in your deployment/CI pipeline.
-
-4. **Use target-specific validation** - Validate with the target environment to catch configuration issues early.
-
-5. **Keep seeds in git** - Commit initial model YAMLs after first import, then update with `sync-local-catalog`.
-
-6. **Profile management** - Use consistent Databricks CLI profiles across your team (e.g., `work-prod`, `work-dev`).
 
 ## See Also
 

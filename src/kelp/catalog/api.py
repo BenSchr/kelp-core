@@ -11,6 +11,7 @@ def sync_catalog(
     sync_metric_views: bool = True,
     sync_tables: bool = True,
     sync_abacs: bool = True,
+    profile: str | None = None,
 ) -> list[str]:
     """Synchronize all tables and metric views to remote Databricks catalog.
 
@@ -21,6 +22,7 @@ def sync_catalog(
     Args:
         sync_metric_views: If True, syncs all metric views to remote catalog.
         sync_tables: If True, syncs all tables to remote catalog.
+        profile: Databricks CLI profile to use for remote metadata lookups.
 
     Returns:
         List of SQL queries executed for synchronization.
@@ -36,9 +38,14 @@ def sync_catalog(
     if sync_functions:
         queries.extend(uc_adapter.sync_all_functions(ctx.catalog_index.get_all("functions")))
     if sync_tables:
-        queries.extend(uc_adapter.sync_all_tables(tables))
+        queries.extend(uc_adapter.sync_all_tables(tables, profile=profile))
     if sync_metric_views:
-        queries.extend(uc_adapter.sync_all_metric_views(ctx.catalog_index.get_all("metric_views")))
+        queries.extend(
+            uc_adapter.sync_all_metric_views(
+                ctx.catalog_index.get_all("metric_views"),
+                profile=profile,
+            )
+        )
     if sync_abacs:
         queries.extend(uc_adapter.sync_all_abac_policies(ctx.catalog_index.get_all("abacs")))
 
@@ -85,7 +92,10 @@ def create_metric_views(view_names: list[str] | None = None) -> list[str]:
     return queries
 
 
-def sync_metric_views(view_names: list[str] | None = None) -> list[str]:
+def sync_metric_views(
+    view_names: list[str] | None = None,
+    profile: str | None = None,
+) -> list[str]:
     """Synchronize specified metric views to the remote catalog.
 
     Synchronizes metric views from the local catalog to Databricks Unity Catalog.
@@ -93,6 +103,7 @@ def sync_metric_views(view_names: list[str] | None = None) -> list[str]:
 
     Args:
         view_names: List of metric view names to sync. If None, syncs all views.
+        profile: Databricks CLI profile to use for remote metadata lookups.
 
     Returns:
         List of SQL queries executed for synchronization.
@@ -107,7 +118,7 @@ def sync_metric_views(view_names: list[str] | None = None) -> list[str]:
     ]
     uc_adapter = UnityCatalogAdapter()
     logger.info("Starting sync for metric views...")
-    queries = uc_adapter.sync_all_metric_views(metric_views)
+    queries = uc_adapter.sync_all_metric_views(metric_views, profile=profile)
     return queries
 
 
@@ -120,7 +131,10 @@ def sync_abac_policies(policy_names: list[str] | None = None) -> list[str]:
     return queries
 
 
-def sync_tables(model_names: list[str] | None = None) -> list[str]:
+def sync_tables(
+    model_names: list[str] | None = None,
+    profile: str | None = None,
+) -> list[str]:
     """Synchronize specified tables to the remote catalog.
 
     Synchronizes tables from the local catalog to Databricks Unity Catalog,
@@ -129,6 +143,7 @@ def sync_tables(model_names: list[str] | None = None) -> list[str]:
 
     Args:
         model_names: List of table names to sync. If None, syncs all tables.
+        profile: Databricks CLI profile to use for remote metadata lookups.
 
     Returns:
         List of SQL queries executed for synchronization.
@@ -140,5 +155,5 @@ def sync_tables(model_names: list[str] | None = None) -> list[str]:
     model_names = model_names or []
     tables = [t for t in get_context().catalog_index.get_all("models") if t.name in model_names]
     uc_adapter = UnityCatalogAdapter()
-    queries = uc_adapter.sync_tables(tables)
+    queries = uc_adapter.sync_tables(tables, profile=profile)
     return queries

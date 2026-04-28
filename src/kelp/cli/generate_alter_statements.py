@@ -30,13 +30,20 @@ def generate_alter_statements(
         "--target",
         help="Environment to use for variable resolution",
     ),
+    profile: str | None = typer.Option(
+        None,
+        "-p",
+        "--profile",
+        help="Databricks CLI profile to use",
+    ),
     output_file: str | None = typer.Option(
         None,
         "-o",
         "--output",
         help="Path to output file for ALTER TABLE statements (optional, defaults to stdout)",
     ),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Preview output without writing"),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Preview output without writing"),
     silent: bool = typer.Option(
         False,
         "--silent",
@@ -55,8 +62,9 @@ def generate_alter_statements(
 
     log_level = "DEBUG" if debug else None
     resolved_target = _resolve_target(target)
-    init(project_file_path=project_file_path, target=resolved_target, log_level=log_level)
-    queries = sync_catalog(sync_functions=True)
+    init(project_file_path=project_file_path,
+         target=resolved_target, log_level=log_level)
+    queries = sync_catalog(sync_functions=True, profile=profile)
     if not silent:
         for q in queries:
             print_message(q + ";")

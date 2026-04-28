@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 
 from kelp.catalog.query_builders._sql import (
-    ALTER_COLUMN,
     BASE_ALTER,
     COMMENT_ON,
     SET_TAG_ON,
