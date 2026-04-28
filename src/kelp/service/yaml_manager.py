@@ -159,6 +159,7 @@ class YamlManager:
         model_index = cls._find_model_index(models, model_name)
         if model_index is None:
             model = {"name": model_name}
+            model_index = len(models)
             models.append(model)
             original_model = None
         else:
@@ -167,6 +168,9 @@ class YamlManager:
 
         defaults = cls._get_hierarchy_defaults(resolved_file_path, path_config)
         cls._patch_metric_view_dict(model, source_metric_view, defaults)
+        if original_model is not None:
+            model = cls._preserve_local_template_values(model, original_model)
+            models[model_index] = model
 
         changes_made = original_model is None or model != original_model
         added_fields, updated_fields, removed_fields = cls._detect_changes(original_model, model)
@@ -254,6 +258,7 @@ class YamlManager:
         model_index = cls._find_model_index(models, model_name)
         if model_index is None:
             model = {"name": model_name}
+            model_index = len(models)
             models.append(model)
             original_model = None
         else:
@@ -264,6 +269,9 @@ class YamlManager:
         defaults = cls._get_hierarchy_defaults(resolved_file_path, path_config)
 
         cls._patch_model_dict(model, source_model, defaults, remote_catalog_config)
+        if original_model is not None:
+            model = cls._preserve_local_template_values(model, original_model)
+            models[model_index] = model
 
         # Detect changes
         changes_made = original_model is None or model != original_model
@@ -650,6 +658,80 @@ class YamlManager:
             patched_constraints.append(updated)
 
         return patched_constraints
+
+    @classmethod
+    def _contains_template_value(cls, value) -> bool:
+        """Return whether the value contains a `${...}` template anywhere."""
+        if isinstance(value, str):
+            return "${" in value
+        if isinstance(value, dict):
+            return any(cls._contains_template_value(item) for item in value.values())
+        if isinstance(value, list):
+            return any(cls._contains_template_value(item) for item in value)
+        return False
+
+    @classmethod
+    def _is_named_dict_list(cls, value: list) -> bool:
+        """Return True when value is a list of dicts each identified by `name`."""
+
+        return all(isinstance(item.get("name"), str) for item in value)
+
+    @classmethod
+    def _preserve_local_template_list_values(
+        cls,
+        updated_values: list,
+        original_values: list,
+    ) -> list:
+        """Preserve templated local values within list structures."""
+        if cls._is_named_dict_list(updated_values) and cls._is_named_dict_list(original_values):
+            original_by_name = {item["name"]: item for item in original_values}
+            return [
+                cls._preserve_local_template_values(item, original_by_name.get(item["name"], {}))
+                for item in updated_values
+            ]
+
+        common_length = min(len(updated_values), len(original_values))
+        merged_values = [
+            cls._preserve_local_template_values(updated_values[index], original_values[index])
+            for index in range(common_length)
+        ]
+
+        if len(updated_values) > common_length:
+            merged_values.extend(copy.deepcopy(updated_values[common_length:]))
+
+        return merged_values
+
+    @classmethod
+    def _preserve_local_template_values(
+        cls,
+        updated_value,
+        original_value,
+    ):
+        """Restore templated local values onto an updated YAML structure.
+
+        This keeps `${...}` values from existing YAML files from being overwritten
+        by resolved values during patching, while still allowing non-templated
+        fields to update normally.
+        """
+        if isinstance(updated_value, dict) and isinstance(original_value, dict):
+            merged = copy.deepcopy(updated_value)
+            for key, original_child in original_value.items():
+                if key in updated_value:
+                    merged[key] = cls._preserve_local_template_values(
+                        updated_value[key],
+                        original_child,
+                    )
+                elif cls._contains_template_value(original_child):
+                    merged[key] = copy.deepcopy(original_child)
+            return merged
+
+        if isinstance(updated_value, list) and isinstance(original_value, list):
+            return cls._preserve_local_template_list_values(updated_value, original_value)
+
+        if cls._contains_template_value(original_value):
+            return copy.deepcopy(original_value)
+
+        return updated_value
 
     @classmethod
     def _extract_unqualified_reference_name(cls, reference_table: str) -> str:

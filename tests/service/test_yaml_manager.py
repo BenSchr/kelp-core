@@ -618,6 +618,7 @@ class TestYamlManagerTableConversion:
 
         # Remote FQN should be preserved in YAML
         # Maybe fix ty check later
+
         assert model_dict["constraints"][0]["reference_table"] == "external.analytics.vendors"  # ty:ignore[invalid-argument-type]
 
 
@@ -743,6 +744,193 @@ class TestYamlManagerIntegration:
         content = yaml.safe_load((tmp_path / "models" / "new_table.yml").read_text())
         assert "kelp_models" in content
         assert content["kelp_models"][0]["name"] == "new_table"
+
+    def test_patch_model_yaml_preserves_templated_existing_values(self, tmp_path: Path):
+        """Test existing templated model values are preserved and do not trigger diffs."""
+        import yaml
+
+        existing_document = {
+            "kelp_models": [
+                {
+                    "name": "orders",
+                    "catalog": "${ catalog }",
+                    "schema": "${ schema }",
+                    "description": "${ order_description }",
+                    "table_properties": {
+                        "retention": "${ retention_hours }",
+                        "routing": {
+                            "path": "${ base_path }/orders",
+                            "roles": ["${ admin_role }", "analyst"],
+                        },
+                    },
+                    "columns": [
+                        {
+                            "name": "customer_id",
+                            "description": "${ customer_id_desc }",
+                            "data_type": "bigint",
+                            "tags": {"pii": "${ pii_flag }"},
+                        },
+                    ],
+                    "constraints": [
+                        {
+                            "name": "fk_orders_customers",
+                            "type": "foreign_key",
+                            "columns": ["customer_id"],
+                            "reference_table": "${ catalog }.${ schema }.customers",
+                            "reference_columns": ["id"],
+                        },
+                    ],
+                },
+            ],
+        }
+        file_path = tmp_path / "models" / "orders.yml"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(yaml.safe_dump(existing_document, sort_keys=False), encoding="utf-8")
+
+        table = Table(
+            name="orders",
+            catalog="prod",
+            schema_="silver",
+            description="Orders table",
+            table_properties={
+                "retention": "168",
+                "routing": {
+                    "path": "/mnt/orders",
+                    "roles": ["admin", "analyst"],
+                },
+            },
+            columns=[
+                Column(
+                    name="customer_id",
+                    description="Customer identifier",
+                    data_type="bigint",
+                    tags={"pii": "true"},
+                ),
+            ],
+            constraints=[
+                ForeignKeyConstraint(
+                    name="fk_orders_customers",
+                    columns=["customer_id"],
+                    reference_table="prod.silver.customers",
+                    reference_columns=["id"],
+                ),
+            ],
+        )
+
+        report = YamlManager.patch_model_yaml(
+            table,
+            path_config=ServicePathConfig(project_root=tmp_path, service_root=Path("models")),
+            relative_file_path="orders.yml",
+        )
+
+        assert report.changes_made is False
+        assert yaml.safe_load(file_path.read_text(encoding="utf-8")) == existing_document
+
+    def test_patch_model_yaml_updates_literals_while_preserving_templates(self, tmp_path: Path):
+        """Test non-templated fields still update while templated values stay intact."""
+        import yaml
+
+        existing_document = {
+            "kelp_models": [
+                {
+                    "name": "orders",
+                    "catalog": "${ catalog }",
+                    "schema": "${ schema }",
+                    "description": "Old description",
+                    "columns": [
+                        {
+                            "name": "customer_id",
+                            "description": "${ customer_id_desc }",
+                            "data_type": "bigint",
+                        },
+                    ],
+                },
+            ],
+        }
+        file_path = tmp_path / "models" / "orders.yml"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(yaml.safe_dump(existing_document, sort_keys=False), encoding="utf-8")
+
+        table = Table(
+            name="orders",
+            catalog="prod",
+            schema_="silver",
+            description="New description",
+            columns=[
+                Column(
+                    name="customer_id",
+                    description="Customer identifier",
+                    data_type="bigint",
+                ),
+            ],
+        )
+
+        report = YamlManager.patch_model_yaml(
+            table,
+            path_config=ServicePathConfig(project_root=tmp_path, service_root=Path("models")),
+            relative_file_path="orders.yml",
+        )
+
+        written = yaml.safe_load(file_path.read_text(encoding="utf-8"))
+        written_model = written["kelp_models"][0]
+
+        assert report.changes_made is True
+        assert written_model["catalog"] == "${ catalog }"
+        assert written_model["schema"] == "${ schema }"
+        assert written_model["description"] == "New description"
+        assert written_model["columns"][0]["description"] == "${ customer_id_desc }"
+
+    def test_patch_metric_view_yaml_preserves_templated_existing_values(self, tmp_path: Path):
+        """Test existing templated metric-view values are preserved and do not trigger diffs."""
+        import yaml
+
+        existing_document = {
+            "kelp_metric_views": [
+                {
+                    "name": "customer_metrics",
+                    "catalog": "${ catalog }",
+                    "schema": "${ analytics_schema }",
+                    "tags": {"owner": "${ owner_tag }"},
+                    "definition": {
+                        "source": "${ catalog }.${ analytics_schema }.customers",
+                        "dimensions": [
+                            {"name": "customer_id", "expr": "${ customer_id_expr }"},
+                        ],
+                        "measures": [
+                            {"name": "total_customers", "agg": "count", "expr": "*"},
+                        ],
+                    },
+                },
+            ],
+        }
+        file_path = tmp_path / "metrics" / "customer_metrics.yml"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(yaml.safe_dump(existing_document, sort_keys=False), encoding="utf-8")
+
+        metric_view = MetricView(
+            name="customer_metrics",
+            catalog="prod",
+            schema_="analytics",
+            tags={"owner": "finance"},
+            definition={
+                "source": "prod.analytics.customers",
+                "dimensions": [
+                    {"name": "customer_id", "expr": "customer_id"},
+                ],
+                "measures": [
+                    {"name": "total_customers", "agg": "count", "expr": "*"},
+                ],
+            },
+        )
+
+        report = YamlManager.patch_metric_view_yaml(
+            metric_view,
+            path_config=ServicePathConfig(project_root=tmp_path, service_root=Path("metrics")),
+            relative_file_path="customer_metrics.yml",
+        )
+
+        assert report.changes_made is False
+        assert yaml.safe_load(file_path.read_text(encoding="utf-8")) == existing_document
 
 
 class TestComplexTableProperties:
