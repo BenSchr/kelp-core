@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.json_schema import SkipJsonSchema
@@ -142,6 +142,10 @@ class Model(BaseModel):
     tags: dict[str, str] = Field(
         default_factory=dict,
         description="Metadata tags for the model",
+    )
+    meta: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Generic user-defined metadata for filtering and grouping",
     )
     raw_config: SkipJsonSchema[dict] = Field(
         default_factory=dict,

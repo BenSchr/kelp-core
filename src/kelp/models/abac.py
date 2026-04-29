@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.json_schema import SkipJsonSchema
@@ -52,6 +52,10 @@ class AbacPolicy(BaseModel):
     using_columns: list[str] = Field(
         default_factory=list,
         description="USING COLUMNS aliases",
+    )
+    meta: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Generic user-defined metadata for filtering and grouping",
     )
     raw_config: SkipJsonSchema[dict] = Field(default_factory=dict)
 

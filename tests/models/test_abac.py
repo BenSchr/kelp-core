@@ -36,3 +36,26 @@ def test_abac_policy_match_columns_and_principals() -> None:
     assert policy.principals_to == ["analysts"]
     assert policy.principals_except == ["admins"]
     assert policy.match_columns[0].alias == "region"
+
+
+def test_abac_meta_defaults_to_empty_dict() -> None:
+    p = AbacPolicy(
+        name="p",
+        securable_type="TABLE",
+        securable_name="main.t",
+        mode="ROW_FILTER",
+        udf_name="fn",
+    )
+    assert p.meta == {}
+
+
+def test_abac_meta_round_trips() -> None:
+    p = AbacPolicy(
+        name="p",
+        securable_type="TABLE",
+        securable_name="main.t",
+        mode="ROW_FILTER",
+        udf_name="fn",
+        meta={"group": "security"},
+    )
+    assert p.meta == {"group": "security"}

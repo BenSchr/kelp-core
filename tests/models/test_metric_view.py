@@ -235,3 +235,14 @@ class TestMetricViewValidation:
         assert metric.definition["custom_field"] == "value"
         assert metric.definition["nested"]["deeply"]["nested"] == "structure"
         assert metric.definition["list_field"] == [1, 2, 3]
+
+
+def test_metric_view_meta_defaults_to_empty_dict() -> None:
+    mv = MetricView(name="m")
+    assert mv.meta == {}
+
+
+def test_metric_view_meta_round_trips() -> None:
+    mv = MetricView(name="m", meta={"group": "analytics"})
+    data = mv.model_dump()
+    assert data["meta"] == {"group": "analytics"}

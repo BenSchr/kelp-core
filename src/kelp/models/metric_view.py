@@ -44,6 +44,10 @@ class MetricView(BaseModel):
         description="The metric view definition including dimensions, metrics, and source table",
     )
     tags: dict[str, str] = Field(default_factory=dict)
+    meta: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Generic user-defined metadata for filtering and grouping",
+    )
     raw_config: SkipJsonSchema[dict] = Field(default_factory=dict)
 
     # Model Config

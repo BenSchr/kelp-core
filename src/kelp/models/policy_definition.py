@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, Field
 from pydantic.json_schema import SkipJsonSchema
 
@@ -43,6 +45,10 @@ class Policy(BaseModel):
     column: ColumnPolicyRule = Field(
         default_factory=ColumnPolicyRule,
         description="Column-level policy rules",
+    )
+    meta: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Generic user-defined metadata for filtering and grouping",
     )
     raw_config: SkipJsonSchema[dict] = Field(
         default_factory=dict,

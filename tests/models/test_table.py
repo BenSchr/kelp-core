@@ -364,3 +364,16 @@ class TestQuality:
 
         assert table.quality is not None
         assert table.quality.engine == "dqx"
+
+
+class TestModelMeta:
+    """Test the meta field on Model."""
+
+    def test_meta_defaults_to_empty_dict(self):
+        table = Table(name="t")
+        assert table.meta == {}
+
+    def test_meta_round_trips_through_model_dump(self):
+        table = Table(name="t", meta={"group": "abc", "nested": {"k": 1}})
+        data = table.model_dump()
+        assert data["meta"] == {"group": "abc", "nested": {"k": 1}}

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.json_schema import SkipJsonSchema
@@ -106,6 +106,10 @@ class KelpFunction(BaseModel):
         description="Python environment declaration",
     )
     tags: dict[str, str] = Field(default_factory=dict, description="Metadata tags")
+    meta: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Generic user-defined metadata for filtering and grouping",
+    )
     raw_config: SkipJsonSchema[dict] = Field(default_factory=dict)
 
     model_config = ConfigDict(

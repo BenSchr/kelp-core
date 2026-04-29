@@ -26,3 +26,14 @@ def test_create_function_with_parameters_and_qualified_name() -> None:
 
     assert function.get_qualified_name() == "main.security.hash_value"
     assert function.parameters[0].name == "v"
+
+
+def test_function_meta_defaults_to_empty_dict() -> None:
+    f = KelpFunction(name="fn", body="1")
+    assert f.meta == {}
+
+
+def test_function_meta_round_trips() -> None:
+    f = KelpFunction(name="fn", body="1", meta={"group": "utils"})
+    data = f.model_dump()
+    assert data["meta"] == {"group": "utils"}

@@ -46,14 +46,24 @@ class MetaRuntimeContext(BaseModel):
         description="Loaded metadata catalog payload",
     )
 
+    # Private memoized MetaCatalog wrapper (not serialized)
+    _catalog_index_cache: MetaCatalog | None = None
+
+    model_config = {"arbitrary_types_allowed": True}
+
     @property
     def catalog_index(self) -> MetaCatalog:
         """Get indexed catalog for efficient name-based lookups.
 
+        The MetaCatalog instance is memoized so lazy-built name indices
+        and filter-result caches persist across repeated accesses.
+
         Returns:
             MetaCatalog with lazy-built indices for each object type.
         """
-        return MetaCatalog(self.catalog)
+        if self._catalog_index_cache is None:
+            object.__setattr__(self, "_catalog_index_cache", MetaCatalog(self.catalog))
+        return self._catalog_index_cache  # ty:ignore[invalid-return-type]
 
 
 class MetaContextStore:

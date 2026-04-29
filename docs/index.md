@@ -376,5 +376,5 @@ export KELP_PROJECT_FILE=/path/to/kelp_project.yml
 
 # Now commands use these defaults
 uv run kelp validate
-uv run kelp catalog sync-from-catalog "catalog.schema.table"
+uv run kelp sync-from-catalog "catalog.schema.table"
 ```

@@ -2,12 +2,51 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+
+
+def _is_filter_match(actual: Any, expected: Any) -> bool:
+    """Check whether *actual* satisfies *expected*.
+
+    When *expected* is a ``dict`` the check uses recursive dict-subset
+    semantics: every key in *expected* must exist in *actual* and each
+    value must match recursively.  Scalar *expected* values are compared
+    with ``==``.
+
+    Args:
+        actual: The attribute value read from a catalog object.
+        expected: The filter value to test against.
+
+    Returns:
+        True when *actual* satisfies *expected*.
+    """
+    if isinstance(expected, dict):
+        if not isinstance(actual, dict):
+            return False
+        for key, expected_val in expected.items():
+            child = actual.get(key, _SENTINEL)
+            if child is _SENTINEL:
+                return False
+            if not _is_filter_match(child, expected_val):
+                return False
+        return True
+    return actual == expected
+
+
+_SENTINEL = object()
+
+
+def _get_attr(obj: Any, attr: str) -> Any:
+    """Read *attr* from *obj*, supporting both Pydantic models and plain dicts."""
+    if isinstance(obj, dict):
+        return obj.get(attr, _SENTINEL)
+    return getattr(obj, attr, _SENTINEL)
 
 
 class MetaCatalog:
@@ -37,6 +76,7 @@ class MetaCatalog:
         self._raw_data = raw_data
         self._indices: dict[str, dict[str, Any]] = {}
         self._built: dict[str, bool] = {}
+        self._filter_cache: dict[str, list[Any]] = {}
 
     def _build_index(self, catalog_key: str) -> None:
         """Build name -> object index for a catalog key.
@@ -102,6 +142,51 @@ class MetaCatalog:
         """
         return self._raw_data.get(catalog_key, [])
 
+    def filter_by(
+        self,
+        catalog_key: str,
+        attr: str,
+        value: Any,
+    ) -> list[Any]:
+        """Return objects whose *attr* satisfies *value*.
+
+        When *value* is a ``dict`` the matching uses recursive dict-subset
+        semantics (see :func:`_is_filter_match`).  Scalar *value* entries
+        use exact equality.  Results are cached per
+        ``(catalog_key, attr, value)`` tuple.
+
+        This method is framework-agnostic — it does not know which
+        attributes a model carries.  Any attribute name can be passed.
+
+        Examples:
+            >>> catalog.filter_by("models", "meta", {"group": "abc"})
+            >>> catalog.filter_by("models", "schema_", "bronze")
+
+        Args:
+            catalog_key: Object type key (e.g., ``"models"``).
+            attr: Attribute name on the catalog objects to filter by.
+            value: Expected value.  A ``dict`` triggers recursive subset
+                matching; any other type uses ``==``.
+
+        Returns:
+            List of matching objects (may be empty).
+        """
+        cache_key = catalog_key + ":" + attr + ":" + json.dumps(value, sort_keys=True, default=str)
+        cached = self._filter_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        result = [
+            obj
+            for obj in self.get_all(catalog_key)
+            if _is_filter_match(
+                _get_attr(obj, attr),
+                value,
+            )
+        ]
+        self._filter_cache[cache_key] = result
+        return result
+
     def get_index(self, catalog_key: str) -> dict[str, Any]:
         """Get name -> object index for a catalog key.
 
@@ -149,6 +234,7 @@ class MetaCatalog:
         Args:
             catalog_key: Specific key to rebuild, or None to rebuild all.
         """
+        self._filter_cache.clear()
         if catalog_key:
             self._built[catalog_key] = False
             self._build_index(catalog_key)

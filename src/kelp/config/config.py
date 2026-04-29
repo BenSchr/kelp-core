@@ -146,3 +146,20 @@ def project_settings() -> ProjectConfig:
         The resolved ProjectConfig for the current kelp project.
     """
     return get_context().project_settings
+
+
+def filter_by_meta(catalog_key: str, filters: dict[str, Any]) -> list[Any]:
+    """Return catalog objects whose ``meta`` dict matches *filters*.
+
+    Convenience wrapper around the generic ``MetaCatalog.filter_by`` method.
+    Auto-initializes the kelp runtime context if needed.
+
+    Args:
+        catalog_key: Catalog type key (e.g. ``"models"``, ``"metric_views"``).
+        filters: Key/value pairs matched against each object's ``meta`` using
+            recursive dict-subset semantics.
+
+    Returns:
+        List of matching catalog objects (may be empty).
+    """
+    return get_context().catalog_index.filter_by(catalog_key, "meta", filters)

@@ -336,7 +336,7 @@ uv run kelp init project  ./my_project
 uv run kelp json-schema --output kelp_json_schema.json
 
 # Sync metadata from Databricks tables to YAML
-uv run kelp catalog sync-from-catalog "catalog.schema.table" --output models/table.yml
+uv run kelp sync-from-catalog "catalog.schema.table" --output models/table.yml
 
 # Validate project configuration
 uv run kelp validate --target prod

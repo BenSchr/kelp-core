@@ -674,7 +674,7 @@ class YamlManager:
     def _is_named_dict_list(cls, value: list) -> bool:
         """Return True when value is a list of dicts each identified by `name`."""
 
-        return all(isinstance(item.get("name"), str) for item in value)
+        return all(isinstance(item, dict) and isinstance(item.get("name"), str) for item in value)
 
     @classmethod
     def _preserve_local_template_list_values(

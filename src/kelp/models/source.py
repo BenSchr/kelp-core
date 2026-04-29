@@ -66,6 +66,10 @@ class Source(BaseModel):
         default=None,
         description="Human-readable description of the source",
     )
+    meta: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Generic user-defined metadata for filtering and grouping",
+    )
 
     # Model Config
     model_config = ConfigDict(

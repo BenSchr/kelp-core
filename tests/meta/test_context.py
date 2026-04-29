@@ -53,3 +53,13 @@ def test_get_or_create_reuses_existing_when_not_refreshing(tmp_path: Path) -> No
 
     assert created is first
     assert created.runtime_vars["marker"] == "first"
+
+
+def test_catalog_index_is_memoized(tmp_path: Path) -> None:
+    """Repeated catalog_index access should return the same MetaCatalog instance."""
+    ctx = _build_context("memo", "m", tmp_path / "memo")
+
+    first = ctx.catalog_index
+    second = ctx.catalog_index
+
+    assert first is second
