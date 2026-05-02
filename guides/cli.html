@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../img/kelp_logo.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -970,17 +970,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#best-practices" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Best Practices
-      
-    </span>
-  </a>
   
 </li>
       
@@ -2067,17 +2056,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#best-practices" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Best Practices
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2155,8 +2133,15 @@
 <p>Generate a JSON schema for <code>kelp_project.yml</code> configuration validation.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>uv<span class="w"> </span>run<span class="w"> </span>kelp<span class="w"> </span>json-schema<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--output<span class="w"> </span>kelp_json_schema.json<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--dry-run
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--dry-run<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>--vscode
 </span></code></pre></div>
+<p><strong>Options:</strong></p>
+<ul>
+<li><code>-o, --output</code> - Output path for the JSON schema file (default: <code>kelp_json_schema.json</code>)</li>
+<li><code>--dry-run</code> - Preview output without writing to file</li>
+<li><code>--vscode</code> - Create/update VS Code <code>.vscode/settings.json</code> with YAML schema configuration</li>
+</ul>
 <h3 id="kelp-check-policies"><code>kelp check-policies</code><a class="headerlink" href="#kelp-check-policies" title="Permanent link">&para;</a></h3>
 <p>Evaluate metadata governance policies against your local table catalog.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>uv<span class="w"> </span>run<span class="w"> </span>kelp<span class="w"> </span>check-policies<span class="w"> </span><span class="se">\</span>
@@ -2169,6 +2154,7 @@
 <li><code>--target</code> - Environment to check against (e.g., <code>dev</code>, <code>prod</code>)</li>
 <li><code>--severity</code> - Only display violations at this severity or above: <code>warn</code> or <code>error</code> (default: all)</li>
 <li><code>--fail-on</code> - Exit with code 1 when violations of this severity are found: <code>warn</code> or <code>error</code> (default: <code>error</code>)</li>
+<li><code>--fast-exit/--no-fast-exit</code> - Stop policy evaluation on first violating policy per model (defaults to <code>policy_config.fast_exit</code> when not provided)</li>
 <li><code>--debug</code> - Enable debug logging</li>
 </ul>
 <blockquote>
@@ -2218,9 +2204,9 @@ Set <code>policy_config.enabled: true</code> in <code>kelp_project.yml</code>.</
 <p><strong>Options:</strong></p>
 <ul>
 <li><code>-p, --profile</code> - Databricks CLI profile to use</li>
+<li><code>--include-properties</code> - Include all table properties in the output YAML (use with caution, may include many properties)</li>
 <li><code>-o, --output</code> - Path to output YAML file (optional - prints to stdout if not provided)</li>
 <li><code>--dry-run</code> - Preview output without writing</li>
-<li><code>--debug</code> - Enable debug logging</li>
 </ul>
 <p><strong>Output:</strong></p>
 <p>Generates a <code>kelp_models</code> YAML structure:</p>
@@ -2357,6 +2343,7 @@ Set <code>policy_config.enabled: true</code> in <code>kelp_project.yml</code>.</
 <li><code>-p, --profile</code> - Databricks CLI profile for table introspection</li>
 <li><code>-o, --output</code> - Path to output SQL file (optional - prints to stdout if not provided)</li>
 <li><code>--dry-run</code> - Preview output without writing</li>
+<li><code>--silent</code> - Only output ALTER TABLE statements, suppressing other logs</li>
 <li><code>--debug</code> - Enable debug logging</li>
 </ul>
 <p><strong>Output:</strong></p>
@@ -2455,27 +2442,6 @@ Set <code>policy_config.enabled: true</code> in <code>kelp_project.yml</code>.</
 <div class="language-text highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>✗ Profile &#39;my-profile&#39; not found in Databricks CLI
 </span></code></pre></div>
 <p><strong>Solution:</strong> Configure the profile with <code>databricks configure</code> or use <code>-p</code> to specify an existing profile.</p>
-<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
-<ol>
-<li>
-<p><strong>Use <code>--dry-run</code> before applying changes</strong> - Always preview with <code>--dry-run</code> before syncing or making changes.</p>
-</li>
-<li>
-<p><strong>Store JSON schema in version control</strong> - Commit <code>kelp_json_schema.json</code> to enable IDE autocomplete for all team members.</p>
-</li>
-<li>
-<p><strong>Validate on deploy</strong> - Include <code>kelp validate</code> in your deployment/CI pipeline.</p>
-</li>
-<li>
-<p><strong>Use target-specific validation</strong> - Validate with the target environment to catch configuration issues early.</p>
-</li>
-<li>
-<p><strong>Keep seeds in git</strong> - Commit initial model YAMLs after first import, then update with <code>sync-local-catalog</code>.</p>
-</li>
-<li>
-<p><strong>Profile management</strong> - Use consistent Databricks CLI profiles across your team (e.g., <code>work-prod</code>, <code>work-dev</code>).</p>
-</li>
-</ol>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="project_config.html">Project Configuration</a> - Detailed <code>kelp_project.yml</code> configuration</li>

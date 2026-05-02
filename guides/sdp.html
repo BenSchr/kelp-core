@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../img/kelp_logo.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -1687,7 +1687,7 @@
 
 
 <h1 id="spark-declarative-pipelines-sdp">Spark Declarative Pipelines (SDP)<a class="headerlink" href="#spark-declarative-pipelines-sdp" title="Permanent link">&para;</a></h1>
-<p>This guide provides an overview of how to integrate Kelp with Databricks Spark Declarative Pipelines (SDP). It covers Kelp initialization in an SDP environment, using decorators to define pipeline components, implementing quality checks, and utilizing the low-level API for more control over your pipelines.</p>
+<p>This guide provides an overview of how to integrate Kelp with Spark Declarative Pipelines (SDP). It covers Kelp initialization in an SDP environment, using decorators to define pipeline components, implementing quality checks, and utilizing the low-level API for more control over your pipelines.</p>
 <h2 id="initialize-kelp-in-sdp">Initialize Kelp in SDP<a class="headerlink" href="#initialize-kelp-in-sdp" title="Permanent link">&para;</a></h2>
 <h3 id="spark-configurations">Spark Configurations<a class="headerlink" href="#spark-configurations" title="Permanent link">&para;</a></h3>
 <p>Kelp autodetects project and target configurations from Spark configurations. You can set these in your pipeline configurations.</p>
@@ -1710,7 +1710,7 @@
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">        </span><span class="nt">kelp.target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${bundle.target}</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">      </span><span class="nt">environment</span><span class="p">:</span>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">        </span><span class="nt">dependencies</span><span class="p">:</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kelp-core==0.0.7</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kelp-core==0.0.8</span>
 </span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">databricks-labs-dqx</span>
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">      </span><span class="c1"># ...</span>
 </span></code></pre></div>
@@ -1796,7 +1796,7 @@ The quarantine implementation is based on the Databricks documentation: <a href=
 </span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">      </span><span class="nt">expect_all_or_quarantine</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </span></code></pre></div>
 <p>When you use <code>expect_all_or_quarantine</code>, Kelp will automatically quarantine the data if any of the expectations fail. You can then investigate and fix the issues with the data before allowing it to be used in downstream pipeline components.
-Since expect_all_or_quarantine is not a SDP built-in expectaion you need to use the kelp decorator which abstracts the creation of the validation and quarantine tables and the necessary flow connections. You can use the <code>@kp.table</code> decorator as shown below, and Kelp will handle the rest.</p>
+Since expect_all_or_quarantine is not a SDP built-in expectation you need to use the kelp decorator which abstracts the creation of the validation and quarantine tables and the necessary flow connections. You can use the <code>@kp.table</code> decorator as shown below, and Kelp will handle the rest.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">kelp.pipelines</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kp</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">table</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">my_table</span><span class="p">():</span>
