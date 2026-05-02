@@ -1,0 +1,350 @@
+{
+  "manifest_version": 1,
+  "spec_signature": {
+    "framework_id": "kelp",
+    "project_header": "kelp_project",
+    "object_catalog_attrs": [
+      "abacs",
+      "functions",
+      "metric_views",
+      "models",
+      "policies",
+      "sources"
+    ]
+  },
+  "project_root": "/workspaces/kelp/demos/sample_project/src/kelp_project_with_manifest",
+  "project_file_path": "/workspaces/kelp/demos/sample_project/src/kelp_project_with_manifest/kelp_project.yml",
+  "target": "dev",
+  "runtime_vars": {
+    "target": "dev",
+    "catalog": "kelp_catalog",
+    "landing_schema": "kelp_bronze",
+    "function_schema": "kelp_funcs",
+    "abac_schema": "kelp_abac"
+  },
+  "project_settings": {
+    "models_path": "./kelp_metadata/models",
+    "models": {
+      "+catalog": "kelp_catalog",
+      "bronze": {
+        "+schema": "kelp_bronze"
+      },
+      "+tags": {
+        "kelp_managed": "",
+        "domain": "sales",
+        "owner": "analytics-team"
+      }
+    },
+    "metrics_path": null,
+    "metric_views": {},
+    "functions_path": null,
+    "functions": {},
+    "abacs_path": null,
+    "abacs": {},
+    "sources_path": "./kelp_metadata/sources",
+    "sources": {
+      "+catalog": "kelp_catalog",
+      "+schema": "kelp_bronze"
+    },
+    "policies_path": null,
+    "quarantine_config": {
+      "quarantine_catalog": null,
+      "quarantine_schema": null,
+      "quarantine_prefix": "",
+      "quarantine_suffix": "_quarantine",
+      "validation_prefix": "",
+      "validation_suffix": "_validation"
+    },
+    "remote_catalog_config": {
+      "table_tag_mode": "replace",
+      "managed_table_tags": [],
+      "column_tag_mode": "replace",
+      "managed_column_tags": [],
+      "table_property_mode": "append",
+      "managed_table_properties": []
+    },
+    "policy_config": {
+      "enabled": false,
+      "fast_exit": false
+    },
+    "runtime_vars": {},
+    "project_file_path": ""
+  },
+  "catalog": {
+    "models": [
+      {
+        "origin_file_path": "bronze/bronze_customers_manifest.yml",
+        "table_type": "managed",
+        "catalog": "kelp_catalog",
+        "schema": "kelp_bronze",
+        "name": "bronze_customers_manifest",
+        "description": "This is the bronze customers model",
+        "spark_conf": {},
+        "table_properties": {},
+        "path": null,
+        "partition_cols": [],
+        "cluster_by_auto": false,
+        "cluster_by": [],
+        "row_filter": null,
+        "columns": [
+          {
+            "name": "country",
+            "description": "Customer country as provided by source (may contain 'unknown').",
+            "data_type": "string",
+            "nullable": true,
+            "generated": null,
+            "tags": {
+              "data_classification": "internal",
+              "geo": "country"
+            }
+          },
+          {
+            "name": "first_name",
+            "description": "Customer given name.",
+            "data_type": "string",
+            "nullable": true,
+            "generated": null,
+            "tags": {
+              "data_classification": "pii"
+            }
+          },
+          {
+            "name": "last_name",
+            "description": "Customer family name.",
+            "data_type": "string",
+            "nullable": true,
+            "generated": null,
+            "tags": {
+              "data_classification": "pii"
+            }
+          },
+          {
+            "name": "user_id",
+            "description": "Internal user identifier; used to link orders to customers.",
+            "data_type": "string",
+            "nullable": true,
+            "generated": null,
+            "tags": {
+              "business": "customer_id",
+              "data_classification": "pii"
+            }
+          },
+          {
+            "name": "_rescued_data",
+            "description": "JSON blob of rescued/parsing errors from the bronze ingestion.",
+            "data_type": "string",
+            "nullable": true,
+            "generated": null,
+            "tags": {
+              "etl": "_rescued"
+            }
+          }
+        ],
+        "quality": {
+          "engine": "sdp",
+          "level": "row",
+          "expect_all": {},
+          "expect_all_or_drop": {},
+          "expect_all_or_fail": {
+            "_rescued_data_is_null": "_rescued_data IS NULL"
+          },
+          "expect_all_or_quarantine": {}
+        },
+        "constraints": [],
+        "tags": {
+          "kelp_managed": "",
+          "domain": "sales",
+          "owner": "analytics-team"
+        },
+        "meta": {},
+        "raw_config": {}
+      },
+      {
+        "origin_file_path": "bronze/bronze_orders_manifest.yml",
+        "table_type": "streaming_table",
+        "catalog": "kelp_catalog",
+        "schema": "kelp_bronze",
+        "name": "bronze_orders_manifest",
+        "description": "This is the orders model",
+        "spark_conf": {},
+        "table_properties": {},
+        "path": null,
+        "partition_cols": [],
+        "cluster_by_auto": false,
+        "cluster_by": [],
+        "row_filter": null,
+        "columns": [
+          {
+            "name": "order_id",
+            "description": "Unique identifier for each order",
+            "data_type": "string",
+            "nullable": true,
+            "generated": null,
+            "tags": {
+              "business": "key",
+              "data_classification": "internal"
+            }
+          },
+          {
+            "name": "order_state",
+            "description": "State of the order lifecycle (Pending, Shipped, etc.).",
+            "data_type": "string",
+            "nullable": true,
+            "generated": null,
+            "tags": {}
+          },
+          {
+            "name": "price",
+            "description": "Unit price for the order line.",
+            "data_type": "double",
+            "nullable": true,
+            "generated": null,
+            "tags": {
+              "sensitivity": "low",
+              "data_classification": "internal"
+            }
+          },
+          {
+            "name": "product",
+            "description": "Product name or identifier.",
+            "data_type": "string",
+            "nullable": true,
+            "generated": null,
+            "tags": {}
+          },
+          {
+            "name": "quantity",
+            "description": "Quantity ordered for the product.",
+            "data_type": "bigint",
+            "nullable": true,
+            "generated": null,
+            "tags": {}
+          },
+          {
+            "name": "store",
+            "description": "Store identifier where the order was placed.",
+            "data_type": "string",
+            "nullable": true,
+            "generated": null,
+            "tags": {}
+          },
+          {
+            "name": "user_id",
+            "description": "Identifier for the user who placed the order; can link to customers.",
+            "data_type": "string",
+            "nullable": true,
+            "generated": null,
+            "tags": {
+              "data_classification": "pii"
+            }
+          },
+          {
+            "name": "_rescued_data",
+            "description": null,
+            "data_type": "string",
+            "nullable": true,
+            "generated": null,
+            "tags": {}
+          },
+          {
+            "name": "_errors",
+            "description": "Structured errors captured by the ingestion/validation engine.",
+            "data_type": "array<struct<name:string,message:string,columns:array<string>,filter:string,function:string,run_time:timestamp,run_id:string,user_metadata:map<string,string>>>",
+            "nullable": true,
+            "generated": null,
+            "tags": {}
+          },
+          {
+            "name": "_warnings",
+            "description": "Structured warnings captured by the ingestion/validation engine.",
+            "data_type": "array<struct<name:string,message:string,columns:array<string>,filter:string,function:string,run_time:timestamp,run_id:string,user_metadata:map<string,string>>>",
+            "nullable": true,
+            "generated": null,
+            "tags": {}
+          }
+        ],
+        "quality": {
+          "engine": "dqx",
+          "level": "row",
+          "sdp_expect_level": "fail",
+          "sdp_quarantine": false,
+          "checks": [
+            {
+              "check": {
+                "function": "is_null",
+                "arguments": {
+                  "column": "_rescued_data"
+                }
+              }
+            }
+          ]
+        },
+        "constraints": [
+          {
+            "name": "pk_bronze_orders_manifest",
+            "type": "primary_key",
+            "columns": [
+              "order_id"
+            ]
+          }
+        ],
+        "tags": {
+          "kelp_managed": "",
+          "domain": "sales",
+          "owner": "analytics-team"
+        },
+        "meta": {},
+        "raw_config": {}
+      }
+    ],
+    "metric_views": [],
+    "functions": [],
+    "abacs": [],
+    "sources": [
+      {
+        "origin_file_path": "sources.yml",
+        "name": "landing_volume_customers",
+        "source_type": "volume",
+        "path": null,
+        "catalog": "kelp_catalog",
+        "schema": "kelp_bronze",
+        "table_name": null,
+        "volume_name": "landing_volume/customers",
+        "options": {
+          "cloudFiles.format": "parquet"
+        },
+        "description": "Raw customer data in Parquet format from the landing volume",
+        "meta": {}
+      },
+      {
+        "origin_file_path": "sources.yml",
+        "name": "landing_volume_orders",
+        "source_type": "volume",
+        "path": null,
+        "catalog": "kelp_catalog",
+        "schema": "kelp_bronze",
+        "table_name": null,
+        "volume_name": "landing_volume/orders",
+        "options": {
+          "cloudFiles.format": "parquet"
+        },
+        "description": "Raw order data in JSON format from the landing volume",
+        "meta": {}
+      },
+      {
+        "origin_file_path": "sources.yml",
+        "name": "test_table_source",
+        "source_type": "table",
+        "path": null,
+        "catalog": "kelp_catalog",
+        "schema": "kelp_bronze",
+        "table_name": "test_table_source",
+        "volume_name": null,
+        "options": {},
+        "description": null,
+        "meta": {}
+      }
+    ],
+    "policies": []
+  }
+}

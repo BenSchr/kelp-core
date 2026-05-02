@@ -150,23 +150,65 @@ def init_runtime(
     project_file_path: str | None = None,
     target: str | None = None,
     init_vars: dict[str, Any] | None = None,
+    manifest_file_path: str | None = None,
     refresh: bool = False,
     store_in_global: bool = True,
 ) -> MetaRuntimeContext:
     """Initialize or retrieve runtime context for the framework.
+
+    When ``manifest_file_path`` is provided, the context is loaded from a
+    pre-built manifest JSON file instead of discovering and rendering
+    project/metadata files. This skips all file I/O, Jinja rendering, and
+    variable resolution. The ``init_vars`` parameter is incompatible with
+    manifest loading and will raise if both are provided.
 
     Args:
         spec: Framework project specification.
         project_file_path: Optional explicit project file path.
         target: Optional target name.
         init_vars: Optional runtime var overrides.
+        manifest_file_path: Optional path to a manifest JSON file.
         refresh: Whether to recreate existing stored context.
         store_in_global: Whether to persist context in global store.
 
     Returns:
         Framework runtime context.
 
+    Raises:
+        ValueError: If both manifest_file_path and init_vars are provided.
+
     """
+    if spec.resolve_runtime_settings and manifest_file_path is None:
+        manifest_file_path = resolve_setting(
+            key=spec.manifest_file_path_setting_key,
+            default=manifest_file_path,
+            init_settings={spec.manifest_file_path_setting_key: manifest_file_path}
+            if manifest_file_path is not None
+            else None,
+            env_prefix=spec.settings_env_prefix,
+            spark_prefix=spec.settings_spark_prefix,
+        )
+
+    if manifest_file_path and init_vars:
+        raise ValueError(
+            "Cannot use 'manifest_file_path' together with 'init_vars'. "
+            "A manifest is a pre-rendered snapshot; runtime variable "
+            "overrides cannot be applied to it.",
+        )
+
+    if manifest_file_path:
+        from kelp.meta.manifest import load_manifest
+
+        ctx = load_manifest(
+            manifest_file_path,
+            spec,
+            expected_target=target,
+            expected_project_file_path=project_file_path,
+        )
+        if store_in_global:
+            MetaContextStore.set(spec.framework_id, ctx, overwrite=refresh)
+        return ctx
+
     if spec.resolve_runtime_settings:
         target = resolve_setting(
             key=spec.target_setting_key,

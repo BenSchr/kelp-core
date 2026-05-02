@@ -62,6 +62,7 @@ class MetaFramework:
         project_file_path: str | None = None,
         target: str | None = None,
         init_vars: dict[str, Any] | None = None,
+        manifest_file_path: str | None = None,
         refresh: bool = False,
         store_in_global: bool = True,
     ) -> MetaRuntimeContext:
@@ -70,12 +71,18 @@ class MetaFramework:
         This discovers the project configuration, loads metadata files,
         resolves variables, and stores the resulting context for later access.
 
+        When ``manifest_file_path`` is provided, the context is loaded directly
+        from a pre-built manifest JSON file, skipping all discovery,
+        rendering, and variable resolution.
+
         Args:
             project_file_path: Path to project file or directory.
                 If None, auto-discovers from current working directory.
             target: Target environment name (e.g., "dev", "prod") to load
                 target-specific variables from project file.
             init_vars: Runtime variable overrides (highest priority).
+            manifest_file_path: Path to a manifest JSON file. When provided,
+                skips all source file loading and uses the snapshot instead.
             refresh: If True, recreate context even if one already exists.
             store_in_global: Whether to store context globally.
 
@@ -85,7 +92,7 @@ class MetaFramework:
 
         Raises:
             FileNotFoundError: If project file cannot be discovered.
-            ValueError: If configuration is invalid.
+            ValueError: If configuration is invalid or manifest is incompatible.
         """
         spec = cls._get_spec()
         return init_runtime(
@@ -93,6 +100,7 @@ class MetaFramework:
             project_file_path=project_file_path,
             target=target,
             init_vars=init_vars,
+            manifest_file_path=manifest_file_path,
             refresh=refresh,
             store_in_global=store_in_global,
         )

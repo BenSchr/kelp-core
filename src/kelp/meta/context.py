@@ -45,6 +45,14 @@ class MetaRuntimeContext(BaseModel):
         default_factory=dict,
         description="Loaded metadata catalog payload",
     )
+    generated_from_manifest: bool = Field(
+        default=False,
+        description="Whether this context was loaded from a manifest file",
+    )
+    manifest_file_path: str | None = Field(
+        default=None,
+        description="Path to the manifest file if loaded from one",
+    )
 
     # Private memoized MetaCatalog wrapper (not serialized)
     _catalog_index_cache: MetaCatalog | None = None

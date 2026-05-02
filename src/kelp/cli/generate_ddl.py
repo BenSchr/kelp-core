@@ -33,6 +33,12 @@ def generate_ddl(
         "--target",
         help="Environment to use for variable resolution",
     ),
+    manifest_file_path: str | None = typer.Option(
+        None,
+        "-m",
+        "--manifest",
+        help="Path to manifest JSON file (skips source file loading)",
+    ),
     output_file: str | None = typer.Option(
         None,
         "-o",
@@ -55,7 +61,12 @@ def generate_ddl(
 
     log_level = "DEBUG" if debug else None
     resolved_target = _resolve_target(target)
-    init(project_file_path=project_file_path, target=resolved_target, log_level=log_level)
+    init(
+        project_file_path=project_file_path,
+        target=resolved_target,
+        manifest_file_path=manifest_file_path,
+        log_level=log_level,
+    )
 
     ctx = get_context()
 

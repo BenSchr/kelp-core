@@ -157,6 +157,7 @@ def _resolve_schema(
         # DDL string → StructType via PySpark's built-in parser
         from pyspark.sql.types import _parse_datatype_string
 
+        # TODO: replace private method with StructType.fromDDL(ddl_string)  # noqa: TD002, TD003
         parsed = _parse_datatype_string(schema)
         if isinstance(parsed, StructType):
             return parsed

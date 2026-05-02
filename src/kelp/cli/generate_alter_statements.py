@@ -30,6 +30,12 @@ def generate_alter_statements(
         "--target",
         help="Environment to use for variable resolution",
     ),
+    manifest_file_path: str | None = typer.Option(
+        None,
+        "-m",
+        "--manifest",
+        help="Path to manifest JSON file (skips source file loading)",
+    ),
     profile: str | None = typer.Option(
         None,
         "-p",
@@ -61,7 +67,12 @@ def generate_alter_statements(
 
     log_level = "DEBUG" if debug else None
     resolved_target = _resolve_target(target)
-    init(project_file_path=project_file_path, target=resolved_target, log_level=log_level)
+    init(
+        project_file_path=project_file_path,
+        target=resolved_target,
+        manifest_file_path=manifest_file_path,
+        log_level=log_level,
+    )
     queries = sync_catalog(sync_functions=True, profile=profile)
     if not silent:
         for q in queries:

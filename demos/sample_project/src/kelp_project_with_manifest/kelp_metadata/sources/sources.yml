@@ -1,0 +1,16 @@
+kelp_sources:
+  - name: landing_volume_customers
+    source_type: volume
+    volume_name: landing_volume/customers
+    description: "Raw customer data in Parquet format from the landing volume"
+    options:
+      cloudFiles.format: parquet
+
+  - name: landing_volume_orders
+    source_type: volume
+    volume_name: landing_volume/orders
+    description: "Raw order data in JSON format from the landing volume"
+    options:
+      cloudFiles.format: parquet
+  - name: test_table_source
+    table_name: test_table_source

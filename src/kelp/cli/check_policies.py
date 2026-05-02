@@ -16,6 +16,15 @@ def check_policies(
         typer.Option("-c", help="Path to the kelp_project.yml"),
     ] = None,
     target: Annotated[str | None, typer.Option(help="Environment to check against")] = None,
+    manifest_file_path: Annotated[
+        str | None,
+        typer.Option(
+            ...,
+            "-m",
+            "--manifest",
+            help="Path to manifest JSON file (skips source file loading)",
+        ),
+    ] = None,
     severity_filter: Annotated[
         str | None,
         typer.Option(
@@ -58,7 +67,13 @@ def check_policies(
 
     # Initialize context WITHOUT running policy checks (we run them manually here
     # so we can control output and exit code).
-    ctx = init(config_path, resolved_target, run_policy_checks=False, log_level=log_level)
+    ctx = init(
+        config_path,
+        resolved_target,
+        manifest_file_path=manifest_file_path,
+        run_policy_checks=False,
+        log_level=log_level,
+    )
     policy_cfg = ctx.project_settings.policy_config
 
     if not policy_cfg.enabled:

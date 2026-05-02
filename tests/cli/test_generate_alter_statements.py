@@ -14,6 +14,7 @@ def test_generate_alter_statements_passes_profile_to_sync_catalog(
     def fake_init(
         project_file_path: str | None = None,
         target: str | None = None,
+        manifest_file_path: str | None = None,
         log_level: str | None = None,
     ) -> None:
         captured["init_args"] = {

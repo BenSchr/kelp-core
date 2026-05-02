@@ -18,6 +18,7 @@ def reset_context_and_env():
     MetaContextStore.clear_all()
     os.environ.pop("KELP_PROJECT_FILE", None)
     os.environ.pop("KELP_TARGET", None)
+    os.environ.pop("KELP_MANIFEST_FILE", None)
 
     yield
 
@@ -25,6 +26,7 @@ def reset_context_and_env():
     MetaContextStore.clear_all()
     os.environ.pop("KELP_PROJECT_FILE", None)
     os.environ.pop("KELP_TARGET", None)
+    os.environ.pop("KELP_MANIFEST_FILE", None)
 
 
 @pytest.fixture

@@ -129,3 +129,7 @@ class MetaProjectSpec(BaseModel):
         default="project_file",
         description="Settings key used to resolve project file path",
     )
+    manifest_file_path_setting_key: str = Field(
+        default="manifest_file",
+        description="Settings key used to resolve manifest file path",
+    )

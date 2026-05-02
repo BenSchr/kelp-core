@@ -62,6 +62,6 @@ resources:
         - environment_key: Default
           spec:
             dependencies:
-              - /Volumes/workspace/default/libs/kelp_core-0.0.7-py3-none-any.whl #kelp-core #/Volumes/workspace/default/libs/kelp-0.0.2-py3-none-any.whl
-            environment_version: "4"
+              - ${var.kelp_dependency}
+            environment_version: "5"
       performance_target: PERFORMANCE_OPTIMIZED

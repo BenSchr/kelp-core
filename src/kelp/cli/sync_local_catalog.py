@@ -29,6 +29,15 @@ def sync_local_catalog(
         typer.Option("-c", help="Path to the kelp_project.yml"),
     ] = None,
     target: Annotated[str | None, typer.Option(help="Environment to sync against")] = None,
+    manifest_file_path: Annotated[
+        str | None,
+        typer.Option(
+            ...,
+            "-m",
+            "--manifest",
+            help="Path to manifest JSON file (skips source file loading)",
+        ),
+    ] = None,
     profile: Annotated[str | None, typer.Option("-p", help="Databricks CLI profile to use")] = None,
     output_file: Annotated[
         str | None,
@@ -57,7 +66,7 @@ def sync_local_catalog(
 
     log_level = "DEBUG" if debug else None
     resolved_target = _resolve_target(target)
-    init(config_path, resolved_target, log_level=log_level)
+    init(config_path, resolved_target, manifest_file_path=manifest_file_path, log_level=log_level)
     ctx = get_context()
 
     project_config: ProjectConfig = ctx.project_settings

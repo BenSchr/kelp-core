@@ -30,7 +30,7 @@ def _extract_plus_defaults(cfg_node: dict) -> dict:
     return defaults
 
 
-def merge_defaults(target, defaults):
+def merge_defaults(target: dict, defaults: dict) -> dict:
     """Merge defaults into target without overwriting existing values.
 
     - If a key is missing in target, a deep copy of the default value is set.

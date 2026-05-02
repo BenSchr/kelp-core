@@ -31,6 +31,7 @@ class Policy(BaseModel):
         description="Path to the source YAML file defining this policy",
     )
     name: str = Field(description="Policy name")
+    # TODO: add pattern validation # noqa: TD002, TD003
     applies_to: str | None = Field(
         default=None,
         description=(

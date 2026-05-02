@@ -32,6 +32,12 @@ def sync_from_pipeline(
         "--target",
         help="Environment to use for variable resolution",
     ),
+    manifest_file_path: str | None = typer.Option(
+        None,
+        "-m",
+        "--manifest",
+        help="Path to manifest JSON file (skips source file loading)",
+    ),
     profile: str | None = typer.Option(
         None,
         "-p",
@@ -67,7 +73,12 @@ def sync_from_pipeline(
     resolved_target = _resolve_target(target)
 
     # Initial setup - init with current target (may be None)
-    init(project_file_path=project_file_path, target=resolved_target, log_level=log_level)
+    init(
+        project_file_path=project_file_path,
+        target=resolved_target,
+        manifest_file_path=manifest_file_path,
+        log_level=log_level,
+    )
 
     log_lines: list[str] = []
 
@@ -94,7 +105,12 @@ def sync_from_pipeline(
         if not resolved_target:
             detected_target = pipelines[0].target
             _log(f"Using target: {detected_target}")
-            init(project_file_path=project_file_path, target=detected_target, log_level=log_level)
+            init(
+                project_file_path=project_file_path,
+                target=detected_target,
+                manifest_file_path=manifest_file_path,
+                log_level=log_level,
+            )
             resolved_target = detected_target
 
         pipeline_ids = [p.id for p in pipelines]
@@ -131,7 +147,6 @@ def sync_from_pipeline(
 
     # Compare with catalog and sync
     catalog_index = ctx.catalog_index.get_index("models")
-    print(catalog_index.keys())
     new_tables = []
     existing_tables = []
 

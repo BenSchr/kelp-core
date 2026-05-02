@@ -1,0 +1,35 @@
+resources:
+  jobs:
+    kelp_sample_job_manifest:
+      name: kelp_sample_job_manifest
+      tasks:
+        - task_key: kelp_sdp_pipeline_manifest
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.kelp_sample_manifest.id}
+            full_refresh: false
+        - task_key: create_spark_table_manifest
+          depends_on:
+            - task_key: kelp_sdp_pipeline_manifest
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/kelp_project_with_manifest/notebooks/create_spark_table
+            source: WORKSPACE
+          environment_key: Default
+        - task_key: update_metadata_manifest
+          depends_on:
+            - task_key: create_spark_table_manifest
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/kelp_project_with_manifest/notebooks/update_metadata
+            source: WORKSPACE
+          environment_key: Default
+      queue:
+        enabled: true
+      parameters:
+        - name: kelp_manifest_file
+          default: ${var.kelp_manifest_file}
+      environments:
+        - environment_key: Default
+          spec:
+            dependencies:
+              - ${var.kelp_dependency}
+            environment_version: "5"
+      performance_target: PERFORMANCE_OPTIMIZED

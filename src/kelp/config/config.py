@@ -13,6 +13,7 @@ from kelp.config.catalog_spec import CATALOG_PARSE_SPECS
 from kelp.constants import KELP_PROJECT_FILENAME, KELP_PROJECT_HEADER
 from kelp.meta import MetaFramework, MetaObjectSpec, MetaProjectSpec
 from kelp.meta.context import MetaRuntimeContext
+from kelp.meta.manifest import export_manifest as _meta_export_manifest
 from kelp.models.project_config import ProjectConfig
 from kelp.utils.logging import configure_logging
 
@@ -52,12 +53,18 @@ def init(
     project_file_path: str | None = None,
     target: str | None = None,
     init_vars: dict[str, Any] | None = None,
+    manifest_file_path: str | None = None,
     refresh: bool = False,
     store_in_global: bool = True,
     run_policy_checks: bool = False,
     log_level: str | None = None,
 ) -> MetaRuntimeContext:
     """Initialize kelp runtime context from current directory.
+
+    When ``manifest_file_path`` is provided (or resolved from ``KELP_MANIFEST_FILE``
+    environment variable), the context is loaded directly from a pre-built
+    manifest JSON file, skipping all project discovery, Jinja rendering, and
+    metadata loading.
 
     When ``policy_config.enabled`` is True in the project settings, metadata
     governance policies are evaluated immediately after loading. Warn-severity
@@ -67,8 +74,11 @@ def init(
         project_file_path: Path to project file or directory.
         target: Target environment name.
         init_vars: Runtime variable overrides.
+        manifest_file_path: Path to a manifest JSON file. When provided, skips
+            source file loading. Also resolved from KELP_MANIFEST_FILE env var.
         refresh: If True, recreate context even if one already exists.
         store_in_global: Whether to store context globally.
+        run_policy_checks: Whether to run policy checks.
         log_level: Optional log level to configure.
 
     Returns:
@@ -81,6 +91,7 @@ def init(
         project_file_path=project_file_path,
         target=target,
         init_vars=init_vars,
+        manifest_file_path=manifest_file_path,
         refresh=refresh,
         store_in_global=store_in_global,
     )
@@ -146,6 +157,22 @@ def project_settings() -> ProjectConfig:
         The resolved ProjectConfig for the current kelp project.
     """
     return get_context().project_settings
+
+
+def export_manifest(output_path: str, ctx: MetaRuntimeContext | None = None) -> str:
+    """Export the kelp runtime context to a manifest JSON file.
+
+    Args:
+        output_path: Path where the manifest JSON file will be written.
+        ctx: Optional runtime context to export. If None, uses the current
+            global context (auto-initializes if needed).
+
+    Returns:
+        The absolute path of the written manifest file.
+    """
+    if ctx is None:
+        ctx = get_context()
+    return _meta_export_manifest(ctx, KELP_SPEC, output_path)
 
 
 def filter_by_meta(catalog_key: str, filters: dict[str, Any]) -> list[Any]:

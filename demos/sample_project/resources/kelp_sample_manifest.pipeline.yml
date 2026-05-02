@@ -1,0 +1,22 @@
+# The main pipeline for test_project
+
+resources:
+  pipelines:
+    kelp_sample_manifest:
+      name: kelp_sample_manifest
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      serverless: true
+      root_path: "../src/kelp_project_with_manifest"
+      libraries:
+        - glob:
+            include: ../src/kelp_project_with_manifest/transformations/**
+
+      configuration:
+        parameters.source_catalog: ${var.source_catalog}
+        parameters.source_schema: ${var.source_schema}
+        kelp.manifest_file: ${var.kelp_manifest_file}
+      environment:
+        dependencies:
+          - ${var.kelp_dependency}
+          - databricks-labs-dqx
