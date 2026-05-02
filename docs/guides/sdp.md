@@ -1,6 +1,6 @@
 # Spark Declarative Pipelines (SDP)
 
-This guide provides an overview of how to integrate Kelp with Databricks Spark Declarative Pipelines (SDP). It covers Kelp initialization in an SDP environment, using decorators to define pipeline components, implementing quality checks, and utilizing the low-level API for more control over your pipelines.
+This guide provides an overview of how to integrate Kelp with Spark Declarative Pipelines (SDP). It covers Kelp initialization in an SDP environment, using decorators to define pipeline components, implementing quality checks, and utilizing the low-level API for more control over your pipelines.
 
 
 ## Initialize Kelp in SDP

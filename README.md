@@ -6,14 +6,14 @@
 ██╔═██╗ ██╔══╝  ██║     ██╔═══╝
 ██║  ██╗███████╗███████╗██║
 ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝
-Metadata Toolkit for Databricks Spark and Declarative Pipelines
+Metadata Toolkit for Spark and Spark Declarative Pipelines
 ```
 Kelp is a powerful framework designed to simplify the management of data pipelines, quality checks, and table configurations. Follow the instructions below to set up Kelp in your environment and start building robust data solutions.
 
 Documentation: [https://benschr.github.io/kelp-core/](https://benschr.github.io/kelp-core/)
 
 ## Why Kelp?
-Kelp provides a metadata and transformation layer for Databricks Spark and Spark Declarative Pipelines (SDP). It lets you define data models, quality checks, and transformations in structured YAML while offering Python utilities for advanced logic. With Kelp you can:
+Kelp provides a metadata and transformation layer for Spark and Spark Declarative Pipelines (SDP). It lets you define data models, quality checks, and transformations in structured YAML while offering Python utilities for advanced logic. With Kelp you can:
 
 ### Metadata management
 - Define models, metric views, functions, ABAC policies, and data sources in readable, maintainable YAML
@@ -71,6 +71,8 @@ kelp_metadata/# (2)!
     functions/**/*.yml
     abacs/**/*.yml
     policies/**/*.yml
+    sources/**/*.yml
+    targets/*.yml
 ```
 
 1. This is where your main project configuration file lives. Here you can set global settings, variables, and other configurations for your Kelp project.
@@ -99,6 +101,8 @@ kelp_metadata/
       governance.yml
     sources/
       sources.yml
+    targets/
+      local.yml
 ```
 
 ## Set Up Targets and Base Configurations
@@ -193,7 +197,7 @@ Explore Kelp's comprehensive guides to get the most out of the framework:
 
 | Guide | Overview |
 |-------|----------|
-| [Spark Declarative Pipelines (SDP)](guides/sdp.md) | Integrate Kelp with Databricks SDP using decorators and the low-level API |
+| [Spark Declarative Pipelines (SDP)](guides/sdp.md) | Integrate Kelp with SDP using decorators and the low-level API |
 | [Normal Spark (Non-SDP)](guides/normal_spark.md) | Use Kelp in standard Spark jobs with `kelp.tables`, DDL, and DQX |
 | [Sync Metadata with Your Catalog](guides/catalog.md) | Keep local metadata in sync with Unity Catalog |
 | [DataFrame Transformations](guides/transformations.md) | Use composable transformations like `apply_schema()` and `apply_func()` |
@@ -335,7 +339,7 @@ uv run kelp init project  ./my_project
 # Generate JSON schema for IDE support
 uv run kelp json-schema --output kelp_json_schema.json
 
-# Sync metadata from Databricks tables to YAML
+# Sync metadata from Unity Catalog tables to YAML
 uv run kelp sync-from-catalog "catalog.schema.table" --output models/table.yml
 
 # Validate project configuration

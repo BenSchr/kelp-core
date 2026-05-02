@@ -2,7 +2,7 @@
 name = "kelp-core"
 version = "0.0.7"
 requires-python = ">=3.12"
-description = "Metadata Toolkit for Databricks Spark and Declarative Pipelines"
+description = "Metadata Toolkit for Spark and Spark Declarative Pipelines"
 dependencies = [
     "databricks-sdk>=0.102.0",
     "jinja2>=3.1.6",

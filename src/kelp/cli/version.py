@@ -11,7 +11,7 @@ kelp_banner = """
   ██║  ██╗███████╗███████╗██║      
   ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝      
 ⌞                                 ⌟
-Metadata Toolkit for Databricks Spark and Declarative Pipelines
+Metadata Toolkit for Spark and Spark Declarative Pipelines
 """
 
 
