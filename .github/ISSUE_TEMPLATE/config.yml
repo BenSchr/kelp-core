@@ -3,7 +3,7 @@ contact_links:
   - name: Security Reporting
     about: Please report security vulnerabilities privately like described in
       SECURITY.md
-    url: https://github.com/BenSchr/kelp-core/.github/SECURITY.md
+    url: https://github.com/BenSchr/kelp-core/blob/main/.github/SECURITY.md
   - name: Question or Problem
     about: Ask a question or ask about a problem in GitHub Discussions.
     url: https://github.com/BenSchr/kelp-core/discussions/categories/q-a

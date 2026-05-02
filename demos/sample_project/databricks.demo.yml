@@ -24,7 +24,7 @@ variables:
     default: ${workspace.file_path}/src/kelp_project_etl/kelp_project.yml
   kelp_dependency:
     description: The kelp-core whl dependency path
-    default: /Volumes/workspace/default/libs/kelp_core-0.0.7-py3-none-any.whl
+    default: /Volumes/workspace/default/libs/kelp_core-0.0.8-py3-none-any.whl
 
 scripts:
   pre_deploy:

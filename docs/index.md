@@ -44,11 +44,11 @@ Kelp provides a metadata and transformation layer for Spark and Spark Declarativ
 To install Kelp, you can use `uv`, `pip`, or the package manager of your choice. Below are the commands for both methods:
 
 ```
-uv add kelp-core==0.0.7
+uv add kelp-core==0.0.8
 ```
 
 ```
-pip install kelp-core==0.0.7
+pip install kelp-core==0.0.8
 ```
 
 
