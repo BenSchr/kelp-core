@@ -11,9 +11,10 @@ from typing import Any
 
 from kelp.config.catalog_spec import CATALOG_PARSE_SPECS
 from kelp.constants import KELP_PROJECT_FILENAME, KELP_PROJECT_HEADER
-from kelp.meta import MetaFramework, MetaObjectSpec, MetaProjectSpec
 from kelp.meta.context import MetaRuntimeContext
+from kelp.meta.framework import MetaFramework
 from kelp.meta.manifest import export_manifest as _meta_export_manifest
+from kelp.meta.spec import MetaObjectSpec, MetaProjectSpec
 from kelp.models.project_config import ProjectConfig
 from kelp.utils.logging import configure_logging
 

@@ -1,6 +1,13 @@
 from typing import Annotated
 
-import typer
+from typer import Exit, Option
+
+from kelp.cli.common_params import (
+    debug_option,
+    kelp_project_path_option,
+    manifest_file_path_option,
+    target_option,
+)
 
 
 def _resolve_target(target: str | None) -> str | None:
@@ -11,36 +18,25 @@ def _resolve_target(target: str | None) -> str | None:
 
 
 def check_policies(
-    config_path: Annotated[
-        str | None,
-        typer.Option("-c", help="Path to the kelp_project.yml"),
-    ] = None,
-    target: Annotated[str | None, typer.Option(help="Environment to check against")] = None,
-    manifest_file_path: Annotated[
-        str | None,
-        typer.Option(
-            ...,
-            "-m",
-            "--manifest",
-            help="Path to manifest JSON file (skips source file loading)",
-        ),
-    ] = None,
+    kelp_project_path: kelp_project_path_option = None,
+    target: target_option = None,
+    manifest_file_path: manifest_file_path_option = None,
     severity_filter: Annotated[
         str | None,
-        typer.Option(
+        Option(
             "--severity",
             help="Only show violations at this severity level or above: 'warn' or 'error'",
         ),
     ] = None,
     fail_on: Annotated[
         str,
-        typer.Option(
+        Option(
             help="Exit with code 1 when violations of this severity are found: 'warn' or 'error'",
         ),
     ] = "error",
     fast_exit: Annotated[
         bool | None,
-        typer.Option(
+        Option(
             "--fast-exit/--no-fast-exit",
             help=(
                 "Stop policy evaluation on first violating policy per model. "
@@ -48,7 +44,7 @@ def check_policies(
             ),
         ),
     ] = None,
-    debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
+    debug: debug_option = False,
 ) -> None:
     """Check metadata governance policies for the Kelp project.
 
@@ -68,19 +64,13 @@ def check_policies(
     # Initialize context WITHOUT running policy checks (we run them manually here
     # so we can control output and exit code).
     ctx = init(
-        config_path,
+        kelp_project_path,
         resolved_target,
         manifest_file_path=manifest_file_path,
         run_policy_checks=False,
         log_level=log_level,
     )
     policy_cfg = ctx.project_settings.policy_config
-
-    if not policy_cfg.enabled:
-        print_warning(
-            "⚠ Policy checks are disabled. "
-            "Set 'policy_config.enabled: true' in kelp_project.yml to enable."
-        )
 
     models: list[Model] = ctx.catalog_index.get_all("models")
     policies: list[Policy] = ctx.catalog_index.get_all("policies") or []
@@ -101,7 +91,7 @@ def check_policies(
             min_severity = PolicySeverity(severity_filter)
         except ValueError:
             print_error(f"Invalid severity filter '{severity_filter}'. Use 'warn' or 'error'.")
-            raise typer.Exit(code=2) from None
+            raise Exit(code=2) from None
 
         if min_severity == PolicySeverity.error:
             all_violations = [v for v in all_violations if v.severity == PolicySeverity.error]
@@ -137,11 +127,11 @@ def check_policies(
         fail_severity = PolicySeverity(fail_on)
     except ValueError:
         print_error(f"Invalid --fail-on value '{fail_on}'. Use 'warn' or 'error'.")
-        raise typer.Exit(code=2) from None
+        raise Exit(code=2) from None
 
     should_fail = (fail_severity == PolicySeverity.error and error_count > 0) or (
         fail_severity == PolicySeverity.warn and (error_count + warn_count) > 0
     )
 
     if should_fail:
-        raise typer.Exit(code=1)
+        raise Exit(code=1)

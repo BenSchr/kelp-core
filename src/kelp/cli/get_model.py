@@ -1,6 +1,13 @@
 from typing import Annotated
 
-import typer
+from typer import Argument, Exit
+
+from kelp.cli.common_params import (
+    debug_option,
+    kelp_project_path_option,
+    manifest_file_path_option,
+    target_option,
+)
 
 
 def _resolve_target(target: str | None) -> str | None:
@@ -20,28 +27,12 @@ def _resolve_target(target: str | None) -> str | None:
 def get_model(
     name: Annotated[
         str,
-        typer.Argument(help="Model name to look up in the catalog"),
+        Argument(help="Model name to look up in the catalog"),
     ],
-    project_file_path: Annotated[
-        str | None,
-        typer.Option(
-            ...,
-            "-c",
-            "--config",
-            help="Path to kelp_project.yml (optional, will auto-detect if not provided)",
-        ),
-    ] = None,
-    target: Annotated[str | None, typer.Option(help="Target environment")] = None,
-    manifest_file_path: Annotated[
-        str | None,
-        typer.Option(
-            ...,
-            "-m",
-            "--manifest",
-            help="Path to manifest JSON file (skips source file loading)",
-        ),
-    ] = None,
-    debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
+    project_file_path: kelp_project_path_option = None,
+    target: target_option = None,
+    manifest_file_path: manifest_file_path_option = None,
+    debug: debug_option = False,
 ) -> None:
     """Print a model definition from the catalog as JSON."""
     from kelp.cli.output import print_error, print_message
@@ -68,6 +59,6 @@ def get_model(
         available = [m.name for m in ctx.catalog_index.get_all("models")]
         if available:
             print_message(f"  Available models: {', '.join(sorted(available))}")
-        raise typer.Exit(code=1) from None
+        raise Exit(code=1) from None
 
     print_message(model.model_dump_json(indent=2, by_alias=True, exclude_none=True))

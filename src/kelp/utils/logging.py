@@ -1,7 +1,5 @@
 import logging
 
-from kelp.config.settings import resolve_setting
-
 
 def configure_logging(level: str | None = None) -> None:
     ## Don't set basicConfig just for own namespace
@@ -10,9 +8,6 @@ def configure_logging(level: str | None = None) -> None:
 
     # Stop duplication in environments that configure root (e.g., Jupyter/IPython).
     logger.propagate = False
-
-    if not level:
-        level = resolve_setting("log_level", default=None)
 
     if level:
         mapped = logging.getLevelNamesMapping().get(level.upper())

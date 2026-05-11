@@ -1,6 +1,15 @@
 from pathlib import Path
+from typing import Annotated
 
-import typer
+from typer import Argument, Exit, Option
+
+from kelp.cli.common_params import (
+    debug_option,
+    dry_run_option,
+    kelp_project_path_option,
+    manifest_file_path_option,
+    target_option,
+)
 
 
 def _resolve_target(target: str | None) -> str | None:
@@ -19,34 +28,20 @@ def _resolve_target(target: str | None) -> str | None:
 
 
 def generate_ddl(
-    name: str = typer.Argument(
-        ..., help="Name of the table, metric view, function, or ABAC policy"
-    ),
-    project_file_path: str | None = typer.Option(
-        None,
-        "-c",
-        "--config",
-        help="Path to kelp_project.yml (optional, will auto-detect if not provided)",
-    ),
-    target: str | None = typer.Option(
-        None,
-        "--target",
-        help="Environment to use for variable resolution",
-    ),
-    manifest_file_path: str | None = typer.Option(
-        None,
-        "-m",
-        "--manifest",
-        help="Path to manifest JSON file (skips source file loading)",
-    ),
-    output_file: str | None = typer.Option(
-        None,
-        "-o",
-        "--output",
-        help="Path to output file for DDL statement (optional, defaults to stdout)",
-    ),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Preview output without writing"),
-    debug: bool = typer.Option(False, "--debug", help="Enable debug logging"),
+    name: Annotated[str, Argument(help="Name of the table, metric view, function, or ABAC policy")],
+    project_file_path: kelp_project_path_option = None,
+    target: target_option = None,
+    manifest_file_path: manifest_file_path_option = None,
+    dry_run: dry_run_option = False,
+    debug: debug_option = False,
+    output_file: Annotated[
+        str | None,
+        Option(
+            "--output",
+            "-o",
+            help="Path to output file for DDL statement (optional, defaults to stdout)",
+        ),
+    ] = None,
 ) -> None:
     """Generate CREATE DDL statement for a table, metric view, function, or ABAC policy.
 
@@ -133,7 +128,7 @@ def generate_ddl(
         ddl = ModelManager.get_spark_schema_ddl(table)
         if ddl is None:
             print_error(f"✗ Failed to generate DDL for table '{name}'")
-            raise typer.Exit(code=1)
+            raise Exit(code=1)
         print_info(f"Found table: {table.get_qualified_name()}")
         print_message(f"  Type: {table.table_type}")
         print_message(f"  Catalog: {table.catalog}")
@@ -156,4 +151,4 @@ def generate_ddl(
     print_error(
         f"✗ '{name}' not found in catalog (tables, metric views, functions, or ABAC policies)"
     )
-    raise typer.Exit(code=1)
+    raise Exit(code=1)

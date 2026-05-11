@@ -1,6 +1,12 @@
 from typing import Annotated
 
-import typer
+from typer import Option
+
+from kelp.cli.common_params import (
+    debug_option,
+    kelp_project_path_option,
+    target_option,
+)
 
 
 def _resolve_target(target: str | None) -> str | None:
@@ -18,21 +24,12 @@ def _resolve_target(target: str | None) -> str | None:
 
 
 def manifest(
-    project_file_path: Annotated[
-        str | None,
-        typer.Option(
-            ...,
-            "-c",
-            "--config",
-            help="Path to kelp_project.yml (optional, will auto-detect if not provided)",
-        ),
-    ] = None,
-    target: Annotated[str | None, typer.Option(help="Target environment")] = None,
+    project_file_path: kelp_project_path_option = None,
+    target: target_option = None,
     output: Annotated[
-        str,
-        typer.Option(..., "-o", "--output", help="Output path for the manifest JSON file"),
+        str, Option("--output", "-o", help="Output path for the manifest JSON file")
     ] = "manifest.json",
-    debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
+    debug: debug_option = False,
 ) -> None:
     """Export a kelp manifest JSON file from the current project.
 

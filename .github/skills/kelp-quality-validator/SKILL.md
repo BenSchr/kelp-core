@@ -500,7 +500,7 @@ uv run kelp validate
 
 # Verify quality section parsed
 uv run python -c "
-from kelp import init
+from kelp.config import init
 ctx = init()
 table = ctx.get_table('my_table')
 print(table.quality)

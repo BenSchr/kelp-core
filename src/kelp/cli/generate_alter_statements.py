@@ -1,6 +1,16 @@
 from pathlib import Path
+from typing import Annotated
 
-import typer
+from typer import Option
+
+from kelp.cli.common_params import (
+    dbx_profile_option,
+    debug_option,
+    dry_run_option,
+    kelp_project_path_option,
+    manifest_file_path_option,
+    target_option,
+)
 
 
 def _resolve_target(target: str | None) -> str | None:
@@ -19,46 +29,18 @@ def _resolve_target(target: str | None) -> str | None:
 
 
 def generate_alter_statements(
-    project_file_path: str | None = typer.Option(
-        None,
-        "-c",
-        "--config",
-        help="Path to kelp_project.yml (optional, will auto-detect if not provided)",
-    ),
-    target: str | None = typer.Option(
-        None,
-        "--target",
-        help="Environment to use for variable resolution",
-    ),
-    manifest_file_path: str | None = typer.Option(
-        None,
-        "-m",
-        "--manifest",
-        help="Path to manifest JSON file (skips source file loading)",
-    ),
-    profile: str | None = typer.Option(
-        None,
-        "-p",
-        "--profile",
-        help="Databricks CLI profile to use",
-    ),
-    output_file: str | None = typer.Option(
-        None,
-        "-o",
-        "--output",
-        help="Path to output file for ALTER TABLE statements (optional, defaults to stdout)",
-    ),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Preview output without writing"),
-    silent: bool = typer.Option(
-        False,
-        "--silent",
-        help="Only output ALTER TABLE statements, suppressing other logs",
-    ),
-    debug: bool = typer.Option(
-        False,
-        "--debug",
-        help="Enable debug logging (overrides --log-level)",
-    ),
+    project_file_path: kelp_project_path_option = None,
+    target: target_option = None,
+    manifest_file_path: manifest_file_path_option = None,
+    profile: dbx_profile_option = None,
+    dry_run: dry_run_option = False,
+    debug: debug_option = False,
+    output_file: Annotated[
+        str | None, Option("--output", "-o", help="Path to output file for ALTER TABLE")
+    ] = None,
+    silent: Annotated[
+        bool, Option("--silent", help="Only output ALTER TABLE statements, suppressing other logs")
+    ] = False,
 ):
     """Generate ALTER TABLE statements for tables and metric views in the catalog that are different from the Databricks catalog."""
     from kelp.catalog.api import sync_catalog

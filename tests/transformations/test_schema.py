@@ -26,7 +26,7 @@ from pyspark.sql.types import (
     VariantType,
 )
 
-from kelp import init
+from kelp.config import init
 from kelp.models.model import Column
 from kelp.transformations.schema import apply_schema
 

@@ -21,8 +21,6 @@ Invalid patterns (will not match):
 See fnmatch documentation for full glob syntax support.
 """
 
-from __future__ import annotations
-
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field

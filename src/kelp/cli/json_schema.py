@@ -2,7 +2,9 @@ import json
 from pathlib import Path
 from typing import Annotated
 
-import typer
+from typer import Option
+
+from kelp.cli.common_params import dry_run_option
 
 
 def _find_project_root() -> Path:
@@ -103,20 +105,16 @@ def _update_settings_json(vscode_dir: Path, schema_filename: str) -> None:
 def json_schema(
     output: Annotated[
         Path | None,
-        typer.Option(
+        Option(
             "--output",
             "-o",
             help="Output path for JSON schema (default: current directory)",
         ),
     ] = None,
-    dry_run: Annotated[
-        bool,
-        typer.Option(..., "--dry-run", help="Preview output without writing"),
-    ] = False,
+    dry_run: dry_run_option = False,
     vscode: Annotated[
         bool,
-        typer.Option(
-            ...,
+        Option(
             "--vscode",
             help="Create/update VS Code .vscode/settings.json with YAML schema config",
         ),

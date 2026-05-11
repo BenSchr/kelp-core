@@ -19,14 +19,14 @@ from kelp.constants import KELP_ENV_PREFIX
 logger = logging.getLogger(__name__)
 
 
-def _get_spark_session():
-    """Get active Spark session if available, else None."""
-    try:
-        from pyspark.sql import SparkSession
+# def _get_spark_session():
+#     """Get active Spark session if available, else None."""
+#     try:
+#         from pyspark.sql import SparkSession
 
-        return SparkSession.getActiveSession()
-    except Exception:  # noqa: BLE001
-        return None
+#         return SparkSession.getActiveSession()
+#     except Exception:
+#         return None
 
 
 class SourceResolver:
@@ -59,27 +59,27 @@ class EnvSource(SourceResolver):
         return value if value is not None else default
 
 
-class SparkSource(SourceResolver):
-    """Spark configuration (auto-detected, optional)."""
+# class SparkSource(SourceResolver):
+#     """Spark configuration (auto-detected, optional)."""
 
-    def __init__(self):
-        self.spark = _get_spark_session()
+#     def __init__(self):
+#         self.spark = _get_spark_session()
 
-    def is_available(self) -> bool:
-        """Check if Spark is available and active."""
-        return self.spark is not None
+#     def is_available(self) -> bool:
+#         """Check if Spark is available and active."""
+#         return self.spark is not None
 
-    def resolve(self, key: str, default: Any = None) -> Any:
-        if not self.is_available():
-            return default
+#     def resolve(self, key: str, default: Any = None) -> Any:
+#         if not self.is_available():
+#             return default
 
-        try:
-            # Try to get from Spark conf
-            value = self.spark.conf.get(f"kelp.{key}")
-            return value if value is not None else default
-        except Exception as e:  # noqa: BLE001
-            logger.debug("Failed to resolve from Spark conf for key '%s': %s", key, e)
-            return default
+#         try:
+#             # Try to get from Spark conf
+#             value = self.spark.conf.get(f"kelp.{key}")
+#             return value if value is not None else default
+#         except Exception as e:
+#             logger.debug("Failed to resolve from Spark conf for key '%s': %s", key, e)
+#             return default
 
 
 class TargetSource(SourceResolver):
@@ -173,7 +173,7 @@ def create_settings_resolver(
     """
     sources: list[SourceResolver] = [
         InitSource(init_settings or {}),
-        SparkSource(),  # Auto-detects Spark
+        #   SparkSource(),  # Auto-detects Spark
         EnvSource(prefix=env_prefix),
         TargetSource(target_settings or {}),
         DefaultSource(default_settings or {}),

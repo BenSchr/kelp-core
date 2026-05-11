@@ -276,7 +276,7 @@ checks over complete violation reporting.
 When `policy_config.enabled: true`, checks run every time `init()` is called:
 
 ```python
-from kelp import init
+from kelp.config import init
 
 ctx = init()  # Policy checks run here if enabled
 ```

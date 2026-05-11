@@ -1,38 +1,45 @@
-from pathlib import Path
+from typing import Annotated
 
-import typer
-import yaml
+from typer import Argument, Option
+
+from kelp.cli.common_params import (
+    dbx_profile_option,
+    dry_run_option,
+)
 
 
 def sync_from_catalog(
-    table_path: str = typer.Argument(
-        ...,
-        help="Fully qualified table name, e.g. database.schema.table",
-    ),
-    profile: str | None = typer.Option(
-        None,
-        "-p",
-        "--profile",
-        help="Databricks CLI profile to use",
-    ),
-    include_properties: bool = typer.Option(
-        False,
-        "--include-properties",
-        help="Include all table properties in the output YAML (use with caution, may include many properties)",
-    ),
-    output_file: str | None = typer.Option(
-        None,
-        "-o",
-        "--output",
-        help="Path to output file for YAML (optional)",
-    ),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Preview output without writing"),
+    table_path: Annotated[
+        str, Argument(help="Fully qualified table name, e.g. database.schema.table")
+    ],
+    profile: dbx_profile_option = None,
+    include_properties: Annotated[
+        bool,
+        Option(
+            "--include-properties",
+            help="Include all table properties in the output YAML (use with caution, may include many properties)",
+        ),
+    ] = False,
+    output_file: Annotated[
+        str | None,
+        Option(
+            "--output",
+            "-o",
+            help="Path to output file for YAML (optional)",
+        ),
+    ] = None,
+    dry_run: dry_run_option = False,
 ) -> None:
     """Sync specified table metadata from the Databricks catalog to a YAML model definition.
 
     Fetches table metadata from Databricks and outputs a sample YAML model
     definition suitable for including in a project's kelp_models.
     """
+
+    from pathlib import Path
+
+    import yaml
+
     from kelp.cli.output import print_message, print_success, print_warning
     from kelp.service.yaml_manager import YamlManager
     from kelp.utils.databricks import get_table_from_dbx_sdk

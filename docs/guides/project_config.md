@@ -21,7 +21,7 @@ my_project/
 Kelp auto-discovers `kelp_project.yml` by searching up to 3 levels in your directory hierarchy. You can also specify the path explicitly:
 
 ```python
-from kelp import init
+from kelp.config import init
 
 ctx = init("./custom/path/kelp_project.yml")
 ```
@@ -242,7 +242,7 @@ targets:
 Specify target when initializing:
 
 ```python
-from kelp import init
+from kelp.config import init
 
 # Use dev environment
 ctx = init(target="dev")
@@ -574,7 +574,7 @@ targets:
 ### Python API
 
 ```python
-from kelp import init, get_context
+from kelp.config import init, get_context
 
 # Auto-discover and load with dev target
 ctx = init(target="dev")

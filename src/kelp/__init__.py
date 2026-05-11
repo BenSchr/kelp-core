@@ -9,14 +9,14 @@ We re-export a thin public API from :mod:`kelp.api` which delegates to
 internal runtime implementations.
 """
 
-from kelp import catalog, meta, tables, transformations
-from kelp.config import get_context, init
+# from kelp import catalog, meta, tables, transformations
+# from kelp.config import get_context, init
 
-__all__ = [
-    "catalog",
-    "get_context",
-    "init",
-    "meta",
-    "tables",
-    "transformations",
-]
+# __all__ = [
+#     "catalog",
+#     "get_context",
+#     "init",
+#     "meta",
+#     "tables",
+#     "transformations",
+# ]

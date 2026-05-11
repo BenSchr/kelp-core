@@ -1,7 +1,16 @@
 from pathlib import Path
 from typing import Annotated
 
-import typer
+from typer import Exit, Option
+
+from kelp.cli.common_params import (
+    dbx_profile_option,
+    debug_option,
+    dry_run_option,
+    kelp_project_path_option,
+    manifest_file_path_option,
+    target_option,
+)
 
 
 def _resolve_target(target: str | None) -> str | None:
@@ -22,32 +31,17 @@ def _resolve_target(target: str | None) -> str | None:
 def sync_local_catalog(
     name: Annotated[
         str | None,
-        typer.Argument(help="Table or metric view name/FQN to sync"),
+        Option(help="Table or metric view name/FQN to sync"),
     ] = None,
-    config_path: Annotated[
-        str | None,
-        typer.Option("-c", help="Path to the kelp_project.yml"),
-    ] = None,
-    target: Annotated[str | None, typer.Option(help="Environment to sync against")] = None,
-    manifest_file_path: Annotated[
-        str | None,
-        typer.Option(
-            ...,
-            "-m",
-            "--manifest",
-            help="Path to manifest JSON file (skips source file loading)",
-        ),
-    ] = None,
-    profile: Annotated[str | None, typer.Option("-p", help="Databricks CLI profile to use")] = None,
+    project_file_path: kelp_project_path_option = None,
+    target: target_option = None,
+    manifest_file_path: manifest_file_path_option = None,
+    profile: dbx_profile_option = None,
     output_file: Annotated[
-        str | None,
-        typer.Option("-o", "--output", help="Path to output file for sync log"),
+        str | None, Option("--output", "-o", help="Path to output file for sync log")
     ] = None,
-    dry_run: Annotated[
-        bool,
-        typer.Option("--dry-run", help="Preview changes without writing"),
-    ] = False,
-    debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
+    dry_run: dry_run_option = False,
+    debug: debug_option = False,
 ) -> None:
     """Update local YAML files from remote Unity Catalog tables and metric views.
 
@@ -66,7 +60,12 @@ def sync_local_catalog(
 
     log_level = "DEBUG" if debug else None
     resolved_target = _resolve_target(target)
-    init(config_path, resolved_target, manifest_file_path=manifest_file_path, log_level=log_level)
+    init(
+        project_file_path,
+        resolved_target,
+        manifest_file_path=manifest_file_path,
+        log_level=log_level,
+    )
     ctx = get_context()
 
     project_config: ProjectConfig = ctx.project_settings
@@ -96,7 +95,7 @@ def sync_local_catalog(
 
         if not tables and not metric_views:
             print_error(f"✗ '{name}' not found in local catalog (tables or metric views)")
-            raise typer.Exit(code=1)
+            raise Exit(code=1)
     else:
         tables = ctx.catalog_index.get_all("models")
         metric_views = ctx.catalog_index.get_all("metric_views")
@@ -159,7 +158,7 @@ def sync_local_catalog(
 
     if metric_views and not metric_path_config:
         _log("✗ metrics_path is not configured in kelp_project.yml", err=True)
-        raise typer.Exit(code=1)
+        raise Exit(code=1)
 
     # Sync metric views
     for metric_view in metric_views:

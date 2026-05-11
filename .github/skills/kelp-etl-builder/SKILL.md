@@ -211,7 +211,7 @@ df = spark.readStream.format("cloudFiles").options(**options).load(path)
 
 **Initialization (usually not needed in SDP, auto-discovered):**
 ```python
-from kelp import init, get_context
+from kelp.config import init, get_context
 
 ctx = init()  # Auto-discover kelp_project.yml
 ctx = init(target="prod")  # Load prod target variables

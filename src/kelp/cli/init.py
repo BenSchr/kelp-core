@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Annotated
 
-import typer
+from typer import Argument, Exit
 
 
 def _write_file(path: Path, content: str) -> None:
@@ -32,7 +32,7 @@ def _init_project_file(project_root: Path) -> Path:
     project_file = project_root / KELP_PROJECT_FILENAME
     if project_file.exists():
         print_error(f"✗ {project_file} already exists. Remove it or choose another path.")
-        raise typer.Exit(code=1)
+        raise Exit(code=1)
 
     project_content = """\
 kelp_project:
@@ -100,7 +100,7 @@ def _init_metadata_dirs(project_root: Path) -> list[Path]:
 def init(
     project_root: Annotated[
         str,
-        typer.Argument(
+        Argument(
             help="Project directory to initialize (defaults to current working directory).",
         ),
     ] = ".",

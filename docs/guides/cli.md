@@ -23,7 +23,7 @@ kelp --help
 Display the current version of Kelp.
 
 ```bash
-uv run kelp version
+kelp version
 ```
 
 Returns the Kelp banner and version information.
@@ -33,17 +33,22 @@ Returns the Kelp banner and version information.
 Validate your Kelp project configuration and catalog.
 
 ```bash
-uv run kelp validate \
+kelp validate \
   --config kelp_project.yml \
   --target prod \
   --debug
 ```
 
+
 **Options:**
 
-- `-c, --config` - Path to the `kelp_project.yml` file (optional, auto-discovers if not provided)
-- `--target` - Environment to validate against (e.g., `dev`, `prod`)
-- `--debug` - Enable debug logging
+```
+  -c, --config TEXT    Path to kelp_project.yml (optional, will auto-detect if
+                        not provided)
+  -t, --target TEXT    Target to use for variable resolution
+  -m, --manifest TEXT  Path to manifest JSON file (skips source file loading)
+  --debug              Enable debug logging
+```
 
 **Output:**
 
@@ -64,49 +69,74 @@ Relative metrics path: ./kelp_metadata/metrics
 Metric views found: 3
 ```
 
+### `kelp manifest`
+
+Generate a manifest JSON file for validation without loading source files.
+
+```bash
+kelp manifest \
+  --config kelp_project.yml \
+  --target prod \
+  --output manifest.json
+```
+
+**Options:**
+
+```
+  -c, --config TEXT  Path to kelp_project.yml (optional, will auto-detect if
+                     not provided)
+  -t, --target TEXT  Target to use for variable resolution
+  -o, --output TEXT  Output path for the manifest JSON file  [default:
+                     manifest.json]
+  --debug            Enable debug logging
+```
+
 ### `kelp json-schema`
 
 Generate a JSON schema for `kelp_project.yml` configuration validation.
 
 ```bash
-uv run kelp json-schema \
+kelp json-schema \
   --output kelp_json_schema.json \
-  --dry-run \
   --vscode
 ```
 
 **Options:**
 
-- `-o, --output` - Output path for the JSON schema file (default: `kelp_json_schema.json`)
-- `--dry-run` - Preview output without writing to file
-- `--vscode` - Create/update VS Code `.vscode/settings.json` with YAML schema configuration
+```
+  -o, --output PATH  Output path for JSON schema (default: current directory)
+  --dry-run          Preview output without writing
+  --vscode           Create/update VS Code .vscode/settings.json with YAML
+                      schema config
+```
 
 ### `kelp check-policies`
 
 Evaluate metadata governance policies against your local table catalog.
 
 ```bash
-uv run kelp check-policies \
+kelp check-policies \
   --config kelp_project.yml \
   --target prod
 ```
 
 **Options:**
 
-- `-c, --config` - Path to the `kelp_project.yml` file (optional, auto-discovers if not provided)
-- `--target` - Environment to check against (e.g., `dev`, `prod`)
-- `--severity` - Only display violations at this severity or above: `warn` or `error` (default: all)
-- `--fail-on` - Exit with code 1 when violations of this severity are found: `warn` or `error` (default: `error`)
-- `--fast-exit/--no-fast-exit` - Stop policy evaluation on first violating policy per model (defaults to `policy_config.fast_exit` when not provided)
-- `--debug` - Enable debug logging
-
-> **Note:** Policies must be enabled in your project settings for this command to run checks.
-> Set `policy_config.enabled: true` in `kelp_project.yml`.
-
-**Output when policies are disabled:**
-
 ```
-⚠ Policy checks are disabled. Set 'policy_config.enabled: true' in kelp_project.yml to enable.
+  -c, --config TEXT             Path to kelp_project.yml (optional, will auto-
+                                detect if not provided)
+  -t, --target TEXT             Target to use for variable resolution
+  -m, --manifest TEXT           Path to manifest JSON file (skips source file
+                                loading)
+  --severity TEXT               Only show violations at this severity level or
+                                above: 'warn' or 'error'
+  --fail-on TEXT                Exit with code 1 when violations of this
+                                severity are found: 'warn' or 'error'
+                                [default: error]
+  --fast-exit / --no-fast-exit  Stop policy evaluation on first violating
+                                policy per model. Defaults to
+                                policy_config.fast_exit when not provided.
+  --debug                       Enable debug logging
 ```
 
 **Output with violations:**
@@ -115,36 +145,20 @@ uv run kelp check-policies \
 ⚠ [WARN]  catalog.schema.bronze_customers — Table 'catalog.schema.bronze_customers' is missing a description.
 ✗ [ERROR] catalog.schema.silver_orders.order_id — Column 'order_id' in table '...' is missing a description.
 
-Policy check complete: 1 error(s), 1 warning(s) across 15 table(s).
+Policy check complete: 1 error(s), 1 warning(s) across 15 models(s).
 ```
 
 **Output when all checks pass:**
 
 ```
-✓ Policy check complete: no violations found (15 table(s) checked).
+✓ Policy check complete: no violations found (15 models(s) checked).
 ```
 
 **Use in CI/CD:**
 
 ```bash
 # Fail the pipeline on any policy error
-uv run kelp check-policies --target prod --fail-on error
-```
-
-**Options:**
-
-- `-o, --output` - Output path for the JSON schema file (default: `kelp_json_schema.json`)
-- `--dry-run` - Preview output without writing to file
-
-**Use Case:**
-
-Import the generated JSON schema into your IDE for YAML validation and autocomplete:
-
-```yaml
-# yaml-language-server: $schema=./kelp_json_schema.json
-kelp_project:
-  models_path: "./kelp_metadata/models"
-  # ... rest of configuration ...
+kelp check-policies --target prod --fail-on error
 ```
 
 ### `kelp sync-from-catalog`
@@ -152,23 +166,26 @@ kelp_project:
 Fetch table metadata from Databricks Unity Catalog and generate a YAML model definition.
 
 ```bash
-uv run kelp sync-from-catalog \
+kelp sync-from-catalog \
   "analytics_prod.core.customers" \
   --profile my-profile \
   --output customers.yml \
-  --dry-run
 ```
 
 **Arguments:**
-
-- `table_path` - Fully qualified table name (required), e.g., `catalog.schema.table`
+```
+  TABLE_PATH  Fully qualified table name, e.g. database.schema.table
+              [required]
+```
 
 **Options:**
-
-- `-p, --profile` - Databricks CLI profile to use
-- `--include-properties` - Include all table properties in the output YAML (use with caution, may include many properties)
-- `-o, --output` - Path to output YAML file (optional - prints to stdout if not provided)
-- `--dry-run` - Preview output without writing
+```
+  -p, --profile TEXT    Databricks CLI profile to use
+  --include-properties  Include all table properties in the output YAML (use
+                        with caution, may include many properties)
+  -o, --output TEXT     Path to output file for YAML (optional)
+  --dry-run             Preview output without writing
+```
 
 **Output:**
 
@@ -195,7 +212,7 @@ kelp_models:
 Fetch table definitions from a Databricks Spark Declarative Pipeline.
 
 ```bash
-uv run kelp sync-from-pipeline \
+kelp sync-from-pipeline \
   --id abc123def456 \
   --config kelp_project.yml \
   --target prod \
@@ -204,14 +221,18 @@ uv run kelp sync-from-pipeline \
 ```
 
 **Options:**
-
-- `--id` - Databricks pipeline ID to sync from (optional if auto-detected from config)
-- `-c, --config` - Path to `kelp_project.yml` (auto-detects if not provided)
-- `--target` - Environment for variable resolution
-- `-p, --profile` - Databricks CLI profile
-- `-o, --output` - Path to output sync report log
-- `--dry-run` - Preview changes without writing
-- `--debug` - Enable debug logging
+```
+  --id TEXT            Databricks pipeline ID (optional, will auto-detect if
+                       not provided)
+  -c, --config TEXT    Path to kelp_project.yml (optional, will auto-detect if
+                       not provided)
+  -t, --target TEXT    Target to use for variable resolution
+  -m, --manifest TEXT  Path to manifest JSON file (skips source file loading)
+  -p, --profile TEXT   Databricks CLI profile to use
+  -o, --output TEXT    Path to output file for sync log
+  --dry-run            Preview output without writing
+  --debug              Enable debug logging
+```
 
 **Output:**
 
@@ -235,7 +256,7 @@ Fetched 3 tables from pipeline abc123def456
 Sync local YAML files with remote Unity Catalog tables and metric views.
 
 ```bash
-uv run kelp sync-local-catalog \
+kelp sync-local-catalog \
   --config kelp_project.yml \
   --target prod \
   --profile my-profile \
@@ -246,24 +267,24 @@ uv run kelp sync-local-catalog \
 Sync a specific object by name:
 
 ```bash
-uv run kelp sync-local-catalog \
+kelp sync-local-catalog \
   "customers" \
   --config kelp_project.yml \
   --target prod
 ```
 
-**Arguments:**
-
-- `[name]` - Optional table or metric view name/FQN to sync (optional - syncs all if not provided)
-
 **Options:**
-
-- `-c, --config` - Path to `kelp_project.yml`
-- `--target` - Environment to sync against
-- `-p, --profile` - Databricks CLI profile
-- `-o, --output` - Path to output sync log file
-- `--dry-run` - Preview changes without writing
-- `--debug` - Enable debug logging
+```
+  --name TEXT          Table or metric view name/FQN to sync
+  -c, --config TEXT    Path to kelp_project.yml (optional, will auto-detect if
+                       not provided)
+  -t, --target TEXT    Target to use for variable resolution
+  -m, --manifest TEXT  Path to manifest JSON file (skips source file loading)
+  -p, --profile TEXT   Databricks CLI profile to use
+  -o, --output TEXT    Path to output file for sync log
+  --dry-run            Preview output without writing
+  --debug              Enable debug logging
+```
 
 **Output:**
 
@@ -291,7 +312,7 @@ Dry-run report:
 Generate DDL (Data Definition Language) CREATE TABLE statements from metadata.
 
 ```bash
-uv run kelp generate-ddl \
+kelp generate-ddl \
   --config kelp_project.yml \
   --target prod \
   --output create_tables.sql \
@@ -299,12 +320,16 @@ uv run kelp generate-ddl \
 ```
 
 **Options:**
-
-- `-c, --config` - Path to `kelp_project.yml` (auto-detects if not provided)
-- `--target` - Environment for variable resolution
-- `-o, --output` - Path to output SQL file (optional - prints to stdout if not provided)
-- `--dry-run` - Preview output without writing
-- `--debug` - Enable debug logging
+```
+  -c, --config TEXT    Path to kelp_project.yml (optional, will auto-detect if
+                       not provided)
+  -t, --target TEXT    Target to use for variable resolution
+  -m, --manifest TEXT  Path to manifest JSON file (skips source file loading)
+  --dry-run            Preview output without writing
+  --debug              Enable debug logging
+  -o, --output TEXT    Path to output file for DDL statement (optional,
+                       defaults to stdout)
+```
 
 **Output:**
 
@@ -326,7 +351,7 @@ TBLPROPERTIES ('domain' = 'customers', 'stage' = 'bronze');
 Generate ALTER TABLE statements to sync existing tables with metadata changes.
 
 ```bash
-uv run kelp generate-alter-statements \
+kelp generate-alter-statements \
   --config kelp_project.yml \
   --target prod \
   --profile my-profile \
@@ -335,14 +360,18 @@ uv run kelp generate-alter-statements \
 ```
 
 **Options:**
-
-- `-c, --config` - Path to `kelp_project.yml` (auto-detects if not provided)
-- `--target` - Environment for variable resolution
-- `-p, --profile` - Databricks CLI profile for table introspection
-- `-o, --output` - Path to output SQL file (optional - prints to stdout if not provided)
-- `--dry-run` - Preview output without writing
-- `--silent` - Only output ALTER TABLE statements, suppressing other logs
-- `--debug` - Enable debug logging
+```
+  -c, --config TEXT    Path to kelp_project.yml (optional, will auto-detect if
+                       not provided)
+  -t, --target TEXT    Target to use for variable resolution
+  -m, --manifest TEXT  Path to manifest JSON file (skips source file loading)
+  -p, --profile TEXT   Databricks CLI profile to use
+  --dry-run            Preview output without writing
+  --debug              Enable debug logging
+  -o, --output TEXT    Path to output file for ALTER TABLE
+  --silent             Only output ALTER TABLE statements, suppressing other
+                       logs
+```
 
 **Output:**
 
@@ -364,7 +393,7 @@ ALTER TABLE kelp_catalog.kelp_bronze.bronze_customers
 Initialize a new Kelp project with default structure and configuration.
 
 ```bash
-uv run kelp init .
+kelp init .
 ```
 
 **Creates:**
@@ -385,7 +414,14 @@ Path to the `kelp_project.yml` file (overrides auto-discovery):
 
 ```bash
 export KELP_PROJECT_FILE="./custom_config.yml"
-uv run kelp validate
+kelp validate
+```
+
+### `KELP_MANIFEST_FILE`
+Path to a manifest JSON file for validation (skips source file loading):
+```bash
+export KELP_MANIFEST_FILE="./manifest.json"
+kelp validate
 ```
 
 ### `KELP_TARGET`
@@ -394,7 +430,7 @@ Default environment target:
 
 ```bash
 export KELP_TARGET="prod"
-uv run kelp validate  # Uses "prod" if not overridden by --target
+kelp validate  # Uses "prod" if not overridden by --target
 ```
 
 ### `KELP_PROFILE`
@@ -403,8 +439,10 @@ Default Databricks CLI profile:
 
 ```bash
 export KELP_PROFILE="my-workspace"
-uv run kelp sync-from-catalog "analytics.core.customers"
+kelp sync-from-catalog "analytics.core.customers"
 ```
+
+
 
 ## Common Workflows
 
@@ -412,57 +450,57 @@ uv run kelp sync-from-catalog "analytics.core.customers"
 
 ```bash
 # Create project structure
-uv run kelp init project --path ./my_project --catalog my_catalog
+kelp init project --path ./my_project --catalog my_catalog
 
 # Generate JSON schema for IDE support
 cd my_project
-uv run kelp json-schema
+kelp json-schema
 
 # Validate configuration
-uv run kelp validate
+kelp validate
 ```
 
 ### Import Existing Table Metadata
 
 ```bash
 # Fetch from Databricks and generate YAML
-uv run kelp sync-from-catalog \
+kelp sync-from-catalog \
   "analytics_prod.core.customers" \
   -p my-profile \
   -o kelp_metadata/models/customers.yml
 
 # Validate the generated file
-uv run kelp validate
+kelp validate
 ```
 
 ### Validate Before Deployment
 
 ```bash
 # Validate development environment
-uv run kelp validate --target dev
+kelp validate --target dev
 
 # Validate production environment
-uv run kelp validate --target prod
+kelp validate --target prod
 ```
 
 ### Sync All Changes from Catalog
 
 ```bash
 # Preview changes
-uv run kelp sync-local-catalog --target prod --dry-run
+kelp sync-local-catalog --target prod --dry-run
 
 # Apply changes
-uv run kelp sync-local-catalog --target prod --output sync_summary.log
+kelp sync-local-catalog --target prod --output sync_summary.log
 ```
 
 ### Sync Specific Objects
 
 ```bash
 # Sync a single table
-uv run kelp sync-local-catalog "customers" --target prod
+kelp sync-local-catalog "customers" --target prod
 
 # Sync a metric view
-uv run kelp sync-local-catalog "analytics.metrics.customer_agg" --target prod
+kelp sync-local-catalog "analytics.metrics.customer_agg" --target prod
 ```
 
 ## Error Handling

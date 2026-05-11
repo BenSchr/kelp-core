@@ -4,12 +4,13 @@ def main() -> None:
     Lazily imports all commands to optimize startup time. Commands are loaded
     only when the user invokes them or requests help.
     """
-    import typer
+    from typer import Typer
 
-    app = typer.Typer(
+    app = Typer(
         name="kelp",
         help="🌿 Kelp - Metadata Toolkit for Databricks Spark and Declarative Pipelines",
         no_args_is_help=True,
+        rich_markup_mode=None,
     )
 
     # Lazy import and register commands

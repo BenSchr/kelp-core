@@ -2,9 +2,13 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from kelp.models import AbacPolicy, KelpFunction, MetricView, Policy, Source
+from kelp.models.abac import AbacPolicy
+from kelp.models.function import KelpFunction
+from kelp.models.metric_view import MetricView
 from kelp.models.model import Model
+from kelp.models.policy_definition import Policy
 from kelp.models.project_config import ProjectConfig
+from kelp.models.source import Source
 
 
 class JsonSchemaModel(BaseModel):

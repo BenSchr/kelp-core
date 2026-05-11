@@ -1,7 +1,17 @@
 import logging
 from pathlib import Path
+from typing import Annotated
 
-import typer
+from typer import Exit, Option
+
+from kelp.cli.common_params import (
+    dbx_profile_option,
+    debug_option,
+    dry_run_option,
+    kelp_project_path_option,
+    manifest_file_path_option,
+    target_option,
+)
 
 
 def _resolve_target(target: str | None) -> str | None:
@@ -20,42 +30,19 @@ def _resolve_target(target: str | None) -> str | None:
 
 
 def sync_from_pipeline(
-    pipeline_id: str = typer.Option(None, "--id", help="Databricks pipeline ID"),
-    project_file_path: str | None = typer.Option(
-        None,
-        "-c",
-        "--config",
-        help="Path to kelp_project.yml (optional, will auto-detect if not provided)",
-    ),
-    target: str | None = typer.Option(
-        None,
-        "--target",
-        help="Environment to use for variable resolution",
-    ),
-    manifest_file_path: str | None = typer.Option(
-        None,
-        "-m",
-        "--manifest",
-        help="Path to manifest JSON file (skips source file loading)",
-    ),
-    profile: str | None = typer.Option(
-        None,
-        "-p",
-        "--profile",
-        help="Databricks CLI profile to use, overrides DATABRICKS_CLI_PROFILE environment variable (defaults to 'DEFAULT' profile if not set)",
-    ),
-    output_file: str | None = typer.Option(
-        None,
-        "-o",
-        "--output",
-        help="Path to output file for sync log",
-    ),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Preview changes without writing"),
-    debug: bool = typer.Option(
-        False,
-        "--debug",
-        help="Enable debug logging (overrides --log-level)",
-    ),
+    pipeline_id: Annotated[
+        str | None,
+        Option("--id", help="Databricks pipeline ID (optional, will auto-detect if not provided)"),
+    ] = None,
+    project_file_path: kelp_project_path_option = None,
+    target: target_option = None,
+    manifest_file_path: manifest_file_path_option = None,
+    profile: dbx_profile_option = None,
+    output_file: Annotated[
+        str | None, Option("--output", "-o", help="Path to output file for sync log")
+    ] = None,
+    dry_run: dry_run_option = False,
+    debug: debug_option = False,
 ) -> None:
     """Sync table metadata from a Databricks pipeline to local YAML files.
 
@@ -99,7 +86,7 @@ def sync_from_pipeline(
                 "No pipeline ID provided and auto-detection failed for target '%s'",
                 resolved_target,
             )
-            raise typer.Exit(1)
+            raise Exit(1)
 
         # If no target was originally resolved, use the detected target and reinit
         if not resolved_target:
@@ -143,7 +130,7 @@ def sync_from_pipeline(
 
     if not tables:
         logger.warning("No tables found in pipeline.")
-        raise typer.Exit(1)
+        raise Exit(1)
 
     # Compare with catalog and sync
     catalog_index = ctx.catalog_index.get_index("models")
@@ -252,7 +239,7 @@ def sync_from_pipeline(
         _log(f"\n{len(errors)} errors occurred:", err=True)
         for error in errors:
             _log(f"  - {error}", err=True)
-        raise typer.Exit(1)
+        raise Exit(1)
 
     if output_file:
         with Path(output_file).open("w") as f:

@@ -1,6 +1,11 @@
-from typing import Annotated
+from typer import Exit
 
-import typer
+from kelp.cli.common_params import (
+    debug_option,
+    kelp_project_path_option,
+    manifest_file_path_option,
+    target_option,
+)
 
 
 def _resolve_target(target: str | None) -> str | None:
@@ -19,21 +24,10 @@ def _resolve_target(target: str | None) -> str | None:
 
 
 def validate(
-    config_path: Annotated[
-        str | None,
-        typer.Option("-c", help="Path to the kelp_project.yml"),
-    ] = None,
-    target: Annotated[str | None, typer.Option(help="Environment to validate against")] = None,
-    manifest_file_path: Annotated[
-        str | None,
-        typer.Option(
-            ...,
-            "-m",
-            "--manifest",
-            help="Path to manifest JSON file (skips source file loading)",
-        ),
-    ] = None,
-    debug: Annotated[bool, typer.Option(help="Debug mode")] = False,
+    project_file_path: kelp_project_path_option = None,
+    target: target_option = None,
+    manifest_file_path: manifest_file_path_option = None,
+    debug: debug_option = False,
 ) -> None:
     """Validate the Kelp project configuration and catalog."""
 
@@ -45,14 +39,17 @@ def validate(
     resolved_target = _resolve_target(target)
 
     run_ctx = init(
-        config_path, resolved_target, manifest_file_path=manifest_file_path, log_level=log_level
+        project_file_path,
+        resolved_target,
+        manifest_file_path=manifest_file_path,
+        log_level=log_level,
     )
     validated = bool(run_ctx)
     if validated:
         print_success("✓ Configuration is valid!")
     else:
         print_error("✗ Configuration is invalid!")
-        raise typer.Exit(code=1)
+        raise Exit(code=1)
 
     project_config = run_ctx.project_settings
 
