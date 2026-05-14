@@ -1,6 +1,8 @@
 [project]
 name = "kelp-core"
-version = "0.0.8"
+version = "0.0.9"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 description = "Metadata Toolkit for Spark and Spark Declarative Pipelines"
 dependencies = [
