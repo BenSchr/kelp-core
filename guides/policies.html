@@ -2469,7 +2469,7 @@ checks over complete violation reporting.</p>
 <h2 id="running-policy-checks">Running Policy Checks<a class="headerlink" href="#running-policy-checks" title="Permanent link">&para;</a></h2>
 <h3 id="automatic-on-init">Automatic (on <code>init</code>)<a class="headerlink" href="#automatic-on-init" title="Permanent link">&para;</a></h3>
 <p>When <code>policy_config.enabled: true</code>, checks run every time <code>init()</code> is called:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">kelp</span><span class="w"> </span><span class="kn">import</span> <span class="n">init</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">kelp.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">init</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">()</span>  <span class="c1"># Policy checks run here if enabled</span>
 </span></code></pre></div>
