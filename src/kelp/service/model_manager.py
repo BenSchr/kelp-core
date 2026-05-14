@@ -15,6 +15,7 @@ from kelp.models.model import (
     PrimaryKeyConstraint,
     SDPQuality,
 )
+from kelp.models.model_config import ModelConfig
 from kelp.models.project_config import ProjectConfig
 
 
@@ -39,6 +40,7 @@ class KelpModel:
     quarantine_table: str | None = None
     target_table: str | None = None
     root_model: Model | None = None
+    config: ModelConfig | None = None
 
     def get_dqx_check_obj(self) -> DQXQuality | None:
         if self.root_model and isinstance(self.root_model.quality, DQXQuality):
@@ -56,6 +58,50 @@ class KelpModel:
             if self.root_model
             else None
         )
+
+    def build_ddl(self, if_not_exists: bool = True) -> str | None:
+        """Build a CREATE TABLE DDL statement directly from this model's properties.
+
+        Unlike :meth:`get_ddl`, this does not require ``root_model`` — it uses
+        ``schema``, ``fqn``, ``table_type``, ``table_properties``,
+        ``cluster_by``, ``partition_cols``, ``path``, and ``comment``
+        directly from the dataclass fields.
+
+        Args:
+            if_not_exists: Emit ``IF NOT EXISTS`` in the statement.
+
+        Returns:
+            DDL string, or ``None`` when ``schema`` is not set.
+        """
+        if not self.schema:
+            return None
+
+        mapped_type = _UC_TYPE.get(self.table_type.lower(), "TABLE") if self.table_type else "TABLE"
+        target = self.fqn or self.name
+
+        ddl = f"CREATE {mapped_type} "
+        if if_not_exists:
+            ddl += "IF NOT EXISTS "
+        ddl += f"{target} (\n{self.schema}\n)"
+
+        if self.config.table_format:
+            ddl += f"\nUSING {self.config.table_format.upper()}"
+
+        if self.comment:
+            ddl += f"\nCOMMENT '{self.comment}'"
+        if self.path:
+            ddl += f"\nLOCATION '{self.path}'"
+        if self.cluster_by_auto:
+            ddl += "\nCLUSTERED BY (AUTO)"
+        elif self.cluster_by:
+            ddl += f"\nCLUSTERED BY ({', '.join(self.cluster_by)})"
+        elif self.partition_cols:
+            ddl += f"\nPARTITIONED BY ({', '.join(self.partition_cols)})"
+        if self.table_properties:
+            props = ", ".join(f"'{k}'='{v}'" for k, v in self.table_properties.items())
+            ddl += f"\nTBLPROPERTIES ({props})"
+
+        return ddl
 
 
 @dataclass
@@ -329,6 +375,8 @@ class ModelManager:
 
         if model.quality and isinstance(model.quality, DQXQuality):
             kelp_model.dqx_checks = model.quality.checks
+
+        kelp_model.config = model.config
 
         return kelp_model
 

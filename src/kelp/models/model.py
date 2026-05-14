@@ -7,6 +7,8 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.json_schema import SkipJsonSchema
 
+from kelp.models.model_config import ModelConfig
+
 
 class TableType(Enum):
     EXTERNAL = "external"
@@ -134,6 +136,10 @@ class Model(BaseModel):
         default=None,
         discriminator="engine",
         description="Data quality configuration using SDPQuality or DQXQuality",
+    )
+    config: ModelConfig | None = Field(
+        default=None,
+        description="Configuration controlling how the model is materialized.",
     )
     constraints: list[PrimaryKeyConstraint | ForeignKeyConstraint] = Field(
         default_factory=list,

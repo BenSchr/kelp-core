@@ -30,6 +30,7 @@ dev = [
     "pyspark[pipelines]>=4.1",
     "faker>=40.4.0",
     "prek>=0.3.11",
+    "delta-spark>=4.2.0",
 ]
 
 test=[
