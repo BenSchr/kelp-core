@@ -111,12 +111,17 @@ class TableDiffCalculator:
         local_keys = set(local.keys()) if local else set()
         remote_keys = set(remote.keys()) if remote else set()
 
+        creates: dict[str, str] = {}
         updates: dict[str, str] = {}
         deletes: list[str] = []
 
         for key in local_keys:
             if mode == "managed" and not self._in_scope(key, managed):
                 continue
+
+            # Mostly relevant for tags on view columns other types handle creates as updates
+            if key not in remote_keys:
+                creates[key] = local[key]
             if key not in remote_keys or local[key] != remote[key]:
                 updates[key] = local[key]
 
@@ -129,7 +134,7 @@ class TableDiffCalculator:
                 [key for key in remote_keys - local_keys if self._in_scope(key, managed)],
             )
 
-        return DictDiff(updates=updates, deletes=deletes)
+        return DictDiff(creates=creates, updates=updates, deletes=deletes)
 
     def _diff_columns(self, local: Model, remote: Model) -> dict[str, ColumnDiff]:
         """Produce per-column diffs for description and tag changes.

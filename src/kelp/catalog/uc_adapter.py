@@ -183,12 +183,6 @@ class UnityCatalogAdapter:
         try:
             remote = get_metric_view_from_dbx_sdk(fqn, profile=profile)
         except Exception:  # noqa: BLE001
-            # logger.warning(
-            #     "Metric view '%s' not found in Unity Catalog; skipping sync. Error: %s",
-            #     fqn,
-            #     e,
-            # )
-            # return []
             # if not exists switch to create mode
             remote = metric_view
             enforce_tags = True
