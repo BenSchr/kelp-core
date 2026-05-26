@@ -4,6 +4,6 @@
 
 - feat: integrate-odcs (#14)
 
-## 🐛 Bug Fixes
+## 🐛 Fixes
 
 - fix: view column tags handled correctly (commit 123de42)

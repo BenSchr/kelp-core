@@ -7,10 +7,13 @@ Kelp integrates with the Open Data Contract Standard (ODCS) to provide a seamles
 To use kelp cli with ODCS integration, you need to have the following installed:
 
 You can install the DataContract CLI using pip:
-`pip install datacontract-cli`
-
+```bash
+pip install datacontract-cli
+```
 DQX if you want to use the DQX check generation:
-`pip install databricks-labs-dqx[datacontract]`
+```bash
+pip install databricks-labs-dqx[datacontract]
+```
 
 ## Import kelp models from an ODCS YAML file
 
