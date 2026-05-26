@@ -1,0 +1,74 @@
+kind: DataContract
+apiVersion: v3.0.2
+id: urn:datacontract:checkout:orders
+name: Orders Contract
+version: 1.0.0
+status: active
+domain: checkout
+
+description:
+  purpose: Order data for analytics
+
+schema:
+  - name: orders
+    physicalType: table
+    description: Customer orders table
+
+    properties:
+      - name: order_id
+        logicalType: string
+        physicalType: string
+        required: true
+        unique: true
+        description: Unique order identifier
+
+      - name: customer_id
+        logicalType: string
+        physicalType: string
+        required: true
+        description: Reference to customer
+
+      - name: amount
+        logicalType: number
+        physicalType: decimal(10,2)
+        required: true
+        description: Order total amount
+        quality:
+          - type: custom
+            engine: dqx
+            description: Amount must be positive
+            implementation:
+              name: amount_positive
+              criticality: error
+              check:
+                function: sql_expression
+                arguments:
+                  expression: amount > 0
+                  columns:
+                    - amount
+
+      - name: status
+        logicalType: string
+        physicalType: string
+        required: false
+        description: Order status
+
+      - name: created_at
+        logicalType: timestamp
+        physicalType: timestamp
+        required: true
+        description: Order creation timestamp
+
+    quality:
+      - type: custom
+        engine: dqx
+        description: Ensure minimum orders exist
+        implementation:
+          name: minimum_orders
+          criticality: warn
+          check:
+            function: is_aggr_not_less_than
+            arguments:
+              column: order_id
+              limit: 1
+              aggr_type: count

@@ -37,8 +37,6 @@ Usage with ``DataFrame.transform()``::
     )
 """
 
-from __future__ import annotations
-
 import logging
 from collections.abc import Callable
 

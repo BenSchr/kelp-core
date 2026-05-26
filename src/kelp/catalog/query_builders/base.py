@@ -1,7 +1,5 @@
 """Base interface for Unity Catalog table query builders."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 
 from kelp.catalog.uc_models import (

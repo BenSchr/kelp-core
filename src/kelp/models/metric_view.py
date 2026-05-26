@@ -9,8 +9,6 @@ See:
 - https://docs.databricks.com/aws/en/metric-views/data-modeling/
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field

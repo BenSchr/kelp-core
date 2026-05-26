@@ -48,7 +48,6 @@ nav:
       - DataFrame Transformations: guides/transformations.md
       - Project Configuration: guides/project_config.md
       - Data Sources: guides/sources.md
-      - CLI Reference: guides/cli.md
       - Functions: guides/functions.md
       - ABAC Policies: guides/abacs.md
       - Metric Views: guides/metric_views.md
@@ -72,6 +71,9 @@ nav:
           - policy_definition: reference/models/policy_definition.md
           - project_config: reference/models/project_config.md
           - source: reference/models/source.md
+  - CLI: cli.md
+  - Integrations:
+      - ODCS: integrations/odcs.md
 plugins:
   - search
   - offline

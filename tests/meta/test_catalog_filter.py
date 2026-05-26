@@ -1,7 +1,5 @@
 """Tests for MetaCatalog.filter_by and _is_filter_match."""
 
-from __future__ import annotations
-
 from types import SimpleNamespace
 
 from kelp.meta.catalog_index import MetaCatalog, _is_filter_match

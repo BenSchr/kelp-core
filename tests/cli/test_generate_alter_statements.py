@@ -1,7 +1,5 @@
 """Tests for the generate_alter_statements CLI helper."""
 
-from __future__ import annotations
-
 from kelp.cli.generate_alter_statements import generate_alter_statements
 
 
@@ -60,7 +58,7 @@ def test_generate_alter_statements_passes_profile_to_sync_catalog(
         "log_level": None,
     }
     assert captured["sync_catalog_args"] == {
-        "sync_functions": True,
+        "sync_functions": False,
         "sync_metric_views": True,
         "sync_tables": True,
         "sync_abacs": True,

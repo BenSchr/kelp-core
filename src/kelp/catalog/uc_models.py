@@ -4,8 +4,6 @@ Column, Model, and constraint definitions are re-exported from the core
 Kelp models to avoid duplicate model definitions.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 
 from kelp.models.model import (

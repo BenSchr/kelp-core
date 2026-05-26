@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import copy
 import logging
 from dataclasses import dataclass
@@ -51,7 +49,7 @@ class ServicePathConfig:
     def from_context(
         service_root_key: str = "models_path",
         hierarchy_config_key: str = "models",
-    ) -> ServicePathConfig:
+    ) -> "ServicePathConfig":
         """Create ServicePathConfig from current runtime context.
 
         Args:
@@ -377,6 +375,17 @@ class YamlManager:
         filtered_tags = cls._filter_tags(source_model.tags, defaults.get("tags"))
         cls._set_or_remove(model, "tags", filtered_tags)
 
+        # Meta is written directly from source model and preserved by template merge when needed
+        cls._set_or_remove(model, "meta", source_model.meta)
+
+        # Quality checks/config are written from source model
+        quality_dict = (
+            source_model.quality.model_dump(exclude_none=True, exclude_defaults=True)
+            if source_model.quality is not None
+            else None
+        )
+        cls._set_or_remove(model, "quality", quality_dict)
+
         # Only write constraints if no default or differs from default
         default_constraints = defaults.get("constraints")
         serialized_constraints = cls._serialize_constraints(source_model.constraints)
@@ -523,7 +532,11 @@ class YamlManager:
             return {}
         if not isinstance(default_tags, dict) or not default_tags:
             return tags
-        return {key: value for key, value in tags.items() if key not in default_tags}
+        return {
+            key: value
+            for key, value in tags.items()
+            if key not in default_tags or default_tags.get(key) != value
+        }
 
     @classmethod
     def _filter_properties_by_mode(

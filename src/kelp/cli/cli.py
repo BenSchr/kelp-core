@@ -21,6 +21,7 @@ def main() -> None:
     from kelp.cli.init import init
     from kelp.cli.json_schema import json_schema
     from kelp.cli.manifest import manifest
+    from kelp.cli.odcs.app import odcs_app
     from kelp.cli.sync_from_catalog import sync_from_catalog
     from kelp.cli.sync_from_pipeline import sync_from_pipeline
     from kelp.cli.sync_local_catalog import sync_local_catalog
@@ -39,5 +40,6 @@ def main() -> None:
     app.command()(generate_alter_statements)
     app.command()(generate_ddl)
     app.command()(init)
+    app.add_typer(odcs_app)
 
     app()

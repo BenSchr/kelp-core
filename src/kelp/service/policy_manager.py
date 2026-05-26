@@ -1,7 +1,5 @@
 """Policy manager for evaluating metadata governance policies."""
 
-from __future__ import annotations
-
 import fnmatch
 import logging
 import re

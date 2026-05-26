@@ -5,8 +5,6 @@ backend. Frameworks provide their own project header and settings model,
 while sharing variable resolution and metadata loading behavior.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from typing import Any
 
