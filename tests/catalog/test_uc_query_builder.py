@@ -1,7 +1,5 @@
 """Tests for Unity Catalog SQL query generation."""
 
-from __future__ import annotations
-
 from kelp.catalog.uc_models import (
     ColumnDiff,
     ConstraintFKDiff,

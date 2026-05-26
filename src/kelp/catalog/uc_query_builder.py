@@ -1,7 +1,5 @@
 """Pure SQL generation for Unity Catalog table synchronisation (v2)."""
 
-from __future__ import annotations
-
 import logging
 
 from kelp.catalog.uc_models import (

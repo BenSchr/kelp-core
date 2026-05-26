@@ -1,7 +1,5 @@
 """DDL generation for Unity Catalog functions."""
 
-from __future__ import annotations
-
 from kelp.models.function import KelpFunction
 
 

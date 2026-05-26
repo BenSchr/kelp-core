@@ -1,3 +1,9 @@
+---
+hide:
+  - navigation
+---
+<style> .md-content .md-typeset h1 { display: none; } </style> 
+
 # CLI Reference
 
 The Kelp CLI provides commands for managing your project configuration, validating metadata, syncing with Unity Catalog, and initializing new projects.
@@ -404,6 +410,88 @@ kelp init .
 - `kelp_metadata/functions/` - Directory for function definitions (optional)
 - `.gitkeep` files for git tracking
 
+## Open Data Contract Commands
+### `kelp odcs import`
+Import Open Data Contract specifications and generate YAML metadata.
+
+```bash
+Usage: kelp odcs import [OPTIONS] SOURCE
+
+  Import a data contract into kelp metadata format.
+
+Arguments:
+  SOURCE  Path to the data contract YAML file.  [required]
+
+Options:
+  -o, --output PATH     Output file path. Prints to stdout if omitted.
+  --generate-dqx-rules  Generate DQX quality rules from the contract.
+  --patch               Patch existing Kelp model YAML files instead of
+                        printing all models.
+  --dry-run             Preview output without writing
+  -c, --config TEXT     Path to kelp_project.yml (optional, will auto-detect
+                        if not provided)
+  -t, --target TEXT     Target to use for variable resolution
+  -m, --manifest TEXT   Path to manifest JSON file (skips source file loading)
+  --debug               Enable debug logging
+  --help                Show this message and exit.
+```
+
+Example usage:
+
+```bash
+kelp odcs import \
+  --generate-dqx-rules \
+  --patch \
+  --config kelp_project.yml \
+  --target prod \
+  my_data_contract.yml
+```
+
+Imports the data contract, generates DQX rules, and patches existing model YAML files based on the contract specifications.
+
+### `kelp odcs export`
+
+Export a Kelp model to Open Data Contract Standard format.
+
+```bash
+Usage: kelp odcs export [OPTIONS] MODEL
+
+  Export a kelp model to Open Data Contract Standard format.
+
+Arguments:
+  MODEL  Name of the kelp model to export.  [required]
+
+Options:
+  -o, --output PATH     Output file path. Prints to stdout if omitted.
+  -c, --config TEXT     Path to kelp_project.yml (optional, will auto-detect
+                        if not provided)
+  -t, --target TEXT     Target to use for variable resolution
+  -m, --manifest TEXT   Path to manifest JSON file (skips source file loading)
+  --debug               Enable debug logging
+  --include-server      Include ODCS server (database/catalog and schema) when
+                        model contains catalog and schema.
+  --patch               Patch an existing contract YAML file, updating only
+                        the matching schema.
+  --dry-run             Preview output without writing
+  --contract-file PATH  Existing contract YAML file to patch when --patch is
+                        used.
+  --help                Show this message and exit.
+```
+
+Example usage:
+
+```bash
+kelp odcs export \
+  --include-server \
+  --patch \
+  --config kelp_project.yml \
+  --target prod \
+  --contract-file existing_contract.yml \
+  customers
+```
+
+Exports the `customers` model to ODCS format, including server information, and patches the existing contract YAML file with the new schema information.
+
 ## Configuration Environment Variables
 
 Configure Kelp CLI behavior using environment variables:
@@ -533,6 +621,6 @@ kelp sync-local-catalog "analytics.metrics.customer_agg" --target prod
 
 ## See Also
 
-- [Project Configuration](project_config.md) - Detailed `kelp_project.yml` configuration
-- [Sync Metadata with Your Catalog](catalog.md) - Programmatic catalog sync
-- Getting Started Guide - Step-by-step setup instructions
+- [Project Configuration](guides/project_config.md) - Detailed `kelp_project.yml` configuration
+- [Sync Metadata with Your Catalog](guides/catalog.md) - Programmatic catalog sync
+- [ODCS Integration](integrations/odcs.md) - Import/export with Open Data Contract Standard

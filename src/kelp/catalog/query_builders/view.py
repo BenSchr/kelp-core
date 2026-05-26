@@ -1,7 +1,5 @@
 """Query builder for views."""
 
-from __future__ import annotations
-
 import logging
 
 from kelp.catalog.query_builders._sql import (

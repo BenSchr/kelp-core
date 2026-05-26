@@ -14,6 +14,7 @@ from kelp.meta.context import MetaContextStore
 from kelp.models.metric_view import MetricView
 from kelp.models.model import (
     Column,
+    DQXQuality,
     ForeignKeyConstraint,
     PrimaryKeyConstraint,
 )
@@ -183,6 +184,15 @@ class TestYamlManagerHelpers:
         filtered = YamlManager._filter_tags(tags, defaults)
 
         assert filtered == {"team": "data"}
+
+    def test_filter_tags_keeps_overridden_default_tag_values(self):
+        """Tag should be kept when key exists in defaults but value differs."""
+        tags = {"owner": "analytics-team", "tier": "silver"}
+        defaults = {"owner": "platform-team", "tier": "silver"}
+
+        filtered = YamlManager._filter_tags(tags, defaults)
+
+        assert filtered == {"owner": "analytics-team"}
 
     def test_serialize_constraints_primary_key(self):
         """Test _serialize_constraints with primary key."""
@@ -589,6 +599,42 @@ class TestYamlManagerTableConversion:
 
         # Should store unqualified name in YAML when table is in local catalog
         assert model_dict["constraints"][0]["reference_table"] == "customers"
+
+    def test_patch_model_dict_writes_meta_fields(self):
+        """Model meta should be patched into YAML model dict."""
+        source_model = Table(
+            name="orders",
+            meta={"odcs_owner": "analytics-team", "lineage": "sap"},
+            columns=[Column(name="id", data_type="bigint")],
+        )
+        model_dict = {"name": "orders"}
+
+        YamlManager._patch_model_dict(model_dict, source_model, defaults={})
+
+        assert model_dict["meta"] == {"odcs_owner": "analytics-team", "lineage": "sap"}
+
+    def test_patch_model_dict_writes_quality(self):
+        """Model quality should be patched into YAML model dict."""
+        source_model = Table(
+            name="orders",
+            quality=DQXQuality(
+                engine="dqx",
+                checks=[{"name": "amount_positive", "check": {"function": "sql_expression"}}],
+            ),
+            columns=[Column(name="id", data_type="bigint")],
+        )
+        model_dict = {"name": "orders"}
+
+        YamlManager._patch_model_dict(model_dict, source_model, defaults={})
+
+        quality = model_dict.get("quality")
+        assert isinstance(quality, dict)
+        assert quality.get("engine") == "dqx"
+        checks = quality.get("checks")
+        assert isinstance(checks, list)
+        assert checks
+        assert isinstance(checks[0], dict)
+        assert checks[0].get("name") == "amount_positive"
 
     def test_patch_model_dict_keeps_remote_fkn_when_not_in_local_catalog(self, mocker: MagicMock):
         """Test that remote FK with FQN is kept if referenced table not in local metadata.

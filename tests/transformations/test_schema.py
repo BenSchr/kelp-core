@@ -4,8 +4,6 @@ Uses a real local SparkSession (provided by the session-scoped ``spark`` fixture
 in conftest.py). Kelp catalog lookups are mocked via ``pytest-mock``.
 """
 
-from __future__ import annotations
-
 from datetime import date, datetime
 from pathlib import Path
 from unittest.mock import MagicMock

@@ -4,8 +4,6 @@ This module provides kelp's v2 runtime context API using the reusable
 ``kelp.meta`` backend with the ``MetaFramework`` pattern.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

@@ -4,8 +4,6 @@ This module provides a clean API class that each framework can instantiate
 to manage their metadata catalog, context, and initialization.
 """
 
-from __future__ import annotations
-
 from typing import Any, ClassVar
 
 from kelp.meta.context import MetaRuntimeContext

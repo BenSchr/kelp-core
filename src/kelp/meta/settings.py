@@ -8,8 +8,6 @@ Priority for resolution (highest to lowest):
 5. Default settings
 """
 
-from __future__ import annotations
-
 import logging
 import os
 from typing import Any

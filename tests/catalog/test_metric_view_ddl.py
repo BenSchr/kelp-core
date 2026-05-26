@@ -1,7 +1,5 @@
 """Tests for Metric View DDL generation."""
 
-from __future__ import annotations
-
 import pytest
 
 from kelp.catalog.metric_view_ddl import (

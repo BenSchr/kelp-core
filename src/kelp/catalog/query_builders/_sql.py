@@ -1,6 +1,5 @@
 """Shared SQL templates and string-escaping helpers for UC query builders."""
 
-from __future__ import annotations
 
 # ---------------------------------------------------------------------------
 # ALTER / COMMENT templates

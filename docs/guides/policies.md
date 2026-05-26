@@ -529,4 +529,4 @@ When a model fails these checks, Kelp reports violations like:
 ## See Also
 
 - [Project Configuration](project_config.md) — Setting `policies_path`, `policy_config.enabled`, and `policy_config.fast_exit`
-- [CLI Reference](cli.md) — `kelp check-policies` options
+- [CLI Reference](../cli.md) — `kelp check-policies` options

@@ -15,8 +15,6 @@ The factory also exposes a static :attr:`CAPABILITY_TABLE` for introspection::
         print(table_type, caps)
 """
 
-from __future__ import annotations
-
 import logging
 
 from kelp.catalog.query_builders.base import BaseTableQueryBuilder, Capability

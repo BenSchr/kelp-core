@@ -1,7 +1,5 @@
 """Function model for Unity Catalog SQL and Python functions."""
 
-from __future__ import annotations
-
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field

@@ -1,7 +1,5 @@
 """Unity Catalog adapter (v2) that integrates with Kelp runtime context."""
 
-from __future__ import annotations
-
 import logging
 
 from kelp.catalog.abac_ddl import generate_create_abac_policy_ddl

@@ -627,7 +627,7 @@ uv run kelp validate -c ./config/kelp_project.yml --target prod
 
 ## See Also
 
-- [CLI Reference](cli.md) - Command-line tool usage
+- [CLI Reference](../cli.md) - Command-line tool usage
 - [Functions](functions.md) - Defining functions with catalog/schema inheritance
 - [Transformations](transformations.md) - Using configuration in transformations
 - Configuration Reference - Configuration YAML keys
