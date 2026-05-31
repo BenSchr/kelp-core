@@ -41,10 +41,10 @@ kelp_models:
       - name: _rescued_data
         data_type: string
       - name: _errors
-        data_type: array<struct<name:string,message:string,columns:array<string>,filter:string,function:string,run_time:timestamp,run_id:string,user_metadata:map<string,string>>>
+        data_type: array<struct<name:string,message:string,columns:array<string>,filter:string,function:string,run_time:timestamp,run_id:string,user_metadata:map<string,string>,rule_fingerprint:string,rule_set_fingerprint:string,skipped:boolean>>
         description: Structured errors captured by the ingestion/validation engine.
       - name: _warnings
-        data_type: array<struct<name:string,message:string,columns:array<string>,filter:string,function:string,run_time:timestamp,run_id:string,user_metadata:map<string,string>>>
+        data_type: array<struct<name:string,message:string,columns:array<string>,filter:string,function:string,run_time:timestamp,run_id:string,user_metadata:map<string,string>,rule_fingerprint:string,rule_set_fingerprint:string,skipped:boolean>>
         description: Structured warnings captured by the ingestion/validation engine.
     quality:
       engine: dqx

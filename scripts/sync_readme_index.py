@@ -9,13 +9,18 @@ Behavior:
 - Writes the normalized content to both README.md and docs/index.md.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
 README = REPO_ROOT / "README.md"
 DOCS_INDEX = REPO_ROOT / "docs" / "index.md"
+
+NO_NAVIGATION_HEADER = """---
+hide:
+  - navigation
+---
+<style> .md-content .md-typeset h1 { display: none; } </style> 
+"""
 
 LINKS_TABLE_HEADER = "| Guide | Overview |"
 LINKS_WARNING = (
@@ -48,11 +53,12 @@ def _ensure_warning_above_links_table(content: str) -> str:
 
 def main() -> None:
     """Synchronize README and docs index content."""
+    header = NO_NAVIGATION_HEADER
     readme_content = README.read_text(encoding="utf-8")
     normalized = _ensure_warning_above_links_table(readme_content)
 
     README.write_text(normalized, encoding="utf-8")
-    DOCS_INDEX.write_text(normalized, encoding="utf-8")
+    DOCS_INDEX.write_text(header + normalized, encoding="utf-8")
 
     print("Updated: README.md")
     print("Updated: docs/index.md")

@@ -44,11 +44,11 @@ Kelp provides a metadata and transformation layer for Spark and Spark Declarativ
 To install Kelp, you can use `uv`, `pip`, or the package manager of your choice. Below are the commands for both methods:
 
 ```
-uv add kelp-core==0.0.8
+uv add kelp-core==0.0.10
 ```
 
 ```
-pip install kelp-core==0.0.8
+pip install kelp-core==0.0.10
 ```
 
 
@@ -202,7 +202,7 @@ Explore Kelp's comprehensive guides to get the most out of the framework:
 | [Sync Metadata with Your Catalog](guides/catalog.md) | Keep local metadata in sync with Unity Catalog |
 | [DataFrame Transformations](guides/transformations.md) | Use composable transformations like `apply_schema()` and `apply_func()` |
 | [Project Configuration](guides/project_config.md) | Master `kelp_project.yml` configuration, hierarchies, and targets |
-| [CLI Reference](guides/cli.md) | Command-line tools for project management and metadata sync |
+| [CLI Reference](cli.md) | Command-line tools for project management and metadata sync |
 | [Functions](guides/functions.md) | Define reusable SQL and Python functions in Unity Catalog |
 | [ABAC Policies](guides/abacs.md) | Implement row and column access control |
 | [Governance Policies](guides/policies.md) | Enforce metadata quality rules for models and columns |
@@ -347,7 +347,7 @@ uv run kelp validate --target prod
 
 ```
 
-Learn more in the [CLI Reference](guides/cli.md).
+Learn more in the [CLI Reference](cli.md).
 
 ## Sync Metadata to Unity Catalog
 
@@ -382,3 +382,8 @@ export KELP_PROJECT_FILE=/path/to/kelp_project.yml
 uv run kelp validate
 uv run kelp catalog sync-from-catalog "catalog.schema.table"
 ```
+
+---
+hide:
+  - navigation
+---

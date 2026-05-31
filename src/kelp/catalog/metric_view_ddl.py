@@ -8,8 +8,6 @@ See:
 - https://docs.databricks.com/aws/en/metric-views/data-modeling/
 """
 
-from __future__ import annotations
-
 import copy
 import logging
 from typing import Any

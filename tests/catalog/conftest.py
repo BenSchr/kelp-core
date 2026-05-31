@@ -1,7 +1,5 @@
 """Fixtures for catalog tests."""
 
-from __future__ import annotations
-
 import pytest
 
 from kelp.catalog.uc_models import Column, RemoteCatalogConfig

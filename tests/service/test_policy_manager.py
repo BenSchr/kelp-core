@@ -1,7 +1,5 @@
 """Tests for PolicyManager service."""
 
-from __future__ import annotations
-
 from kelp.models.model import Column, PrimaryKeyConstraint, SDPQuality
 from kelp.models.model import Model as Table
 from kelp.models.policy import (

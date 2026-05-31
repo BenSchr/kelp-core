@@ -5,8 +5,6 @@ across frameworks. Framework-specific settings are loaded separately via each
 framework's ``project_header``.
 """
 
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 from typing import Any

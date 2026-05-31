@@ -1,6 +1,8 @@
 [project]
 name = "kelp-core"
-version = "0.0.8"
+version = "0.0.10"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 description = "Metadata Toolkit for Spark and Spark Declarative Pipelines"
 dependencies = [
@@ -26,11 +28,11 @@ kelp = "kelp.cli.cli:main"
 dev = [
     { include-group = "test" },
     { include-group = "docs" },
-    "databricks-labs-dqx>=0.12.0",
+    "databricks-labs-dqx[datacontract]>=0.12.0",
     "pyspark[pipelines]>=4.1",
     "faker>=40.4.0",
     "prek>=0.3.11",
-    "delta-spark>=4.2.0",
+    "datacontract-cli>=0.12.4",
 ]
 
 test=[

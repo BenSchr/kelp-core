@@ -1,7 +1,5 @@
 """Tests for Unity Catalog diff logic."""
 
-from __future__ import annotations
-
 from kelp.catalog.uc_diff import TableDiffCalculator
 from kelp.catalog.uc_models import Column, RemoteCatalogConfig
 from kelp.catalog.uc_models import Model as Table

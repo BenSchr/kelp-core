@@ -1,7 +1,5 @@
 """Tests for Unity Catalog adapter profile plumbing."""
 
-from __future__ import annotations
-
 from kelp.catalog.uc_adapter import UnityCatalogAdapter
 from kelp.catalog.uc_models import RemoteCatalogConfig, TableDiff
 from kelp.models.metric_view import MetricView

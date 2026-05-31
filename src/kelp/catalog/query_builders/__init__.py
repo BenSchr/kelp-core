@@ -14,8 +14,6 @@ Public API::
 
 """
 
-from __future__ import annotations
-
 from kelp.catalog.query_builders.base import BaseTableQueryBuilder, Capability
 from kelp.catalog.query_builders.factory import CAPABILITY_TABLE, UCQueryBuilderFactory
 from kelp.catalog.query_builders.managed import ManagedTableQueryBuilder

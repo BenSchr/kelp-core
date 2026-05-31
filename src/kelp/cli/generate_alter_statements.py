@@ -41,6 +41,13 @@ def generate_alter_statements(
     silent: Annotated[
         bool, Option("--silent", help="Only output ALTER TABLE statements, suppressing other logs")
     ] = False,
+    include_functions: Annotated[
+        bool,
+        Option(
+            "--include-functions",
+            help="Include CREATE OR REPLACE FUNCTION statements for functions",
+        ),
+    ] = False,
 ):
     """Generate ALTER TABLE statements for tables and metric views in the catalog that are different from the Databricks catalog."""
     from kelp.catalog.api import sync_catalog
@@ -55,7 +62,7 @@ def generate_alter_statements(
         manifest_file_path=manifest_file_path,
         log_level=log_level,
     )
-    queries = sync_catalog(sync_functions=True, profile=profile)
+    queries = sync_catalog(sync_functions=include_functions, profile=profile)
     if not silent:
         for q in queries:
             print_message(q + ";")

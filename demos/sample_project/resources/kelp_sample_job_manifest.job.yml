@@ -4,10 +4,12 @@ resources:
       name: kelp_sample_job_manifest
       tasks:
         - task_key: kelp_sdp_pipeline_manifest
+          max_retries: 0
           pipeline_task:
             pipeline_id: ${resources.pipelines.kelp_sample_manifest.id}
             full_refresh: false
         - task_key: create_spark_table_manifest
+          max_retries: 0
           depends_on:
             - task_key: kelp_sdp_pipeline_manifest
           notebook_task:
@@ -15,6 +17,7 @@ resources:
             source: WORKSPACE
           environment_key: Default
         - task_key: update_metadata_manifest
+          max_retries: 0
           depends_on:
             - task_key: create_spark_table_manifest
           notebook_task:

@@ -1,7 +1,5 @@
 """Parallel metadata file loading helpers for the generic meta module."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial

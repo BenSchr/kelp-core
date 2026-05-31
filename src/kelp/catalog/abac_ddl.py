@@ -1,7 +1,5 @@
 """DDL generation for Unity Catalog ABAC policies."""
 
-from __future__ import annotations
-
 from kelp.models.abac import AbacPolicy
 
 

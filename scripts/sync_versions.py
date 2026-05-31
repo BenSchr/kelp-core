@@ -9,8 +9,6 @@ This script reads the canonical version from pyproject.toml and updates:
   - Databricks bundle YAMLs: kelp_core-<version>-py3-none-any.whl references
 """
 
-from __future__ import annotations
-
 import re
 import sys
 import tomllib

@@ -7,8 +7,6 @@ on subsequent initializations by loading the pre-built context directly.
 This module is framework-agnostic and must not contain any Kelp-specific logic.
 """
 
-from __future__ import annotations
-
 import json
 import logging
 from pathlib import Path

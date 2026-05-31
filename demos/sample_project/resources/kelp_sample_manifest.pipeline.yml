@@ -16,6 +16,8 @@ resources:
         parameters.source_catalog: ${var.source_catalog}
         parameters.source_schema: ${var.source_schema}
         kelp.manifest_file: ${var.kelp_manifest_file}
+        pipelines.dropInactiveTables: "true"
+
       environment:
         dependencies:
           - ${var.kelp_dependency}

@@ -1,7 +1,5 @@
 """ABAC policy model for Unity Catalog policy definitions."""
 
-from __future__ import annotations
-
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field

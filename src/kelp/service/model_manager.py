@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -400,7 +398,7 @@ class SparkSchemaBuilder:
         self,
         add_generated: bool = False,
         exclude: list[str] | None = None,
-    ) -> SparkSchemaBuilder:
+    ) -> "SparkSchemaBuilder":
         exclude_set = {c.lower() for c in (exclude or [])}
         self._excluded_columns = exclude_set
         for col in self.model.columns:
@@ -409,7 +407,7 @@ class SparkSchemaBuilder:
             self.table_parts.append(self._column_to_string(col, add_generated=add_generated))
         return self
 
-    def add_constraints(self) -> SparkSchemaBuilder:
+    def add_constraints(self) -> "SparkSchemaBuilder":
         for constraint in self.model.constraints:
             if isinstance(constraint, PrimaryKeyConstraint):
                 # Skip constraint if it references excluded columns
@@ -445,7 +443,7 @@ class SparkSchemaBuilder:
                 )
         return self
 
-    def add_clustering(self) -> SparkSchemaBuilder:
+    def add_clustering(self) -> "SparkSchemaBuilder":
         if self.model.cluster_by_auto:
             self.outer_parts.append("CLUSTERED BY (AUTO)")
         elif self.model.cluster_by:
@@ -454,7 +452,7 @@ class SparkSchemaBuilder:
             self.outer_parts.append(f"PARTITIONED BY ({', '.join(self.model.partition_cols)})")
         return self
 
-    def add_table_properties(self) -> SparkSchemaBuilder:
+    def add_table_properties(self) -> "SparkSchemaBuilder":
         if self.model.table_properties:
             props = ", ".join(f"'{k}'='{v}'" for k, v in self.model.table_properties.items())
             self.outer_parts.append(f"TBLPROPERTIES ({props})")

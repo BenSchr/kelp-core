@@ -9,6 +9,7 @@ resources:
             left: "{{job.parameters.update_metadata}}"
             right: "true"
         - task_key: prepare_functions
+          max_retries: 0
           notebook_task:
             notebook_path: ${workspace.file_path}/src/kelp_project_etl/notebooks/prepare_functions
             source: WORKSPACE
@@ -17,6 +18,7 @@ resources:
             - task_key: check_update_funcs
               outcome: "true"
         - task_key: kelp_sdp_pipeline
+          max_retries: 0
           run_if: AT_LEAST_ONE_SUCCESS
           depends_on:
             - task_key: prepare_functions
@@ -26,6 +28,7 @@ resources:
             pipeline_id: ${resources.pipelines.kelp_sample_sdp.id}
             full_refresh: false
         - task_key: create_spark_table
+          max_retries: 0
           depends_on:
             - task_key: kelp_sdp_pipeline
           notebook_task:
@@ -40,6 +43,7 @@ resources:
             left: "{{job.parameters.update_metadata}}"
             right: "true"
         - task_key: update_metadata
+          max_retries: 0
           depends_on:
             - task_key: check_update_metadata
               outcome: "true"
