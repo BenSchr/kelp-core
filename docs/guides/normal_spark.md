@@ -59,6 +59,74 @@ if ddl:
     spark.sql(ddl)
 ```
 
+## Materialize DataFrames (Decorator + Function)
+
+Kelp now provides two non-SDP materialization entry points in `kelp.tables`:
+
+- `@kt.materialized(...)` — decorate a function that returns a DataFrame.
+- `kt.materialize(...)` — materialize an already-built DataFrame directly.
+
+Both paths use Delta Lake writes and can resolve model configuration from metadata.
+
+### Option A: Decorator (`@materialized`)
+
+```python
+import kelp.tables as kt
+from pyspark.sql import SparkSession
+
+spark = SparkSession.active()
+kt.init(target="prod")
+
+
+@kt.materialized(name="orders")
+def build_orders():
+    return spark.read.table("raw.orders")
+
+
+# Runs the function and materializes the returned DataFrame
+df = build_orders()
+```
+
+With explicit override config:
+
+```python
+import kelp.tables as kt
+
+
+@kt.materialized(
+    name="orders",
+    config={
+        "write_mode": "merge",
+        "unique_keys": ["order_id"],
+        "options": {"mergeSchema": "true"},
+    },
+)
+def build_orders_incremental():
+    return spark.read.table("staging.orders")
+```
+
+### Option B: Direct Function (`materialize`)
+
+```python
+import kelp.tables as kt
+from kelp.models.model_mat_config import ModelMaterializationConfig
+
+df = spark.read.table("staging.orders")
+
+kt.materialize(
+    spark=spark,
+    dataframe=df,
+    table_name="orders",  # model name or fully qualified table name
+    config=ModelMaterializationConfig(
+        write_mode="overwrite",
+        options={"overwriteSchema": "true"},
+    ),
+)
+```
+
+If `config` is omitted, Kelp will use metadata materialization settings when available;
+otherwise it falls back to append behavior.
+
 ## Apply Schemas with `apply_schema()`
 
 Use `apply_schema()` for schema enforcement on DataFrames:

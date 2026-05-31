@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from pyspark.sql import SparkSession
 
-from kelp.models.model_config import ModelConfig
+from kelp.models.model_mat_config import ModelMaterializationConfig
 from kelp.service.model_manager import KelpModel
 
 logger = logging.getLogger(__name__)
@@ -28,9 +28,9 @@ class ModelContext:
     this: KelpModel
     full_refresh: bool
     target_exists: bool
-    model_config: ModelConfig | None = field(default=None, init=False)
+    model_config: ModelMaterializationConfig | None = field(default=None, init=False)
 
-    def config(self, **kwargs: object) -> ModelConfig:
+    def config(self, **kwargs: object) -> ModelMaterializationConfig:
         """Get or update the active model configuration.
 
         Call with no arguments to read the current config.
@@ -52,10 +52,9 @@ class ModelContext:
         """
         if kwargs:
             current = self.model_config.model_dump() if self.model_config is not None else {}
-            self.model_config = ModelConfig(**{**current, **kwargs})  # type: ignore[arg-type]
-        return self.model_config if self.model_config is not None else ModelConfig()
+            self.model_config = ModelMaterializationConfig(**{**current, **kwargs})  # type: ignore[arg-type]
+        return self.model_config if self.model_config is not None else ModelMaterializationConfig()
 
     def is_incremental(self) -> bool:
         """Return ``True`` when the target exists and a full refresh is not requested."""
         return self.target_exists and not self.full_refresh
-

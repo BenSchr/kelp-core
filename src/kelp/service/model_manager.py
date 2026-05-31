@@ -13,7 +13,7 @@ from kelp.models.model import (
     PrimaryKeyConstraint,
     SDPQuality,
 )
-from kelp.models.model_config import ModelConfig
+from kelp.models.model_mat_config import ModelMaterializationConfig
 from kelp.models.project_config import ProjectConfig
 
 
@@ -38,7 +38,7 @@ class KelpModel:
     quarantine_table: str | None = None
     target_table: str | None = None
     root_model: Model | None = None
-    config: ModelConfig | None = None
+    config: ModelMaterializationConfig | None = None
 
     def get_dqx_check_obj(self) -> DQXQuality | None:
         if self.root_model and isinstance(self.root_model.quality, DQXQuality):
@@ -340,11 +340,14 @@ class ModelManager:
         model_name: str,
         model: Model | None = None,
         ctx: MetaRuntimeContext | None = None,
+        soft_handle: bool = False,
         exclude: list[str] | None = None,
     ) -> KelpModel:
         ctx = ctx or get_context()
-        model = model or _get_model_from_context(ctx, model_name, soft_handle=False)
+        model = model or _get_model_from_context(ctx, model_name, soft_handle=soft_handle)
         if model is None:
+            if soft_handle:
+                return KelpModel(name=model_name, fqn=model_name)
             raise KeyError(f"Model not found in catalog: {model_name}")
 
         kelp_model = KelpModel(name=model.name)
@@ -374,7 +377,7 @@ class ModelManager:
         if model.quality and isinstance(model.quality, DQXQuality):
             kelp_model.dqx_checks = model.quality.checks
 
-        kelp_model.config = model.config
+        kelp_model.config = model.materialization
 
         return kelp_model
 

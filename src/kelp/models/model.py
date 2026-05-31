@@ -5,7 +5,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.json_schema import SkipJsonSchema
 
-from kelp.models.model_config import ModelConfig
+from kelp.models.model_mat_config import ModelMaterializationConfig
 
 
 class TableType(Enum):
@@ -280,7 +280,7 @@ class Model(BaseModel):
         discriminator="engine",
         description="Data quality configuration using SDPQuality or DQXQuality",
     )
-    config: ModelConfig | None = Field(
+    materialization: ModelMaterializationConfig | None = Field(
         default=None,
         description="Configuration controlling how the model is materialized.",
     )
