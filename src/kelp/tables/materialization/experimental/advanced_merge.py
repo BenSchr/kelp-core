@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -83,6 +81,7 @@ class AdvancedMergeMaterializer:
         # ======================================================================
 
         effective_config = config or ModelMaterializationConfig(write_mode="merge")
+
         resolved_unique_keys = unique_keys or effective_config.unique_keys
         resolved_predicates = predicates if predicates is not None else effective_config.predicates
 
@@ -326,7 +325,7 @@ class AdvancedMergeMaterializer:
     def _run_cdc_type1(
         cls,
         *,
-        target_dt: Any,
+        target_dt: DeltaTable,
         source_df: DataFrame,
         unique_keys: list[str],
         sequence_columns: list[str],

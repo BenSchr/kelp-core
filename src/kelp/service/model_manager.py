@@ -45,18 +45,6 @@ class KelpModel:
             return self.root_model.quality
         return None
 
-    def get_ddl(self, if_not_exists: bool = True) -> str | None:
-        mapped_type = _UC_TYPE.get(self.table_type.lower(), "TABLE") if self.table_type else "TABLE"
-        return (
-            ModelManager.get_spark_schema_ddl(
-                self.root_model,
-                table_type=mapped_type,
-                if_not_exists=if_not_exists,
-            )
-            if self.root_model
-            else None
-        )
-
     def build_ddl(self, if_not_exists: bool = True) -> str | None:
         """Build a CREATE TABLE DDL statement directly from this model's properties.
 
@@ -82,17 +70,14 @@ class KelpModel:
             ddl += "IF NOT EXISTS "
         ddl += f"{target} (\n{self.schema}\n)"
 
-        if self.config.table_format:
-            ddl += f"\nUSING {self.config.table_format.upper()}"
-
         if self.comment:
             ddl += f"\nCOMMENT '{self.comment}'"
         if self.path:
             ddl += f"\nLOCATION '{self.path}'"
         if self.cluster_by_auto:
-            ddl += "\nCLUSTERED BY (AUTO)"
+            ddl += "\nCLUSTER BY (AUTO)"
         elif self.cluster_by:
-            ddl += f"\nCLUSTERED BY ({', '.join(self.cluster_by)})"
+            ddl += f"\nCLUSTER BY ({', '.join(self.cluster_by)})"
         elif self.partition_cols:
             ddl += f"\nPARTITIONED BY ({', '.join(self.partition_cols)})"
         if self.table_properties:
@@ -100,6 +85,17 @@ class KelpModel:
             ddl += f"\nTBLPROPERTIES ({props})"
 
         return ddl
+
+    def get_ddl(self, if_not_exists: bool = True) -> str | None:
+        mapped_type = _UC_TYPE.get(self.table_type.lower(), "TABLE") if self.table_type else "TABLE"
+        if self.root_model:
+            return ModelManager.get_spark_schema_ddl(
+                self.root_model,
+                table_type=mapped_type,
+                if_not_exists=if_not_exists,
+            )
+        # Fallback to building DDL from dataclass fields when root_model is not available
+        return self.build_ddl(if_not_exists=if_not_exists)
 
 
 @dataclass
@@ -448,9 +444,9 @@ class SparkSchemaBuilder:
 
     def add_clustering(self) -> "SparkSchemaBuilder":
         if self.model.cluster_by_auto:
-            self.outer_parts.append("CLUSTERED BY (AUTO)")
+            self.outer_parts.append("CLUSTER BY (AUTO)")
         elif self.model.cluster_by:
-            self.outer_parts.append(f"CLUSTERED BY ({', '.join(self.model.cluster_by)})")
+            self.outer_parts.append(f"CLUSTER BY ({', '.join(self.model.cluster_by)})")
         elif self.model.partition_cols:
             self.outer_parts.append(f"PARTITIONED BY ({', '.join(self.model.partition_cols)})")
         return self
@@ -488,9 +484,9 @@ class SparkSchemaBuilder:
                 gen = column.generated
                 identity_str = "GENERATED "
                 if isinstance(gen, GeneratedIdentityColumnConfig):
-                    identity_str += "AS DEFAULT " if gen.as_default else "AS ALWAYS "
+                    identity_str += "BY DEFAULT " if gen.as_default else "ALWAYS "
                     identity_str += (
-                        f"IDENTITY (START WITH {gen.start_with} INCREMENT BY {gen.increment_by})"
+                        f"AS IDENTITY (START WITH {gen.start_with} INCREMENT BY {gen.increment_by})"
                     )
                 col_str += f" {identity_str}"
             elif column.generated.type == "expression":

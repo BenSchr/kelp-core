@@ -1,0 +1,36 @@
+kelp_models:
+  - name: bronze_orders_mat
+    description: Bronze orders append-only feed loaded from in-function seed data.
+    columns:
+      - name: order_id
+        data_type: bigint
+        description: Auto-generated surrogate id for the order row.
+        generated:
+          type: identity
+          as_default: true
+      - name: order_nk
+        data_type: string
+        description: Natural order key from source events.
+      - name: user_id
+        data_type: string
+        description: Customer business key.
+      - name: product
+        data_type: string
+        description: Ordered product.
+      - name: quantity
+        data_type: bigint
+        description: Ordered quantity.
+      - name: unit_price
+        data_type: double
+        description: Unit price in source event.
+      - name: order_date
+        data_type: date
+        description: Business order date.
+      - name: order_updated_at
+        data_type: timestamp
+        description: Last update timestamp from source event.
+      - name: ingest_date
+        data_type: date
+        description: Date this row was ingested.
+    materialization:
+      write_mode: append

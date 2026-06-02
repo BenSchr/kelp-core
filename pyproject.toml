@@ -121,6 +121,10 @@ filterwarnings = [
     "ignore::DeprecationWarning",
 ]
 
+log_cli = true
+log_cli_level = "INFO"
+
+
 [tool.ty.src]
 include = ["src", "tests", "scripts"]
 exclude = ["tests/fixtures"]

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 
 from pyspark.sql import SparkSession
@@ -45,14 +43,27 @@ def ensure_table_created(
     if table_exists(spark, target_name):
         return True
 
-    if kelp_model is None or kelp_model.root_model is None:
+    if kelp_model is None:
         return False
 
     ddl = kelp_model.get_ddl(if_not_exists=True)
+
     if not ddl:
         return False
+    try:
+        spark.sql(ddl)
+    except Exception as e:  # noqa: BLE001
+        logger.warning(
+            "Failed to create table '%s' for model '%s' using DDL: %s",
+            target_name,
+            kelp_model.name,
+            ddl,
+        )
+        # Raise since creating table may contain generated columns or other metadata-driven schema details that are required for correct materialization
+        raise RuntimeError(
+            f"Failed to create table '{target_name}' for model '{kelp_model.name}'."
+        ) from e
 
-    spark.sql(ddl)
     return table_exists(spark, target_name)
 
 
@@ -112,3 +123,13 @@ def build_null_safe_change_condition(
 
     comparisons = [f"NOT ({source_alias}.`{col}` <=> {target_alias}.`{col}`)" for col in columns]
     return " OR ".join(comparisons)
+
+
+def apply_full_refresh(spark: SparkSession, table_name: str) -> None:
+    """Apply a full refresh by dropping the target table.
+
+    Args:
+        spark: Active SparkSession.
+        table_name: Fully qualified target table name.
+    """
+    spark.sql(f"DROP TABLE {table_name}")

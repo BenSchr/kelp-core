@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=/workspaces/kelp/.vscode/kelp_json_schema.json
+kelp_project:
+  models_path: "./kelp_metadata/models"
+
+  models:
+    +catalog: ${ catalog }
+    bronze:
+      +schema: kelp_bronze
+
+    silver:
+      +schema: kelp_silver
+    gold:
+      +schema: kelp_gold
+    +tags:
+      kelp_managed: ""
+      domain: "sales"
+      owner: "analytics-team"
+
+vars:
+  catalog: kelp_catalog
+  landing_schema: kelp_bronze
+
+targets:
+  dev:
+    vars:
+      catalog: ${catalog}
+
+  prod:
+    vars:
+      catalog: ${catalog}

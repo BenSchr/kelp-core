@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from pyspark.sql import DataFrame, SparkSession
 
 from kelp.models.model_mat_config import ModelMaterializationConfig

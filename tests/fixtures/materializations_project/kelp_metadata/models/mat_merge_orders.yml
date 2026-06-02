@@ -1,0 +1,25 @@
+kelp_models:
+  - name: mat_merge_orders
+    description: Fixture model for merge materialization tests
+    columns:
+      - name: id
+        data_type: bigint
+        nullable: false
+      - name: name
+        data_type: string
+        nullable: true
+      - name: updated_at
+        data_type: bigint
+        nullable: true
+    materialization:
+      write_mode: merge
+      unique_keys:
+        - id
+      sequence_by:
+        - updated_at
+      include_at_target_cols:
+        - id
+        - name
+        - updated_at
+      ignore_null_updates: true
+      apply_as_delete: "_op = 'D'"

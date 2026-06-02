@@ -30,7 +30,7 @@
 #     """Return whether *fqn* exists in the active catalog, defaulting to ``False`` on error."""
 #     try:
 #         return spark.catalog.tableExists(fqn)
-#     except Exception:  # noqa: BLE001
+#     except Exception:
 #         logger.debug("Could not determine if target '%s' exists.", fqn)
 #         return False
 
@@ -77,55 +77,6 @@
 #     kelp_model = ModelManager.build_model(table_name, ctx=ctx)
 
 #     return kelp_model
-
-
-# def _materialize(
-#     spark: SparkSession,
-#     result: DataFrame,
-#     fqn: str,
-#     write_config: ModelConfig,
-# ) -> None:
-#     """Apply *write_config* to persist *result* to *fqn*."""
-#     if write_config.write_mode == "merge":
-#         _execute_merge(result, fqn, write_config)
-#     elif write_config.write_mode == "view":
-#         _execute_view(spark, result, fqn)
-#     elif write_config.write_mode in ("append", "overwrite"):
-#         result.write.format(write_config.table_format).options(**write_config.options).mode(
-#             write_config.write_mode
-#         ).saveAsTable(fqn)
-
-
-# def _execute_view(spark: SparkSession, result: DataFrame, fqn: str) -> None:
-#     """Register *result* as a view named *fqn*."""
-#     import uuid
-
-#     tmp = f"_kelp_tmp_{uuid.uuid4().hex}"
-#     result.createOrReplaceTempView(tmp)
-#     spark.sql(f"CREATE OR REPLACE VIEW {fqn} AS SELECT * FROM {tmp}")  # noqa: S608
-#     spark.catalog.dropTempView(tmp)
-
-
-# def _execute_merge(source: DataFrame, fqn: str, config: ModelConfig) -> None:
-#     """Execute a ``MERGE INTO`` of *source* into *fqn* using the native PySpark API."""
-#     from delta import DeltaTable
-
-#     target = DeltaTable.forName(source.sparkSession, fqn)  # type: ignore[attr-defined]
-
-#     writer = target.alias("target").merge(source.alias("source"), F.expr(config.merge_condition))  # type: ignore[attr-defined]
-
-#     if config.when_matched_update_all:
-#         writer = writer.whenMatchedUpdateAll()
-#     if config.when_matched_update:
-#         writer = writer.whenMatchedUpdate(config.when_matched_update)
-#     if config.when_not_matched_insert_all:
-#         writer = writer.whenNotMatchedInsertAll()
-#     if config.when_not_matched_by_source_delete:
-#         writer = writer.whenNotMatchedBySourceDelete()
-#     if config.merge_with_schema_evolution:
-#         writer = writer.withSchemaEvolution()
-
-#     writer.execute()  # type: ignore[attr-defined]
 
 
 # def model(

@@ -1,0 +1,39 @@
+kelp_models:
+  - name: silver_customers_refined_mat
+    description: Silver refined customers with normalized fields.
+    columns:
+      - name: user_id
+        data_type: string
+        nullable: false
+      - name: full_name
+        data_type: string
+      - name: country
+        data_type: string
+      - name: email
+        data_type: string
+      - name: customer_updated_at
+        data_type: timestamp
+      - name: ingest_date
+        data_type: date
+    constraints:
+      - name: pk_silver_customers_refined
+        type: primary_key
+        columns:
+          - user_id
+    cluster_by:
+      - ingest_date
+      - customer_updated_at
+    materialization:
+      write_mode: merge
+      unique_keys:
+        - user_id
+      sequence_by:
+        - customer_updated_at
+      ignore_null_updates: true
+      include_at_target_cols:
+        - user_id
+        - full_name
+        - country
+        - email
+        - customer_updated_at
+        - ingest_date

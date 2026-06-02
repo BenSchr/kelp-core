@@ -1,0 +1,27 @@
+resources:
+  jobs:
+    kelp_sample_job_spark:
+      name: kelp_sample_job_spark
+      tasks:
+        - task_key: run_spark_transformations
+          max_retries: 0
+          notebook_task:
+            notebook_path: ${workspace.file_path}/src/kelp_project_spark/notebooks/transformations
+            source: WORKSPACE
+          environment_key: Default
+      queue:
+        enabled: true
+      parameters:
+        - name: kelp_project_file
+          default: ${var.kelp_project_file_spark}
+        - name: kelp_target
+          default: ${bundle.target}
+        - name: full_refresh
+          default: "false"
+      environments:
+        - environment_key: Default
+          spec:
+            dependencies:
+              - ${var.kelp_dependency}
+            environment_version: "5"
+      performance_target: PERFORMANCE_OPTIMIZED

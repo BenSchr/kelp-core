@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -107,5 +105,41 @@ class ModelMaterializationConfig(BaseModel):
         default=True,
         description=(
             "Whether to enable schema evolution during merge operations. Only applicable when write_mode='merge'. "
+        ),
+    )
+    exclude_at_target_cols: list[str] | None = Field(
+        default=None,
+        description=(
+            "List of columns to exclude from the target dataset during a merge operation. Only applicable when write_mode='merge'. "
+        ),
+    )
+    include_at_target_cols: list[str] | None = Field(
+        default=None,
+        description=(
+            "List of columns to include from the target dataset during a merge operation. Only applicable when write_mode='merge'. "
+        ),
+    )
+    sequence_by: list[str] | None = Field(
+        default=None,
+        description=(
+            "List of columns to order source and target datasets by before applying the merge condition. Only applicable when write_mode='merge'. "
+        ),
+    )
+    ignore_null_updates: bool = Field(
+        default=False,
+        description=(
+            "Whether to ignore updates to columns where the source value is null during a merge operation. Only applicable when write_mode='merge'. "
+        ),
+    )
+    apply_as_delete: str | None = Field(
+        default=None,
+        description=(
+            "Used for CDC scenarios. Whether to apply a condition as a delete operation instead of an update or insert during a merge. Only applicable when write_mode='merge'. "
+        ),
+    )
+    prevent_full_refresh: bool = Field(
+        default=False,
+        description=(
+            "Whether to prevent full refreshes for this model. If True, attempts to perform a full refresh (e.g. via the 'full_refresh' flag in the materialization context) will be overridden to perform an append or merge instead, and a warning will be logged. This can be useful for protecting critical tables from accidental full refreshes."
         ),
     )
