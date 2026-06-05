@@ -7,8 +7,8 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as f
 
 from kelp.config import init
-from kelp.tables import MaterializedContext, materialized
-from kelp.tables.materialization.factory import materialize
+from kelp.models.model_mat_config import ModelMaterializationConfig
+from kelp.tables import MaterializedContext, materialize, materialized
 
 
 @pytest.fixture
@@ -81,6 +81,31 @@ def test_append_materialization_from_yaml(
         spark,
         table_name,
         materializations_project_dir / "data/append/result.csv",
+    )
+
+
+def test_materialize_creates_table_when_missing(
+    spark: SparkSession,
+    materializations_project_dir: Path,
+    initialized_materializations_context: None,
+) -> None:
+    """Materialize should create a missing target table during append writes."""
+    table_name = "mat_runtime_create_orders"
+    _drop_table_if_exists(spark, table_name)
+
+    source_df = _csv_df(spark, materializations_project_dir / "data/append/source.csv")
+    materialize(
+        spark=spark,
+        dataframe=source_df,
+        table_name=table_name,
+        config=ModelMaterializationConfig(write_mode="append"),
+    )
+
+    assert spark.catalog.tableExists(table_name)
+    _assert_table_matches_csv(
+        spark,
+        table_name,
+        materializations_project_dir / "data/append/source.csv",
     )
 
 
@@ -162,6 +187,37 @@ def test_materialized_decorator_integration(
     )
 
 
+def test_materialized_decorator_without_model_uses_runtime_config(
+    spark: SparkSession,
+    materializations_project_dir: Path,
+    initialized_materializations_context: None,
+) -> None:
+    """Decorator should fully work with runtime config when no model exists."""
+    table_name = "mat_runtime_decorator_orders"
+    _drop_table_if_exists(spark, table_name)
+
+    target_df = _csv_df(spark, materializations_project_dir / "data/append/target.csv")
+    target_df.write.format("delta").mode("overwrite").saveAsTable(table_name)
+
+    @materialized(
+        name=table_name,
+        config=ModelMaterializationConfig(write_mode="append"),
+        apply_vacuum=False,
+        apply_optimize=False,
+    )
+    def build_df() -> DataFrame:
+        return _csv_df(spark, materializations_project_dir / "data/append/source.csv")
+
+    result_df = build_df()
+    assert result_df.count() == 2
+
+    _assert_table_matches_csv(
+        spark,
+        table_name,
+        materializations_project_dir / "data/append/result.csv",
+    )
+
+
 def test_materialized_decorator_ctx_incremental_append(
     spark: SparkSession,
     materializations_project_dir: Path,
@@ -188,7 +244,7 @@ def test_materialized_decorator_ctx_incremental_append(
             return source_df.filter(f.col("event_ts") > f.lit(max_ts))
         return source_df
 
-    from kelp.tables.materialization.runner import Runner
+    from kelp.tables import Runner
 
     runner = Runner()
     result_df = runner.run_one(table_name)
@@ -207,3 +263,112 @@ def test_materialized_decorator_ctx_incremental_append(
     logger.info(runner.runlog)
     for entry in runner.runlog.entries:
         logger.info(entry)
+
+
+def test_runner_multi_step_refinement_pipeline(
+    spark: SparkSession,
+    materializations_project_dir: Path,
+    initialized_materializations_context: None,
+) -> None:
+    """Runner should execute dependent steps where each step refines prior-step data."""
+    from kelp.tables.materialization.runner import _REGISTRY
+
+    append_table = "mat_append_orders"
+    overwrite_table = "mat_overwrite_orders"
+    merge_table = "mat_merge_orders"
+
+    _drop_table_if_exists(spark, append_table)
+    _drop_table_if_exists(spark, overwrite_table)
+    _drop_table_if_exists(spark, merge_table)
+
+    spark.createDataFrame([], "id BIGINT, name STRING").write.format("delta").mode(
+        "overwrite"
+    ).saveAsTable(append_table)
+    spark.createDataFrame([], "id BIGINT, name STRING").write.format("delta").mode(
+        "overwrite"
+    ).saveAsTable(overwrite_table)
+    spark.createDataFrame([], "id BIGINT, name STRING, updated_at BIGINT").write.format(
+        "delta"
+    ).mode("overwrite").saveAsTable(merge_table)
+
+    registry_snapshot = dict(_REGISTRY)
+    _REGISTRY.clear()
+
+    try:
+
+        @materialized(
+            name=append_table,
+            apply_vacuum=False,
+            apply_optimize=False,
+        )
+        def bronze_step(ctx: MaterializedContext) -> DataFrame:
+            source_df = _csv_df(spark, materializations_project_dir / "data/append/source.csv")
+            return source_df.select(
+                f.col("id").cast("bigint").alias("id"),
+                f.lower(f.col("name")).alias("name"),
+            )
+
+        @materialized(
+            name=overwrite_table,
+            depends_on=[append_table],
+            apply_vacuum=False,
+            apply_optimize=False,
+        )
+        def silver_step(ctx: MaterializedContext) -> DataFrame:
+            previous_df = spark.read.table(append_table)
+            return (
+                previous_df.filter(f.col("id") > f.lit(1))
+                .withColumn("name", f.concat(f.lit("silver_"), f.col("name")))
+                .withColumn("id", f.col("id").cast("bigint"))
+                .select("id", "name")
+            )
+
+        @materialized(
+            name=merge_table,
+            depends_on=[overwrite_table],
+            apply_vacuum=False,
+            apply_optimize=False,
+        )
+        def gold_step(ctx: MaterializedContext) -> DataFrame:
+            previous_df = spark.read.table(overwrite_table)
+            return (
+                previous_df.withColumn("name", f.concat(f.col("name"), f.lit("_gold")))
+                .withColumn("id", f.col("id").cast("bigint"))
+                .withColumn("updated_at", (f.col("id") * f.lit(100)).cast("bigint"))
+                .withColumn("_op", f.lit("U"))
+                .select("id", "name", "updated_at", "_op")
+            )
+
+        # Keep local references to avoid function redefinition lint warnings.
+        _ = bronze_step, silver_step, gold_step
+
+        from kelp.tables import Runner
+
+        runner = Runner()
+
+        assert runner.plan_all() == [append_table, overwrite_table, merge_table]
+
+        runner.run_all()
+
+        assert [entry.model for entry in runner.runlog.entries] == [
+            append_table,
+            overwrite_table,
+            merge_table,
+        ]
+        assert all(entry.status == "success" for entry in runner.runlog.entries)
+
+        append_rows = {row["id"]: row["name"] for row in spark.table(append_table).collect()}
+        assert append_rows == {1: "alice", 2: "bob"}
+
+        overwrite_rows = {row["id"]: row["name"] for row in spark.table(overwrite_table).collect()}
+        assert overwrite_rows == {2: "silver_bob"}
+
+        merge_rows = [
+            (row["id"], row["name"], row["updated_at"])
+            for row in spark.table(merge_table).collect()
+        ]
+        assert merge_rows == [(2, "silver_bob_gold", 200)]
+
+    finally:
+        _REGISTRY.clear()
+        _REGISTRY.update(registry_snapshot)

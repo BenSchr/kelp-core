@@ -3,7 +3,6 @@ import logging
 from pyspark.sql import SparkSession
 
 from kelp.models.model_mat_config import ModelMaterializationConfig
-from kelp.service.model_manager import KelpModel
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +27,18 @@ def table_exists(spark: SparkSession, table_name: str) -> bool:
 
 
 def ensure_table_created(
-    spark: SparkSession, kelp_model: KelpModel | None, target_name: str
+    spark: SparkSession,
+    target_name: str,
+    create_table_ddl: str | None = None,
+    model_name: str | None = None,
 ) -> bool:
     """Create a missing target table via Kelp model DDL when available.
 
     Args:
         spark: Active SparkSession.
-        kelp_model: Resolved Kelp model, when metadata exists.
         target_name: Target table name/FQN.
+        create_table_ddl: Optional DDL statement used to create target when missing.
+        model_name: Optional model name for contextual logging.
 
     Returns:
         ``True`` when the table exists after this function returns, else ``False``.
@@ -43,25 +46,21 @@ def ensure_table_created(
     if table_exists(spark, target_name):
         return True
 
-    if kelp_model is None:
+    if not create_table_ddl:
         return False
 
-    ddl = kelp_model.get_ddl(if_not_exists=True)
-
-    if not ddl:
-        return False
     try:
-        spark.sql(ddl)
-    except Exception as e:  # noqa: BLE001
+        spark.sql(create_table_ddl)
+    except Exception as e:
         logger.warning(
             "Failed to create table '%s' for model '%s' using DDL: %s",
             target_name,
-            kelp_model.name,
-            ddl,
+            model_name or target_name,
+            create_table_ddl,
         )
         # Raise since creating table may contain generated columns or other metadata-driven schema details that are required for correct materialization
         raise RuntimeError(
-            f"Failed to create table '{target_name}' for model '{kelp_model.name}'."
+            f"Failed to create table '{target_name}' for model '{model_name or target_name}'."
         ) from e
 
     return table_exists(spark, target_name)

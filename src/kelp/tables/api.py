@@ -6,7 +6,7 @@ Every function in this module delegates to
 pipeline-specific logic is involved.
 """
 
-from kelp.models.model import Column
+from kelp.models.model import Column, DQXQuality
 from kelp.service.model_manager import KelpModel, ModelManager
 
 
@@ -79,3 +79,8 @@ def source_options(name: str) -> dict:
     from kelp.service.source_manager import SourceManager
 
     return SourceManager.get_options(name)
+
+
+def get_dqx_config(name: str) -> DQXQuality | None:
+    """Get the DQX quality configuration for a model, if it exists."""
+    return ModelManager.build_model(name).dqx_quality

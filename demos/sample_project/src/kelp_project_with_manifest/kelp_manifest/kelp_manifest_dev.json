@@ -47,7 +47,7 @@
       "+schema": "kelp_bronze"
     },
     "policies_path": null,
-    "quarantine_config": {
+    "quality_config": {
       "quarantine_catalog": null,
       "quarantine_schema": null,
       "quarantine_prefix": "",

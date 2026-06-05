@@ -8,7 +8,7 @@ from pyspark.sql import DataFrame, SparkSession
 
 from kelp.models.model_mat_config import ModelMaterializationConfig
 from kelp.tables.materialization.base import table_exists
-from kelp.tables.materialization.factory import _resolve_model, materialize
+from kelp.tables.materialization.factory import _resolve_materialization_inputs, materialize
 from kelp.tables.materialization.runner import _REGISTRY, ModelSpec
 
 
@@ -38,9 +38,11 @@ def materialized(
     name: str | None = None,
     config: ModelMaterializationConfig | dict | None = None,
     depends_on: list[str] | None = None,
+    full_refresh: bool = False,
     apply_vacuum: bool = True,
     vacuum_lite: bool = True,
     apply_optimize: bool = True,
+    apply_quality_checks: bool = True,
 ) -> Callable[[Callable[..., DataFrame]], Callable[..., DataFrame]]:
     """Decorator that materializes the returned DataFrame.
 
@@ -78,16 +80,17 @@ def materialized(
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> DataFrame:
-            full_refresh = bool(kwargs.pop("full_refresh", False))
+            runtime_full_refresh = kwargs.pop("full_refresh", full_refresh)
 
             spark = SparkSession.getActiveSession()
             if spark is None:
                 raise RuntimeError("No active SparkSession available for materialization.")
 
-            kelp_model = _resolve_model(target_name)
-            resolved_target_name = (
-                kelp_model.fqn if kelp_model is not None and kelp_model.fqn else target_name
+            resolved_inputs = _resolve_materialization_inputs(
+                table_name=target_name,
+                config=cfg,
             )
+            resolved_target_name = resolved_inputs.target_name
 
             call_args = args
             if inject_ctx:
@@ -95,7 +98,7 @@ def materialized(
                     spark=spark,
                     this=resolved_target_name,
                     target_exists=table_exists(spark, resolved_target_name),
-                    full_refresh=full_refresh,
+                    full_refresh=runtime_full_refresh,
                 )
                 call_args = (context, *args)
 
@@ -111,10 +114,11 @@ def materialized(
                 dataframe=result,
                 table_name=target_name,
                 config=cfg,
-                full_refresh=full_refresh,
+                full_refresh=runtime_full_refresh,
                 apply_vacuum=apply_vacuum,
                 vacuum_lite=vacuum_lite,
                 apply_optimize=apply_optimize,
+                apply_quality_checks=apply_quality_checks,
             )
             return result
 

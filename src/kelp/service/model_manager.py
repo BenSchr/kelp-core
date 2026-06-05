@@ -32,18 +32,17 @@ class KelpModel:
     fqn: str | None = None
     schema: str | None = None
     schema_lite: str | None = None
-    dqx_checks: list[dict] | None = None
+    dqx_quality: DQXQuality | None = None
 
     validation_table: str | None = None
     quarantine_table: str | None = None
     target_table: str | None = None
     root_model: Model | None = None
-    config: ModelMaterializationConfig | None = None
+    materialization: ModelMaterializationConfig | None = None
+    meta: dict[str, Any] | None = None
 
-    def get_dqx_check_obj(self) -> DQXQuality | None:
-        if self.root_model and isinstance(self.root_model.quality, DQXQuality):
-            return self.root_model.quality
-        return None
+    # def get_dqx_check_obj(self) -> DQXQuality | None:
+    #     return self.dqx_quality
 
     def build_ddl(self, if_not_exists: bool = True) -> str | None:
         """Build a CREATE TABLE DDL statement directly from this model's properties.
@@ -220,8 +219,8 @@ class ModelManager:
         catalog: str | None = None,
     ) -> str:
         project_config = _get_project_config(ctx)
-        prefix = project_config.quarantine_config.validation_prefix
-        suffix = project_config.quarantine_config.validation_suffix
+        prefix = project_config.quality_config.validation_prefix
+        suffix = project_config.quality_config.validation_suffix
         validation_model_name = f"{prefix}{model_name}{suffix}"
         return cls.build_qualified_model_name(catalog, schema, validation_model_name)
 
@@ -234,10 +233,10 @@ class ModelManager:
         catalog: str | None = None,
     ) -> str:
         project_config = _get_project_config(ctx)
-        prefix = project_config.quarantine_config.quarantine_prefix
-        suffix = project_config.quarantine_config.quarantine_suffix
-        quarantine_catalog = project_config.quarantine_config.quarantine_catalog
-        quarantine_schema = project_config.quarantine_config.quarantine_schema
+        prefix = project_config.quality_config.quarantine_prefix
+        suffix = project_config.quality_config.quarantine_suffix
+        quarantine_catalog = project_config.quality_config.quarantine_catalog
+        quarantine_schema = project_config.quality_config.quarantine_schema
         qnt_name = f"{prefix}{model_name}{suffix}"
         schema = quarantine_schema or schema
         catalog = quarantine_catalog or catalog
@@ -309,15 +308,6 @@ class ModelManager:
             add_generated=False,
             exclude=exclude,
         )
-
-        if model.quality and isinstance(model.quality, SDPQuality):
-            sdp_model.expect_all = model.quality.expect_all
-            sdp_model.expect_all_or_drop = model.quality.expect_all_or_drop
-            sdp_model.expect_all_or_fail = model.quality.expect_all_or_fail
-            sdp_model.expect_all_or_quarantine = model.quality.expect_all_or_quarantine
-        elif model.quality and isinstance(model.quality, DQXQuality):
-            sdp_model.dqx_checks = model.quality.checks
-
         sdp_model.validation_table = cls.build_validation_model_name(
             ctx, model.name, model.schema_, model.catalog
         )
@@ -327,7 +317,17 @@ class ModelManager:
         sdp_model.target_table = (
             sdp_model.validation_table if sdp_model.expect_all_or_quarantine else sdp_model.fqn
         )
+        if model.quality and isinstance(model.quality, SDPQuality):
+            sdp_model.expect_all = model.quality.expect_all
+            sdp_model.expect_all_or_drop = model.quality.expect_all_or_drop
+            sdp_model.expect_all_or_fail = model.quality.expect_all_or_fail
+            sdp_model.expect_all_or_quarantine = model.quality.expect_all_or_quarantine
+        elif model.quality and isinstance(model.quality, DQXQuality):
+            sdp_model.dqx_quality = model.quality
+
         sdp_model.root_model = model
+        sdp_model.meta = model.meta
+
         return sdp_model
 
     @classmethod
@@ -370,10 +370,16 @@ class ModelManager:
         )
         kelp_model.root_model = model
 
-        if model.quality and isinstance(model.quality, DQXQuality):
-            kelp_model.dqx_checks = model.quality.checks
+        quarantine_table = cls.build_quarantine_model_name(
+            ctx, model.name, model.schema_, model.catalog
+        )
+        kelp_model.quarantine_table = quarantine_table
 
-        kelp_model.config = model.materialization
+        if model.quality and isinstance(model.quality, DQXQuality):
+            kelp_model.dqx_quality = model.quality
+
+        kelp_model.materialization = model.materialization
+        kelp_model.meta = model.meta
 
         return kelp_model
 

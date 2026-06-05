@@ -272,7 +272,7 @@ Configure how Kelp handles data quality failures and quarantine tables.
 
 ```yaml
 kelp_project:
-  quarantine_config:
+  quality_config:
     quarantine_catalog: null              # Use default catalog
     quarantine_schema: quarantine         # Store quarantine tables here
     quarantine_prefix: ""
@@ -287,7 +287,7 @@ Control quarantine and validation table naming:
 
 ```yaml
 kelp_project:
-  quarantine_config:
+  quality_config:
     quarantine_catalog: quality_checks_catalog
     quarantine_schema: failed_records
     quarantine_prefix: qtn_                # Prefix for quarantine tables
@@ -513,7 +513,7 @@ kelp_project:
   abacs: {}
 
   # Quarantine and validation table configuration
-  quarantine_config:
+  quality_config:
     quarantine_catalog: null
     quarantine_schema: quality
     quarantine_prefix: ""

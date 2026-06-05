@@ -121,7 +121,7 @@ def sync_from_pipeline(
     for pipeline_id in pipeline_ids:
         p_tables = pipeline_manager.fetch_pipeline_models(
             pipeline_id,
-            quarantine_config=ctx.project_settings.quarantine_config,
+            quality_config=ctx.project_settings.quality_config,
         )
         for table in p_tables:
             _log(f"  • {table.name}")

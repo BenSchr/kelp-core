@@ -1,6 +1,9 @@
 # yaml-language-server: $schema=/workspaces/kelp/.vscode/kelp_json_schema.json
 kelp_project:
   models_path: "./kelp_metadata/models"
+  quality_config:
+    dqx_monitoring_fqn: ${catalog}.kelp_bronze.dqx_monitoring
+    dqx_monitoring_enabled: true
 
   models:
     +catalog: ${ catalog }

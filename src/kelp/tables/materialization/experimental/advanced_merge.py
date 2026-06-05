@@ -103,7 +103,13 @@ class AdvancedMergeMaterializer:
         )
 
         existed_before = table_exists(spark, target_name)
-        ensure_table_created(spark, kelp_model, target_name)
+        create_table_ddl = kelp_model.get_ddl(if_not_exists=True) if kelp_model else None
+        ensure_table_created(
+            spark,
+            target_name,
+            create_table_ddl=create_table_ddl,
+            model_name=kelp_model.name if kelp_model else target_name,
+        )
         created_now = (not existed_before) and table_exists(spark, target_name)
 
         if not table_exists(spark, target_name):
@@ -116,7 +122,8 @@ class AdvancedMergeMaterializer:
                 dataframe=dataframe,
                 target_name=target_name,
                 config=ModelMaterializationConfig(write_mode="append", options={}),
-                kelp_model=kelp_model,
+                create_table_ddl=create_table_ddl,
+                model_name=kelp_model.name if kelp_model else target_name,
             )
             return
 

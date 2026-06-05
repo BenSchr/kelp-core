@@ -23,5 +23,6 @@ resources:
           spec:
             dependencies:
               - ${var.kelp_dependency}
+              - databricks-labs-dqx
             environment_version: "5"
       performance_target: PERFORMANCE_OPTIMIZED

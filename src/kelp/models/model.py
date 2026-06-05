@@ -119,6 +119,15 @@ class DQXQuality(Quality):
         default=False,
         description="Whether to quarantine rows failing quality checks",
     )
+    spark_violation_action: Literal["error", "ignore", "drop"] = Field(
+        default="error",
+        description="Action for quality violations at the Spark level: error (raise exception), ignore (store errors in output), or drop (exclude from output)",
+    )
+    spark_quarantine: bool = Field(
+        default=False,
+        description="Whether to write rows failing quality checks to a quarantine table at the Spark level",
+    )
+
     checks: list[dict] = Field(
         default_factory=list,
         description="Quality check configurations",
@@ -151,6 +160,10 @@ class Column(BaseModel):
     tags: dict[str, str] = Field(
         default_factory=dict,
         description="Metadata tags for the column",
+    )
+    meta: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Generic user-defined metadata for filtering and grouping columns",
     )
 
 

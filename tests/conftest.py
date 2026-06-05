@@ -61,7 +61,7 @@ def functions_abacs_project_dir(fixtures_dir: Path) -> Path:
     return fixtures_dir / "functions_abacs_project"
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def spark() -> Generator[SparkSession, None, None]:
     """Create a single-core local SparkSession with Delta support for table tests."""
 
@@ -75,8 +75,13 @@ def spark() -> Generator[SparkSession, None, None]:
         shutil.rmtree(warehouse_dir)
     warehouse_dir.mkdir(parents=True, exist_ok=True)
 
+    # Kill DQX internal SparkSession if it exists to avoid conflicts with our test SparkSession
+    active = SparkSession.getActiveSession()
+    if active is not None:
+        active.stop()
+
     builder = (
-        SparkSession.builder.master("local[1]")
+        SparkSession.builder.master("local[4]")
         .appName("kelp-spark-test")
         .config("spark.sql.warehouse.dir", str(warehouse_dir))
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
@@ -84,7 +89,7 @@ def spark() -> Generator[SparkSession, None, None]:
             "spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog"
         )
         .config("spark.sql.shuffle.partitions", "1")
-        .config("spark.default.parallelism", "1")
+        # .config("spark.default.parallelism", "1")
         .config("spark.streaming.stopGracefullyOnShutdown", "true")
         .config("spark.ui.enabled", "false")
     )

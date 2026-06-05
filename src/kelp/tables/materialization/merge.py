@@ -7,7 +7,6 @@ from pyspark.sql.column import Column
 from pyspark.sql.window import Window
 
 from kelp.models.model_mat_config import ModelMaterializationConfig
-from kelp.service.model_manager import KelpModel
 from kelp.tables.materialization.append_overwrite import AppendOverwriteMaterializer
 from kelp.tables.materialization.base import (
     build_null_safe_change_condition,
@@ -121,7 +120,8 @@ class MergeMaterializer:
         dataframe: DataFrame,
         target_name: str,
         config: ModelMaterializationConfig,
-        kelp_model: KelpModel | None,
+        create_table_ddl: str | None = None,
+        model_name: str | None = None,
     ) -> None:
         """Materialize by merging source rows into target.
 
@@ -136,9 +136,15 @@ class MergeMaterializer:
             dataframe: Source DataFrame.
             target_name: Target table name/FQN.
             config: Effective materialization config.
-            kelp_model: Resolved Kelp model (if found).
+            create_table_ddl: Optional DDL used to create target table when missing.
+            model_name: Optional model name for contextual logging.
         """
-        ensure_table_created(spark, kelp_model, target_name)
+        ensure_table_created(
+            spark,
+            target_name,
+            create_table_ddl=create_table_ddl,
+            model_name=model_name,
+        )
 
         if not table_exists(spark, target_name):
             logger.warning(
@@ -150,7 +156,8 @@ class MergeMaterializer:
                 dataframe=dataframe,
                 target_name=target_name,
                 config=ModelMaterializationConfig(write_mode="append", options=config.options),
-                kelp_model=kelp_model,
+                create_table_ddl=create_table_ddl,
+                model_name=model_name,
             )
             return
 

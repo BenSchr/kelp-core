@@ -12,10 +12,11 @@ from kelp.tables.api import (
     source,
     source_options,
 )
-from kelp.tables.materialization import MaterializedContext, materialize, materialized
+from kelp.tables.materialization import MaterializedContext, Runner, materialize, materialized
 
 __all__ = [
     "MaterializedContext",
+    "Runner",
     "columns",
     "ddl",
     "func",

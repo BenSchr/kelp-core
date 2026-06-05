@@ -34,3 +34,13 @@ kelp_models:
         description: Date this row was ingested.
     materialization:
       write_mode: append
+    quality:
+      engine: dqx
+      spark_violation_action: drop
+      spark_quarantine: true
+      checks:
+        - check:
+            function: is_not_equal_to
+            arguments:
+              column: user_id
+              value: "'U999'"
