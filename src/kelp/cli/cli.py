@@ -8,7 +8,7 @@ def main() -> None:
 
     app = Typer(
         name="kelp",
-        help="🌿 Kelp - Metadata Toolkit for Databricks Spark and Declarative Pipelines",
+        help="🌿 Kelp - Metadata Toolkit for Spark and Declarative Pipelines",
         no_args_is_help=True,
         rich_markup_mode=None,
     )
