@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 import yaml
 from databricks.sdk import WorkspaceClient
@@ -8,6 +9,11 @@ from kelp.models.metric_view import MetricView
 from kelp.models.model import Model
 
 logger = logging.getLogger(__name__)
+
+
+def on_databricks() -> bool:
+    """Detect if code is running in a Databricks environment."""
+    return "DATABRICKS_RUNTIME_VERSION" in os.environ
 
 
 def _parse_clustering_columns(raw_value: str | list[object] | None) -> list[str]:

@@ -1,0 +1,48 @@
+kelp_models:
+  - name: silver_orders_refined_mat
+    description: Silver refined orders with line amount and quality filtering.
+    columns:
+      - name: order_nk
+        data_type: string
+        nullable: false
+      - name: user_id
+        data_type: string
+      - name: product
+        data_type: string
+      - name: quantity
+        data_type: bigint
+      - name: unit_price
+        data_type: double
+      - name: line_amount
+        data_type: double
+      - name: order_date
+        data_type: date
+      - name: order_updated_at
+        data_type: timestamp
+      - name: ingest_date
+        data_type: date
+    constraints:
+      - name: pk_silver_orders_refined
+        type: primary_key
+        columns:
+          - order_nk
+    cluster_by:
+      - order_date
+      - order_updated_at
+    materialization:
+      write_mode: merge
+      unique_keys:
+        - order_nk
+      sequence_by:
+        - order_updated_at
+      ignore_null_updates: true
+      include_at_target_cols:
+        - order_nk
+        - user_id
+        - product
+        - quantity
+        - unit_price
+        - line_amount
+        - order_date
+        - order_updated_at
+        - ingest_date

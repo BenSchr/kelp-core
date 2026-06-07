@@ -1,0 +1,6 @@
+id,name,updated_at,_op
+1,,11,U
+2,stale_2,19,U
+2,new_2,21,U
+3,new_3,30,U
+4,will_delete,6,D

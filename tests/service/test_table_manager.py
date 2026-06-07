@@ -38,13 +38,10 @@ class TestKelpModel:
 
     def test_kelp_table_get_dqx_check_obj_with_dqx_quality(self):
         """Test get_dqx_check_obj returns DQX quality object."""
-        root_model = Table(
-            name="test",
-            quality=DQXQuality(engine="dqx", checks=[{"name": "test_check"}]),
-        )
-        kelp_table = KelpModel(name="test", root_model=root_model)
+        quality = DQXQuality(engine="dqx", checks=[{"name": "test_check"}])
+        kelp_table = KelpModel(name="test", dqx_quality=quality)
 
-        dqx_obj = kelp_table.get_dqx_check_obj()
+        dqx_obj = kelp_table.dqx_quality
 
         assert dqx_obj is not None
         assert isinstance(dqx_obj, DQXQuality)
@@ -58,7 +55,7 @@ class TestKelpModel:
         )
         kelp_table = KelpModel(name="test", root_model=root_model)
 
-        dqx_obj = kelp_table.get_dqx_check_obj()
+        dqx_obj = kelp_table.dqx_quality
 
         assert dqx_obj is None
 
@@ -66,7 +63,7 @@ class TestKelpModel:
         """Test get_dqx_check_obj returns None when no quality defined."""
         kelp_table = KelpModel(name="test")
 
-        dqx_obj = kelp_table.get_dqx_check_obj()
+        dqx_obj = kelp_table.dqx_quality
 
         assert dqx_obj is None
 
@@ -254,7 +251,7 @@ class TestSparkSchemaBuilder:
         builder = SparkSchemaBuilder(table)
         schema = builder.add_columns(add_generated=True).build_raw()
 
-        assert "GENERATED AS ALWAYS" in schema
+        assert "GENERATED ALWAYS AS " in schema
         assert "IDENTITY (START WITH 1 INCREMENT BY 1)" in schema
 
     def test_column_with_generated_expression(self):
@@ -324,7 +321,7 @@ class TestSparkSchemaBuilder:
         builder = SparkSchemaBuilder(table)
         ddl = builder.add_columns().add_clustering().build_ddl()
 
-        assert "CLUSTERED BY (id)" in ddl
+        assert "CLUSTER BY (id)" in ddl
 
     def test_build_ddl_with_partitioning(self):
         """Test DDL with partitioning."""

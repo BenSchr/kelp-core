@@ -10,6 +10,8 @@ Reference for the core model and column configuration models.
 
 ::: kelp.models.model.Model
 
+::: kelp.models.model_mat_config.ModelMaterializationConfig
+
 ::: kelp.models.model.Column
 
 ::: kelp.models.model.GeneratedIdentityColumnConfig

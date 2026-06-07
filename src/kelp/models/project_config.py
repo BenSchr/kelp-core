@@ -6,7 +6,7 @@ from pydantic.json_schema import SkipJsonSchema
 from kelp.models.policy import PolicyConfig
 
 
-class QuarantineConfig(BaseModel):
+class QualityConfig(BaseModel):
     """Configuration for table quarantine and validation.
 
     Attributes:
@@ -16,6 +16,8 @@ class QuarantineConfig(BaseModel):
         quarantine_suffix: Suffix for quarantine table names.
         validation_prefix: Prefix for validation table names.
         validation_suffix: Suffix for validation table names.
+        dqx_quality_monitoring_table: Fully qualified name of the table to store quality violation details.
+        dqx_quality_monitoring_enabled: Whether to enable quality monitoring and storing violation details.
     """
 
     quarantine_catalog: str | None = Field(
@@ -41,6 +43,14 @@ class QuarantineConfig(BaseModel):
     validation_suffix: str = Field(
         default="_validation",
         description="Suffix for validation table names",
+    )
+    dqx_monitoring_fqn: str | None = Field(
+        default=None,
+        description="Fully qualified name of the table to store quality violation details",
+    )
+    dqx_monitoring_enabled: bool = Field(
+        default=False,
+        description="Whether to enable quality monitoring and storing violation details",
     )
 
 
@@ -109,7 +119,7 @@ class ProjectConfig(BaseModel):
         abacs: Configuration hierarchy for ABAC policies.
         sources_path: Path to source definitions.
         sources: Configuration hierarchy for sources.
-        quarantine_config: Configuration for table quarantine and validation.
+        quality_config: Configuration for table quarantine and validation.
         remote_catalog_config: Configuration for remote catalog synchronization.
         runtime_vars: Runtime variables (internal use).
         project_file_path: Path to the project configuration file (internal use).
@@ -159,8 +169,8 @@ class ProjectConfig(BaseModel):
         default=None,
         description="Path to policy definitions",
     )
-    quarantine_config: QuarantineConfig = Field(
-        default_factory=QuarantineConfig,
+    quality_config: QualityConfig = Field(
+        default_factory=QualityConfig,
         description="Configuration for table quarantine and validation",
     )
     remote_catalog_config: RemoteCatalogConfig = Field(

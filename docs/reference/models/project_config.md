@@ -6,7 +6,7 @@ title: kelp.models.project_config
 
 Reference for the project_config configuration model.
 
-::: kelp.models.project_config.QuarantineConfig
+::: kelp.models.project_config.QualityConfig
 
 ::: kelp.models.project_config.RemoteCatalogConfig
 

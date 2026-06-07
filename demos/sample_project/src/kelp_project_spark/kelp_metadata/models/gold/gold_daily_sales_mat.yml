@@ -1,0 +1,26 @@
+kelp_models:
+  - name: gold_daily_sales_mat
+    description: Gold daily sales aggregation by country and order date.
+    columns:
+      - name: order_date
+        data_type: date
+        nullable: false
+      - name: country
+        data_type: string
+        nullable: false
+      - name: order_count
+        data_type: bigint
+      - name: gross_revenue
+        data_type: double
+      - name: total_units
+        data_type: bigint
+      - name: max_order_updated_at
+        data_type: timestamp
+    cluster_by:
+      - order_date
+      - country
+    materialization:
+      write_mode: merge
+      unique_keys:
+        - order_date
+        - country

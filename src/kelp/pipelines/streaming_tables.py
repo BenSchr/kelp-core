@@ -181,7 +181,7 @@ def table(
         if validation_model_name is None or quarantine_model_name is None:
             raise ValueError("Validation or quarantine table name is missing.")
 
-        dqx_obj = sdp_table.get_dqx_check_obj()
+        dqx_obj = sdp_table.dqx_quality
 
         if dqx_obj:
             try:

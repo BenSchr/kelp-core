@@ -769,7 +769,7 @@
       "type": "object"
     },
     "ProjectConfig": {
-      "description": "Project-level configuration for a kelp project.\n\nAttributes:\n    models_path: Path to table/model definitions.\n    models: Configuration hierarchy for models.\n    metrics_path: Path to metric view definitions.\n    metric_views: Configuration hierarchy for metric views.\n    functions_path: Path to function definitions.\n    functions: Configuration hierarchy for functions.\n    abacs_path: Path to ABAC policy definitions.\n    abacs: Configuration hierarchy for ABAC policies.\n    sources_path: Path to source definitions.\n    sources: Configuration hierarchy for sources.\n    quarantine_config: Configuration for table quarantine and validation.\n    remote_catalog_config: Configuration for remote catalog synchronization.\n    runtime_vars: Runtime variables (internal use).\n    project_file_path: Path to the project configuration file (internal use).",
+      "description": "Project-level configuration for a kelp project.\n\nAttributes:\n    models_path: Path to table/model definitions.\n    models: Configuration hierarchy for models.\n    metrics_path: Path to metric view definitions.\n    metric_views: Configuration hierarchy for metric views.\n    functions_path: Path to function definitions.\n    functions: Configuration hierarchy for functions.\n    abacs_path: Path to ABAC policy definitions.\n    abacs: Configuration hierarchy for ABAC policies.\n    sources_path: Path to source definitions.\n    sources: Configuration hierarchy for sources.\n    quality_config: Configuration for table quarantine and validation.\n    remote_catalog_config: Configuration for remote catalog synchronization.\n    runtime_vars: Runtime variables (internal use).\n    project_file_path: Path to the project configuration file (internal use).",
       "properties": {
         "models_path": {
           "anyOf": [
@@ -866,7 +866,7 @@
           "title": "Sources",
           "type": "object"
         },
-        "quarantine_config": {
+        "quality_config": {
           "$ref": "#/$defs/QuarantineConfig",
           "description": "Configuration for table quarantine and validation"
         },

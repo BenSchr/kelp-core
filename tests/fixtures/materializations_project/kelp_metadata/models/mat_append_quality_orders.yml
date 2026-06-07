@@ -1,0 +1,22 @@
+kelp_models:
+  - name: mat_append_quality_orders
+    description: Fixture model for append materialization tests with DQX quality checks
+    columns:
+      - name: id
+        data_type: bigint
+        nullable: false
+      - name: name
+        data_type: string
+        nullable: true
+    materialization:
+      write_mode: append
+    quality:
+      engine: dqx
+      spark_violation_action: drop
+      spark_quarantine: true
+      checks:
+        - check:
+            function: is_not_equal_to
+            arguments:
+              column: id
+              value: 1

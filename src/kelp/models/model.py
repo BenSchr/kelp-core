@@ -5,6 +5,8 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.json_schema import SkipJsonSchema
 
+from kelp.models.model_mat_config import ModelMaterializationConfig
+
 
 class TableType(Enum):
     EXTERNAL = "external"
@@ -117,6 +119,15 @@ class DQXQuality(Quality):
         default=False,
         description="Whether to quarantine rows failing quality checks",
     )
+    spark_violation_action: Literal["error", "ignore", "drop"] = Field(
+        default="error",
+        description="Action for quality violations at the Spark level: error (raise exception), ignore (store errors in output), or drop (exclude from output)",
+    )
+    spark_quarantine: bool = Field(
+        default=False,
+        description="Whether to write rows failing quality checks to a quarantine table at the Spark level",
+    )
+
     checks: list[dict] = Field(
         default_factory=list,
         description="Quality check configurations",
@@ -149,6 +160,10 @@ class Column(BaseModel):
     tags: dict[str, str] = Field(
         default_factory=dict,
         description="Metadata tags for the column",
+    )
+    meta: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Generic user-defined metadata for filtering and grouping columns",
     )
 
 
@@ -277,6 +292,10 @@ class Model(BaseModel):
         default=None,
         discriminator="engine",
         description="Data quality configuration using SDPQuality or DQXQuality",
+    )
+    materialization: ModelMaterializationConfig | None = Field(
+        default=None,
+        description="Configuration controlling how the model is materialized.",
     )
     constraints: list[PrimaryKeyConstraint | ForeignKeyConstraint] = Field(
         default_factory=list,

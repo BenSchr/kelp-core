@@ -1,0 +1,8 @@
+kelp_project:
+  models_path: "./kelp_metadata/models"
+  quality_config:
+    dqx_monitoring_fqn: default.dqx_metrics
+    dqx_monitoring_enabled: true
+
+targets:
+  dev: {}

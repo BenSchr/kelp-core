@@ -33,6 +33,7 @@ dev = [
     "faker>=40.4.0",
     "prek>=0.3.11",
     "datacontract-cli>=0.12.4",
+    "delta-spark>=4.2.0",
 ]
 
 test=[
@@ -119,6 +120,10 @@ addopts = "-v --tb=short"
 filterwarnings = [
     "ignore::DeprecationWarning",
 ]
+
+log_cli = true
+log_cli_level = "INFO"
+
 
 [tool.ty.src]
 include = ["src", "tests", "scripts"]

@@ -7,7 +7,7 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.service import pipelines as sp
 
 from kelp.models.model import Model
-from kelp.models.project_config import QuarantineConfig
+from kelp.models.project_config import QualityConfig
 from kelp.utils.common import find_path_by_name
 from kelp.utils.databricks import get_table_from_dbx_sdk
 
@@ -43,13 +43,13 @@ class PipelineManager:
     def fetch_pipeline_models(
         self,
         pipeline_id: str,
-        quarantine_config: QuarantineConfig | None = None,
+        quality_config: QualityConfig | None = None,
     ) -> list[Model]:
         """Fetch all relevant tables from a Databricks pipeline.
 
         Args:
             pipeline_id: The Databricks pipeline ID
-            quarantine_config: Optional config to filter out quarantine/validation tables
+            quality_config: Optional config to filter out quarantine/validation tables
 
         Returns:
             List of Model objects from the pipeline
@@ -72,9 +72,9 @@ class PipelineManager:
         logger.info("Found %s datasets in pipeline", len(dataset_names))
 
         # Filter relevant datasets
-        if quarantine_config:
+        if quality_config:
             dataset_names = [
-                name for name in dataset_names if self._is_relevant_dataset(name, quarantine_config)
+                name for name in dataset_names if self._is_relevant_dataset(name, quality_config)
             ]
             logger.info("Filtered to %s relevant datasets", len(dataset_names))
 
@@ -163,7 +163,7 @@ class PipelineManager:
         rs = update_info.refresh_selection
         return (not frs or len(frs) == 0) and (not rs or len(rs) == 0)
 
-    def _is_relevant_dataset(self, fqn: str, q_conf: QuarantineConfig) -> bool:
+    def _is_relevant_dataset(self, fqn: str, q_conf: QualityConfig) -> bool:
         """Check if a dataset is relevant (not quarantine/validation table)."""
         fqn_parts = fqn.split(".")
         if len(fqn_parts) < 3:

@@ -13,6 +13,7 @@ from kelp.models.model import (
     PrimaryKeyConstraint,
     SDPQuality,
 )
+from kelp.models.model_mat_config import ModelMaterializationConfig
 from kelp.models.project_config import ProjectConfig
 
 
@@ -31,29 +32,69 @@ class KelpModel:
     fqn: str | None = None
     schema: str | None = None
     schema_lite: str | None = None
-    dqx_checks: list[dict] | None = None
+    dqx_quality: DQXQuality | None = None
 
     validation_table: str | None = None
     quarantine_table: str | None = None
     target_table: str | None = None
     root_model: Model | None = None
+    materialization: ModelMaterializationConfig | None = None
+    meta: dict[str, Any] | None = None
 
-    def get_dqx_check_obj(self) -> DQXQuality | None:
-        if self.root_model and isinstance(self.root_model.quality, DQXQuality):
-            return self.root_model.quality
-        return None
+    # def get_dqx_check_obj(self) -> DQXQuality | None:
+    #     return self.dqx_quality
+
+    def build_ddl(self, if_not_exists: bool = True) -> str | None:
+        """Build a CREATE TABLE DDL statement directly from this model's properties.
+
+        Unlike :meth:`get_ddl`, this does not require ``root_model`` — it uses
+        ``schema``, ``fqn``, ``table_type``, ``table_properties``,
+        ``cluster_by``, ``partition_cols``, ``path``, and ``comment``
+        directly from the dataclass fields.
+
+        Args:
+            if_not_exists: Emit ``IF NOT EXISTS`` in the statement.
+
+        Returns:
+            DDL string, or ``None`` when ``schema`` is not set.
+        """
+        if not self.schema:
+            return None
+
+        mapped_type = _UC_TYPE.get(self.table_type.lower(), "TABLE") if self.table_type else "TABLE"
+        target = self.fqn or self.name
+
+        ddl = f"CREATE {mapped_type} "
+        if if_not_exists:
+            ddl += "IF NOT EXISTS "
+        ddl += f"{target} (\n{self.schema}\n)"
+
+        if self.comment:
+            ddl += f"\nCOMMENT '{self.comment}'"
+        if self.path:
+            ddl += f"\nLOCATION '{self.path}'"
+        if self.cluster_by_auto:
+            ddl += "\nCLUSTER BY (AUTO)"
+        elif self.cluster_by:
+            ddl += f"\nCLUSTER BY ({', '.join(self.cluster_by)})"
+        elif self.partition_cols:
+            ddl += f"\nPARTITIONED BY ({', '.join(self.partition_cols)})"
+        if self.table_properties:
+            props = ", ".join(f"'{k}'='{v}'" for k, v in self.table_properties.items())
+            ddl += f"\nTBLPROPERTIES ({props})"
+
+        return ddl
 
     def get_ddl(self, if_not_exists: bool = True) -> str | None:
         mapped_type = _UC_TYPE.get(self.table_type.lower(), "TABLE") if self.table_type else "TABLE"
-        return (
-            ModelManager.get_spark_schema_ddl(
+        if self.root_model:
+            return ModelManager.get_spark_schema_ddl(
                 self.root_model,
                 table_type=mapped_type,
                 if_not_exists=if_not_exists,
             )
-            if self.root_model
-            else None
-        )
+        # Fallback to building DDL from dataclass fields when root_model is not available
+        return self.build_ddl(if_not_exists=if_not_exists)
 
 
 @dataclass
@@ -178,8 +219,8 @@ class ModelManager:
         catalog: str | None = None,
     ) -> str:
         project_config = _get_project_config(ctx)
-        prefix = project_config.quarantine_config.validation_prefix
-        suffix = project_config.quarantine_config.validation_suffix
+        prefix = project_config.quality_config.validation_prefix
+        suffix = project_config.quality_config.validation_suffix
         validation_model_name = f"{prefix}{model_name}{suffix}"
         return cls.build_qualified_model_name(catalog, schema, validation_model_name)
 
@@ -192,10 +233,10 @@ class ModelManager:
         catalog: str | None = None,
     ) -> str:
         project_config = _get_project_config(ctx)
-        prefix = project_config.quarantine_config.quarantine_prefix
-        suffix = project_config.quarantine_config.quarantine_suffix
-        quarantine_catalog = project_config.quarantine_config.quarantine_catalog
-        quarantine_schema = project_config.quarantine_config.quarantine_schema
+        prefix = project_config.quality_config.quarantine_prefix
+        suffix = project_config.quality_config.quarantine_suffix
+        quarantine_catalog = project_config.quality_config.quarantine_catalog
+        quarantine_schema = project_config.quality_config.quarantine_schema
         qnt_name = f"{prefix}{model_name}{suffix}"
         schema = quarantine_schema or schema
         catalog = quarantine_catalog or catalog
@@ -267,15 +308,6 @@ class ModelManager:
             add_generated=False,
             exclude=exclude,
         )
-
-        if model.quality and isinstance(model.quality, SDPQuality):
-            sdp_model.expect_all = model.quality.expect_all
-            sdp_model.expect_all_or_drop = model.quality.expect_all_or_drop
-            sdp_model.expect_all_or_fail = model.quality.expect_all_or_fail
-            sdp_model.expect_all_or_quarantine = model.quality.expect_all_or_quarantine
-        elif model.quality and isinstance(model.quality, DQXQuality):
-            sdp_model.dqx_checks = model.quality.checks
-
         sdp_model.validation_table = cls.build_validation_model_name(
             ctx, model.name, model.schema_, model.catalog
         )
@@ -285,7 +317,17 @@ class ModelManager:
         sdp_model.target_table = (
             sdp_model.validation_table if sdp_model.expect_all_or_quarantine else sdp_model.fqn
         )
+        if model.quality and isinstance(model.quality, SDPQuality):
+            sdp_model.expect_all = model.quality.expect_all
+            sdp_model.expect_all_or_drop = model.quality.expect_all_or_drop
+            sdp_model.expect_all_or_fail = model.quality.expect_all_or_fail
+            sdp_model.expect_all_or_quarantine = model.quality.expect_all_or_quarantine
+        elif model.quality and isinstance(model.quality, DQXQuality):
+            sdp_model.dqx_quality = model.quality
+
         sdp_model.root_model = model
+        sdp_model.meta = model.meta
+
         return sdp_model
 
     @classmethod
@@ -294,11 +336,14 @@ class ModelManager:
         model_name: str,
         model: Model | None = None,
         ctx: MetaRuntimeContext | None = None,
+        soft_handle: bool = False,
         exclude: list[str] | None = None,
     ) -> KelpModel:
         ctx = ctx or get_context()
-        model = model or _get_model_from_context(ctx, model_name, soft_handle=False)
+        model = model or _get_model_from_context(ctx, model_name, soft_handle=soft_handle)
         if model is None:
+            if soft_handle:
+                return KelpModel(name=model_name, fqn=model_name)
             raise KeyError(f"Model not found in catalog: {model_name}")
 
         kelp_model = KelpModel(name=model.name)
@@ -325,8 +370,16 @@ class ModelManager:
         )
         kelp_model.root_model = model
 
+        quarantine_table = cls.build_quarantine_model_name(
+            ctx, model.name, model.schema_, model.catalog
+        )
+        kelp_model.quarantine_table = quarantine_table
+
         if model.quality and isinstance(model.quality, DQXQuality):
-            kelp_model.dqx_checks = model.quality.checks
+            kelp_model.dqx_quality = model.quality
+
+        kelp_model.materialization = model.materialization
+        kelp_model.meta = model.meta
 
         return kelp_model
 
@@ -397,9 +450,9 @@ class SparkSchemaBuilder:
 
     def add_clustering(self) -> "SparkSchemaBuilder":
         if self.model.cluster_by_auto:
-            self.outer_parts.append("CLUSTERED BY (AUTO)")
+            self.outer_parts.append("CLUSTER BY (AUTO)")
         elif self.model.cluster_by:
-            self.outer_parts.append(f"CLUSTERED BY ({', '.join(self.model.cluster_by)})")
+            self.outer_parts.append(f"CLUSTER BY ({', '.join(self.model.cluster_by)})")
         elif self.model.partition_cols:
             self.outer_parts.append(f"PARTITIONED BY ({', '.join(self.model.partition_cols)})")
         return self
@@ -437,9 +490,9 @@ class SparkSchemaBuilder:
                 gen = column.generated
                 identity_str = "GENERATED "
                 if isinstance(gen, GeneratedIdentityColumnConfig):
-                    identity_str += "AS DEFAULT " if gen.as_default else "AS ALWAYS "
+                    identity_str += "BY DEFAULT " if gen.as_default else "ALWAYS "
                     identity_str += (
-                        f"IDENTITY (START WITH {gen.start_with} INCREMENT BY {gen.increment_by})"
+                        f"AS IDENTITY (START WITH {gen.start_with} INCREMENT BY {gen.increment_by})"
                     )
                 col_str += f" {identity_str}"
             elif column.generated.type == "expression":

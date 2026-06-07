@@ -37,6 +37,11 @@ Kelp provides a metadata and transformation layer for Spark and Spark Declarativ
 - Sync descriptions and tags from metadata to tables and columns without requiring the Spark schema to match exactly
 - Use a low-level API (no decorators) to stay robust against SDP syntax or feature changes
 
+### Spark Dataframe Materialization
+- Declarative materalization of normal Spark Dataframes through decorators or a low-level API
+- Perform writes through metadata configurations for consistent settings and reduced boilerplate
+- Automatically apply DQX quality checks and quarantine patterns on DataFrames before writing
+
 ### Extra utilities
 - Composable DataFrame transformations for schema enforcement and function application
 - CLI tools for project management and metadata synchronization
@@ -387,8 +392,3 @@ export KELP_PROJECT_FILE=/path/to/kelp_project.yml
 uv run kelp validate
 uv run kelp catalog sync-from-catalog "catalog.schema.table"
 ```
-
----
-hide:
-  - navigation
----

@@ -1,0 +1,12 @@
+kelp_models:
+  - name: mat_append_orders
+    description: Fixture model for append materialization tests
+    columns:
+      - name: id
+        data_type: bigint
+        nullable: false
+      - name: name
+        data_type: string
+        nullable: true
+    materialization:
+      write_mode: append
