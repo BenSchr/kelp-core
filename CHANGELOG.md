@@ -3,6 +3,7 @@
 ## ✨ Features
 
 - feat: spark-declarative-dataframes (#15) - Add support for Spark declarative DataFrames in Kelp materialization. This allows users to define materialized tables using a more concise and expressive syntax.
+- feat: external streaming table comments (#17) - You can now add descriptions to streaming tables outside of sdp.
 
 ## 🐛 Fixes
 
