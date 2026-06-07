@@ -5259,7 +5259,7 @@ def get_my_data():
 </span><span id="__span-0-181"><a id="__codelineno-0-181" name="__codelineno-0-181"></a>        <span class="k">if</span> <span class="n">validation_model_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">quarantine_model_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="__span-0-182"><a id="__codelineno-0-182" name="__codelineno-0-182"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Validation or quarantine table name is missing.&quot;</span><span class="p">)</span>
 </span><span id="__span-0-183"><a id="__codelineno-0-183" name="__codelineno-0-183"></a>
-</span><span id="__span-0-184"><a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="n">dqx_obj</span> <span class="o">=</span> <span class="n">sdp_table</span><span class="o">.</span><span class="n">get_dqx_check_obj</span><span class="p">()</span>
+</span><span id="__span-0-184"><a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="n">dqx_obj</span> <span class="o">=</span> <span class="n">sdp_table</span><span class="o">.</span><span class="n">dqx_quality</span>
 </span><span id="__span-0-185"><a id="__codelineno-0-185" name="__codelineno-0-185"></a>
 </span><span id="__span-0-186"><a id="__codelineno-0-186" name="__codelineno-0-186"></a>        <span class="k">if</span> <span class="n">dqx_obj</span><span class="p">:</span>
 </span><span id="__span-0-187"><a id="__codelineno-0-187" name="__codelineno-0-187"></a>            <span class="k">try</span><span class="p">:</span>
