@@ -34,6 +34,7 @@ class MaterializedContext:
 
 
 def materialized(
+    func: Callable[..., DataFrame] | None = None,
     *,
     name: str | None = None,
     config: ModelMaterializationConfig | dict | None = None,
@@ -129,5 +130,8 @@ def materialized(
             depends_on=list(depends_on),
         )
         return wrapper
+
+    if func is not None and callable(func):
+        return decorator(func)
 
     return decorator
