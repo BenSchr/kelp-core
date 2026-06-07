@@ -12,11 +12,6 @@ Kelp is a powerful framework designed to simplify the management of data pipelin
 
 Documentation: [https://benschr.github.io/kelp-core/](https://benschr.github.io/kelp-core/)
 
-# TODO
-[] Rename Quarantine Config into QualityConfig
-[] Add DQX Checks for materialization step
-[] Bootstrap Code for Quality Table
-
 ## Why Kelp?
 Kelp provides a metadata and transformation layer for Spark and Spark Declarative Pipelines (SDP). It lets you define data models, quality checks, and transformations in structured YAML while offering Python utilities for advanced logic. With Kelp you can:
 
@@ -387,8 +382,3 @@ export KELP_PROJECT_FILE=/path/to/kelp_project.yml
 uv run kelp validate
 uv run kelp catalog sync-from-catalog "catalog.schema.table"
 ```
-
----
-hide:
-  - navigation
----

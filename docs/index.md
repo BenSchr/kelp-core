@@ -387,8 +387,3 @@ export KELP_PROJECT_FILE=/path/to/kelp_project.yml
 uv run kelp validate
 uv run kelp catalog sync-from-catalog "catalog.schema.table"
 ```
-
----
-hide:
-  - navigation
----
