@@ -112,7 +112,7 @@ def materialized(
             materialize(
                 spark=spark,
                 dataframe=result,
-                table_name=target_name,
+                name=target_name,
                 config=cfg,
                 full_refresh=runtime_full_refresh,
                 apply_vacuum=apply_vacuum,

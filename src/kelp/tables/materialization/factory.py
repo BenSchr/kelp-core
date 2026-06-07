@@ -109,7 +109,7 @@ def _sync_metadata(
 def materialize(
     *,
     dataframe: DataFrame,
-    table_name: str,
+    name: str,
     config: ModelMaterializationConfig | None = None,
     full_refresh: bool = False,
     sync_metadata: bool = True,
@@ -128,7 +128,7 @@ def materialize(
 
     Args:
         dataframe: DataFrame to materialize.
-        table_name: Kelp model name or fully qualified table name.
+        name: Kelp model name or fully qualified table name.
         config: Optional runtime override materialization config.
         full_refresh: Whether to perform a full refresh, which may be prevented by model config.
         sync_metadata: Whether to perform metadata sync after materialization.
@@ -144,11 +144,11 @@ def materialize(
     if spark is None:
         raise RuntimeError("No active SparkSession available for materialization.")
 
-    resolved = _resolve_materialization_inputs(table_name=table_name, config=config)
+    resolved = _resolve_materialization_inputs(table_name=name, config=config)
 
     logger.info(
         "Materializing '%s' to target '%s' with config: %s",
-        table_name,
+        name,
         resolved.target_name,
         resolved.effective_config.model_dump_json(),
     )

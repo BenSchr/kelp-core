@@ -73,7 +73,7 @@ def test_append_materialization_from_yaml(
     materialize(
         spark=spark,
         dataframe=source_df,
-        table_name=table_name,
+        name=table_name,
         config=None,
     )
 
@@ -97,7 +97,7 @@ def test_materialize_creates_table_when_missing(
     materialize(
         spark=spark,
         dataframe=source_df,
-        table_name=table_name,
+        name=table_name,
         config=ModelMaterializationConfig(write_mode="append"),
     )
 
@@ -125,7 +125,7 @@ def test_overwrite_materialization_from_yaml(
     materialize(
         spark=spark,
         dataframe=source_df,
-        table_name=table_name,
+        name=table_name,
         config=None,
     )
 
@@ -150,7 +150,7 @@ def test_merge_materialization_from_yaml(
     materialize(
         spark=spark,
         dataframe=source_df,
-        table_name=table_name,
+        name=table_name,
         config=None,
     )
 

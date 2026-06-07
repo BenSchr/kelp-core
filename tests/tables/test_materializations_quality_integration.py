@@ -79,7 +79,7 @@ def test_materialize_quality_checks_drop_with_quarantine(
     materialize(
         spark=spark,
         dataframe=source_df,
-        table_name=table_name,
+        name=table_name,
         config=None,
         apply_vacuum=False,
         apply_optimize=False,
@@ -128,7 +128,7 @@ def test_materialize_quality_checks_drop_without_quarantine(
     materialize(
         spark=spark,
         dataframe=source_df,
-        table_name=table_name,
+        name=table_name,
         config=None,
         apply_vacuum=False,
         apply_optimize=False,
@@ -178,7 +178,7 @@ def test_materialize_quality_checks_error_mode_raises(
         materialize(
             spark=spark,
             dataframe=source_df,
-            table_name=table_name,
+            name=table_name,
             config=None,
             apply_vacuum=False,
             apply_optimize=False,
@@ -207,7 +207,7 @@ def test_materialize_quality_checks_can_be_disabled_at_runtime(
     materialize(
         spark=spark,
         dataframe=source_df,
-        table_name=table_name,
+        name=table_name,
         config=None,
         apply_quality_checks=False,
         apply_vacuum=False,
