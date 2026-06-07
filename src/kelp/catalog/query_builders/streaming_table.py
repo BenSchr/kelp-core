@@ -5,6 +5,7 @@ import logging
 from kelp.catalog.query_builders._sql import (
     ALTER_COLUMN,
     BASE_ALTER,
+    COMMENT_ON,
     SET_COMMENT,
     SET_TAGS,
     UNSET_TAGS,
@@ -30,11 +31,20 @@ class StreamingTableQueryBuilder(BaseTableQueryBuilder):
 
     capabilities: frozenset[Capability] = frozenset(
         {
+            Capability.TABLE_DESCRIPTION,
             Capability.TABLE_TAGS,
             Capability.COLUMN_DESCRIPTION,
             Capability.COLUMN_TAGS,
         }
     )
+
+    def description_queries(self, fqn: str, diff: TableDiff) -> list[str]:
+        """Generate ``COMMENT ON TABLE`` statement."""
+        if diff.table_description is None:
+            return []
+        query = COMMENT_ON.format(type="TABLE", path=fqn, comment=esc(diff.table_description))
+        logger.debug("Generated: %s", query)
+        return [query]
 
     def table_tag_queries(self, fqn: str, tag_diff: DictDiff) -> list[str]:
         """Generate ``ALTER STREAMING TABLE … SET/UNSET TAGS`` statements."""

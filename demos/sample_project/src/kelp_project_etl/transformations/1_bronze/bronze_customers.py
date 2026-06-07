@@ -6,7 +6,8 @@ spark = SparkSession.active()
 # kp.init("../../kelp_metadata/kelp_project.yml")
 
 
-@kp.table(exclude_params=["schema"])
+# Adding description later through sync_metadata
+@kp.table(exclude_params=["schema", "description"])
 def bronze_customers():
     """
     Bronze transformation for customers. Reads from the source_customers temporary view and writes to the bronze layer.
