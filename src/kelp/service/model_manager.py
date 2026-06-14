@@ -29,6 +29,8 @@ class KelpModel:
     cluster_by_auto: bool | None = None
     cluster_by: list[str] | None = None
     row_filter: str | None = None
+    auto_ttl: dict | None = None
+
     fqn: str | None = None
     schema: str | None = None
     schema_lite: str | None = None
@@ -138,6 +140,7 @@ class KelpSdpModel(KelpModel):
             "cluster_by": self.cluster_by,
             "schema": self.schema or None,
             "row_filter": self.row_filter,
+            "auto_ttl": self.auto_ttl,
             "expect_all": self.expect_all,
             "expect_all_or_drop": self.expect_all_or_drop,
             "expect_all_or_fail": self.expect_all_or_fail,
@@ -325,6 +328,12 @@ class ModelManager:
         elif model.quality and isinstance(model.quality, DQXQuality):
             sdp_model.dqx_quality = model.quality
 
+        if model.auto_ttl:
+            sdp_model.auto_ttl = {
+                "timestamp_column": model.auto_ttl.timestamp_column,
+                "expire_in_days": model.auto_ttl.expire_in_days,
+            }
+
         sdp_model.root_model = model
         sdp_model.meta = model.meta
 
@@ -380,6 +389,12 @@ class ModelManager:
 
         kelp_model.materialization = model.materialization
         kelp_model.meta = model.meta
+
+        if model.auto_ttl:
+            kelp_model.auto_ttl = {
+                "timestamp_column": model.auto_ttl.timestamp_column,
+                "expire_in_days": model.auto_ttl.expire_in_days,
+            }
 
         return kelp_model
 

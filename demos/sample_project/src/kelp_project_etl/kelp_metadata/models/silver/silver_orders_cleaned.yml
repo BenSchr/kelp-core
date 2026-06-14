@@ -33,6 +33,9 @@ kelp_models:
         data_type: string
         tags:
           data_classification: internal
+      - name: order_date
+        data_type: timestamp
+        description: Datetime when order was placed
       - name: order_state
         data_type: string
       - name: price

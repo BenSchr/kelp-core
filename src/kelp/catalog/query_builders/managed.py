@@ -6,11 +6,13 @@ from kelp.catalog.query_builders._sql import (
     ADD_FK,
     ADD_PK,
     ALTER_COLUMN,
+    AUTO_TTL,
     BASE_ALTER,
     CLUSTER_BY_AUTO,
     CLUSTER_BY_COLS,
     CLUSTER_BY_NONE,
     COMMENT_ON,
+    DROP_AUTO_TTL,
     DROP_CONSTRAINT,
     SET_TAGS,
     SET_TBLPROPERTIES,
@@ -49,6 +51,7 @@ class ManagedTableQueryBuilder(BaseTableQueryBuilder):
             Capability.COLUMN_TAGS,
             Capability.CLUSTER_BY,
             Capability.CONSTRAINTS,
+            Capability.AUTO_TTL,
         }
     )
 
@@ -206,5 +209,19 @@ class ManagedTableQueryBuilder(BaseTableQueryBuilder):
             ref_table=constraint.reference_table,
             ref_cols=", ".join(constraint.reference_columns),
         )
+        logger.debug("Generated: %s", query)
+        return [query]
+
+    def auto_ttl_queries(self, fqn: str, diff: TableDiff) -> list[str]:
+        if not diff.auto_ttl_changed:
+            return []
+        if diff.auto_ttl is None:
+            query = DROP_AUTO_TTL.format(fqn=fqn)
+        else:
+            query = AUTO_TTL.format(
+                fqn=fqn,
+                expiration=diff.auto_ttl.expire_in_days,
+                time_col=diff.auto_ttl.timestamp_column,
+            )
         logger.debug("Generated: %s", query)
         return [query]

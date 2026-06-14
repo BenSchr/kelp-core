@@ -48,6 +48,8 @@ ADD_FK = (
 )
 DROP_CONSTRAINT = "ALTER TABLE {fqn} DROP CONSTRAINT {name}"
 
+AUTO_TTL = "ALTER TABLE {fqn} DELETE ROWS {expiration} DAYS AFTER {time_col}"
+DROP_AUTO_TTL = "ALTER TABLE {fqn} DROP ROW DELETION"
 
 # ---------------------------------------------------------------------------
 # String helpers

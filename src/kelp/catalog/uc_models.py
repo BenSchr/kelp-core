@@ -128,3 +128,5 @@ class TableDiff:
     cluster_by_changed: bool = False
     cluster_by_cols: list[str] | None = None
     cluster_by_auto: bool | None = None
+    auto_ttl_changed: bool = False
+    auto_ttl: dict | None = None

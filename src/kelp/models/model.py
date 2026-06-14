@@ -178,6 +178,15 @@ class PrimaryKeyConstraint(Constraint):
     )
 
 
+class AutoTTLConfig(BaseModel):
+    timestamp_column: str = Field(
+        description="Name of the timestamp column used for TTL",
+    )
+    expire_in_days: int = Field(
+        description="Number of days after which data expires",
+    )
+
+
 class Model(BaseModel):
     """Model definition in Unity Catalog.
 
@@ -301,6 +310,11 @@ class Model(BaseModel):
         default_factory=list,
         description="Constraints like primary key or foreign key",
     )
+    auto_ttl: AutoTTLConfig | None = Field(
+        default=None,
+        description="Configuration for automatic TTL (Time To Live) based on a timestamp column",
+    )
+
     tags: dict[str, str] = Field(
         default_factory=dict,
         description="Metadata tags for the model",

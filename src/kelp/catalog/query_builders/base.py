@@ -25,6 +25,7 @@ class Capability(StrEnum):
         COLUMN_TAGS: Per-column tag set/unset statements.
         CLUSTER_BY: ``ALTER TABLE <fqn> CLUSTER BY ...`` statement.
         CONSTRAINTS: ``ADD/DROP CONSTRAINT`` statements.
+        AUTO_TTL: ``ALTER TABLE <fqn> DELETE ROWS <expiration_days> DAYS AFTER <time_column_name>`` statement.
     """
 
     TABLE_DESCRIPTION = "table_description"
@@ -34,6 +35,7 @@ class Capability(StrEnum):
     COLUMN_TAGS = "column_tags"
     CLUSTER_BY = "cluster_by"
     CONSTRAINTS = "constraints"
+    AUTO_TTL = "auto_ttl"
 
 
 class BaseTableQueryBuilder:
@@ -79,6 +81,8 @@ class BaseTableQueryBuilder:
         queries.extend(self.column_queries(fqn, diff))
         queries.extend(self.cluster_by_queries(fqn, diff))
         queries.extend(self.constraint_queries(fqn, diff.constraint_pk, diff.constraint_fk))
+        queries.extend(self.auto_ttl_queries(fqn, diff))
+
         return queries
 
     # ------------------------------------------------------------------
@@ -165,6 +169,19 @@ class BaseTableQueryBuilder:
 
         Returns:
             Ordered list of DROP / ADD CONSTRAINT statements.
+
+        """
+        return []
+
+    def auto_ttl_queries(self, fqn: str, diff: TableDiff) -> list[str]:
+        """Generate SQL to update automatic TTL configuration.
+
+        Args:
+            fqn: Fully-qualified table name.
+            diff: Full table diff (use ``diff.auto_ttl_changed`` and ``diff.auto_ttl``).
+
+        Returns:
+            Zero or one SQL string.
 
         """
         return []

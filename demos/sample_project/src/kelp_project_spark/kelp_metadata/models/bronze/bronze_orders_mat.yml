@@ -32,6 +32,11 @@ kelp_models:
       - name: ingest_date
         data_type: date
         description: Date this row was ingested.
+    auto_ttl:
+      timestamp_column: order_date
+      expire_in_days: 365
+    cluster_by:
+      - order_id
     materialization:
       write_mode: append
     quality:
