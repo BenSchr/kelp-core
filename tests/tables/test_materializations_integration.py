@@ -218,6 +218,61 @@ def test_materialized_decorator_without_model_uses_runtime_config(
     )
 
 
+def test_materialized_decorator_merge_schema_evolution_updates_existing_rows(
+    spark: SparkSession,
+    initialized_materializations_context: None,
+) -> None:
+    """Decorator merge should evolve schema and apply new column values on matched updates."""
+    table_name = "mat_runtime_merge_schema_evolution_orders"
+    _drop_table_if_exists(spark, table_name)
+
+    spark.createDataFrame(
+        [
+            (1, "old_1", 10),
+            (2, "old_2", 20),
+        ],
+        "id BIGINT, name STRING, updated_at BIGINT",
+    ).write.format("delta").mode("overwrite").saveAsTable(table_name)
+
+    @materialized(
+        name=table_name,
+        config=ModelMaterializationConfig(
+            write_mode="merge",
+            unique_keys=["id"],
+            sequence_by=["updated_at"],
+            merge_with_schema_evolution=True,
+        ),
+        apply_vacuum=False,
+        apply_optimize=False,
+    )
+    def build_df() -> DataFrame:
+        return spark.createDataFrame(
+            [
+                (1, "new_1", 11, "gold"),
+                (2, "stale_2", 19, "stale"),
+                (3, "new_3", 30, "new"),
+            ],
+            "id BIGINT, name STRING, updated_at BIGINT, status STRING",
+        )
+
+    result_df = build_df()
+    assert result_df.count() == 3
+
+    actual_df = spark.table(table_name)
+    assert "status" in actual_df.columns
+
+    rows = {
+        row["id"]: (row["name"], row["updated_at"], row["status"])
+        for row in actual_df.select("id", "name", "updated_at", "status").collect()
+    }
+
+    assert rows == {
+        1: ("new_1", 11, "gold"),
+        2: ("old_2", 20, None),
+        3: ("new_3", 30, "new"),
+    }
+
+
 def test_materialized_decorator_ctx_incremental_append(
     spark: SparkSession,
     materializations_project_dir: Path,
