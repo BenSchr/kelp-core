@@ -78,6 +78,7 @@ def get_table_from_dbx_sdk(
     table_obj["partition_cols"] = []
     table_obj["cluster_by"] = []
     table_obj["cluster_by_auto"] = False
+    table_obj["auto_ttl"] = None
     if info.properties:
         table_obj["cluster_by_auto"] = (
             info.properties.get("clusterByAuto", "false").lower() == "true"
@@ -85,6 +86,16 @@ def get_table_from_dbx_sdk(
         table_obj["cluster_by"] = _parse_clustering_columns(
             info.properties.get("clusteringColumns", "[]")
         )
+
+        ### AutoTTL
+        auto_ttl_expiration = info.properties.get("autottl.expireInDays")
+        auto_ttl_time_col = info.properties.get("autottl.timestampColumn")
+        if auto_ttl_expiration and auto_ttl_time_col:
+            table_obj["auto_ttl"] = {
+                "expire_in_days": int(auto_ttl_expiration),
+                "timestamp_column": auto_ttl_time_col,
+            }
+
     if info.columns:
         table_obj["partition_cols"] = [
             col.name

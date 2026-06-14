@@ -7,6 +7,11 @@ kelp_models:
         type: primary_key
         columns:
           - order_id
+    auto_ttl:
+      expire_in_days: 365
+      timestamp_column: order_date
+    cluster_by:
+      - order_id
 
     columns:
       - name: order_id
@@ -18,6 +23,9 @@ kelp_models:
       - name: order_state
         data_type: string
         description: State of the order lifecycle (Pending, Shipped, etc.).
+      - name: order_date
+        data_type: timestamp
+        description: Datetime when order was placed
       - name: price
         data_type: double
         description: Unit price for the order line.

@@ -65,6 +65,9 @@ class TableDiffCalculator:
         diff.cluster_by_cols = local.cluster_by
         diff.cluster_by_auto = local.cluster_by_auto
 
+        diff.auto_ttl_changed = local.auto_ttl != remote.auto_ttl
+        diff.auto_ttl = local.auto_ttl
+
         return diff
 
     @staticmethod
