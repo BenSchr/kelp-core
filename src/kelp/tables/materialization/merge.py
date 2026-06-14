@@ -176,6 +176,7 @@ class MergeMaterializer:
         source_cols = {col.lower(): col for col in source_df.columns}
         target_cols = {col.lower(): col for col in target_df.columns}
         overlapping_cols = [source_cols[col] for col in source_cols if col in target_cols]
+        source_only_cols = [source_cols[col] for col in source_cols if col not in target_cols]
 
         missing_sequence_cols = [col for col in sequence_columns if col.lower() not in source_cols]
         if missing_sequence_cols:
@@ -248,10 +249,26 @@ class MergeMaterializer:
             required_cols=key_cols,
         )
 
+        selected_evolution_write_cols: list[str] = []
+        if config.merge_with_schema_evolution and source_only_cols:
+            selected_evolution_write_cols = cls._resolve_selected_columns(
+                candidate_cols=source_only_cols,
+                include_cols=config.include_at_target_cols,
+                exclude_cols=config.exclude_at_target_cols,
+                required_cols=None,
+            )
+
+        selected_write_cols = list(selected_target_write_cols)
+        selected_write_cols.extend(
+            [
+                col
+                for col in selected_evolution_write_cols
+                if col.lower() not in {c.lower() for c in selected_write_cols}
+            ]
+        )
+
         update_candidate_cols = [
-            col
-            for col in selected_target_write_cols
-            if col.lower() not in {k.lower() for k in key_cols}
+            col for col in selected_write_cols if col.lower() not in {k.lower() for k in key_cols}
         ]
 
         if config.matched_update_include_cols:
@@ -263,7 +280,7 @@ class MergeMaterializer:
 
         matched_condition = config.matched_condition
         if matched_condition is None:
-            condition_cols = list(update_candidate_cols)
+            condition_cols = [col for col in update_candidate_cols if col.lower() in target_cols]
             if config.matched_condition_include_cols:
                 include = {c.lower() for c in config.matched_condition_include_cols}
                 condition_cols = [c for c in condition_cols if c.lower() in include]
@@ -287,7 +304,11 @@ class MergeMaterializer:
         }
         if config.ignore_null_updates:
             update_map = {
-                f"`{col}`": f"coalesce({source_alias}.`{col}`, {target_alias}.`{col}`)"
+                f"`{col}`": (
+                    f"coalesce({source_alias}.`{col}`, {target_alias}.`{col}`)"
+                    if col.lower() in target_cols
+                    else f"{source_alias}.`{col}`"
+                )
                 for col in update_candidate_cols
             }
 
@@ -298,7 +319,7 @@ class MergeMaterializer:
                 builder = builder.whenMatchedUpdate(set=update_map)
 
         insert_map: dict[str, str | Column] = {
-            f"`{col}`": f"{source_alias}.`{col}`" for col in selected_target_write_cols
+            f"`{col}`": f"{source_alias}.`{col}`" for col in selected_write_cols
         }
 
         if config.not_matched_condition:
