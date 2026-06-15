@@ -7,6 +7,7 @@ Kelp models to avoid duplicate model definitions.
 from dataclasses import dataclass, field
 
 from kelp.models.model import (
+    AutoTTLConfig,
     Column,
     ForeignKeyConstraint,
     Model,
@@ -129,4 +130,4 @@ class TableDiff:
     cluster_by_cols: list[str] | None = None
     cluster_by_auto: bool | None = None
     auto_ttl_changed: bool = False
-    auto_ttl: dict | None = None
+    auto_ttl: AutoTTLConfig | None = None

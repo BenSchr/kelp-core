@@ -3,6 +3,7 @@
 ## ✨ Features
 
 - feat: auto-ttl ([#21](https://github.com/BenSchr/kelp-core/pull/21)) - Add support to configure automatic time-to-live (TTL) on tables and streaming tables.
+- feat: improve skills ([#22](https://github.com/BenSchr/kelp-core/pull/22)) - Enhancing the agent skills of this repo, added claude-plugin and library-skills
 
 ## 🐛 Fixes
 

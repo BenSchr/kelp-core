@@ -1,0 +1,9 @@
+{
+    "name": "kelp",
+    "description": "Kelp skills for developing and migrating kelp projects",
+    "version": "0.0.1",
+    "author": {
+        "name": "BenSchr"
+    },
+    "license": "MIT"
+}

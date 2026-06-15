@@ -392,3 +392,26 @@ export KELP_PROJECT_FILE=/path/to/kelp_project.yml
 uv run kelp validate
 uv run kelp catalog sync-from-catalog "catalog.schema.table"
 ```
+
+## LLM Integration
+
+Kelp provides following skills
+
+| Skill | Description |
+|-------|-------------|
+| kelp-base | Base skill for interacting with Kelp projects, metadata, and code usage |
+| kelp-migration | Skill for migrating existing spark projects and pipelines to Kelp |
+
+**Option 1**
+
+Use .claude-plugin with your preferred IDE or marketplace to integrate the provided skills into your workflow.
+
+**Option 2**
+
+Use `library-skills` package to install the skills from the `kelp-core` library and integrate them into your custom agents or applications.
+Visit [https://github.com/tiangolo/library-skills](https://github.com/tiangolo/library-skills) for more details.
+
+
+```bash
+uvx library-skills
+```
