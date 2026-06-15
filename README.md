@@ -399,7 +399,7 @@ Kelp provides following skills
 
 **Option 1**
 
-Use .claude-plugin with your preffered IDE or marketplace to integrate the provided skills into your workflow.
+Use .claude-plugin with your preferred IDE or marketplace to integrate the provided skills into your workflow.
 
 **Option 2**
 
