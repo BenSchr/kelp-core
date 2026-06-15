@@ -1,4 +1,6 @@
-# 0.0.12 (TBD)
+# 0.0.13 (TBD)
+
+# 0.0.12 (2026-06-15)
 
 ## ✨ Features
 
@@ -8,8 +10,6 @@
 ## 🐛 Fixes
 
 - fix: merge schema evolution ([#20](https://github.com/BenSchr/kelp-core/pull/20))
-
-## ⚠️ Breaking Changes
 
 # 0.0.11 (2026-06-07)
 
