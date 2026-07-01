@@ -100,7 +100,7 @@ class TestMetricView:
             catalog="analytics",
             schema_="marketing",
             definition={
-                "source_table": "sales.transactions",
+                "source": "sales.transactions",
                 "dimensions": [
                     {"name": "product_id", "data_type": "string"},
                     {"name": "category", "data_type": "string"},
@@ -127,7 +127,7 @@ class TestMetricView:
             },
         )
 
-        assert "source_table" in metric.definition
+        assert "source" in metric.definition
         assert len(metric.definition["dimensions"]) == 3
         assert len(metric.definition["metrics"]) == 3
         assert len(metric.definition["filters"]) == 2

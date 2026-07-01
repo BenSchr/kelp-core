@@ -83,7 +83,7 @@ kelp_metric_views:
         - name: region
           expr: region
       
-      source_table: ${ catalog }.gold.customer_orders
+      source: ${ catalog }.gold.customer_orders
       
     tags:
       domain: customer
@@ -99,7 +99,7 @@ kelp_metric_views:
 - `definition` - Metric view specification
   - `measures` - Aggregated metrics (with name, description, SQL expression)
   - `dimensions` - Grouping attributes (with name and SQL expression)
-  - `source_table` - Underlying table (fully qualified)
+  - `source` - Underlying table (fully qualified)
 - `tags` - Metadata tags
 
 ### Revenue Metrics Example
@@ -134,7 +134,7 @@ kelp_metric_views:
         - name: region
           expr: customer_region
       
-      source_table: analytics.gold.orders_with_customers
+      source: analytics.gold.orders_with_customers
     
     tags:
       domain: financial
@@ -173,7 +173,7 @@ kelp_metric_views:
         - name: plan_type
           expr: subscription_plan
       
-      source_table: ${ catalog }.gold.customer_cohorts
+      source: ${ catalog }.gold.customer_cohorts
     
     tags:
       domain: customer

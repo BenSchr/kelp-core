@@ -303,7 +303,7 @@ kelp_metric_views:
       dimensions:
         - name: order_month
           expr: DATE_TRUNC('MONTH', order_date)
-      source_table: ${ catalog }.gold.orders
+      source: ${ catalog }.gold.orders
 ```
 
 Learn more in the [Functions](guides/functions.md), [Metric Views](guides/metric_views.md), [ABAC Policies](guides/abacs.md), and [Governance Policies](guides/policies.md) guides.
