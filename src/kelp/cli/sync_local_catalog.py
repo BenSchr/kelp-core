@@ -49,14 +49,16 @@ def sync_local_catalog(
     cataloged objects are synced.
     """
 
+    from kelp.catalog.remote_fetchers import RemoteFetcherFactory
     from kelp.cli.output import print_error, print_message, print_success
     from kelp.config import get_context, init
     from kelp.models.project_config import ProjectConfig
     from kelp.service.yaml_manager import ServicePathConfig, YamlManager
-    from kelp.utils.databricks import (
-        get_metric_view_from_dbx_sdk,
-        get_table_from_dbx_sdk,
-    )
+
+    # The CLI runs outside a Spark session, so it always uses the SDK engine.
+    fetchers = RemoteFetcherFactory()
+    table_fetcher = fetchers.get_table_fetcher("sdk")
+    metric_view_fetcher = fetchers.get_metric_view_fetcher("sdk")
 
     log_level = "DEBUG" if debug else None
     resolved_target = _resolve_target(target)
@@ -129,7 +131,7 @@ def sync_local_catalog(
         tables_checked += 1
         fqn = table.get_qualified_name()
         try:
-            remote = get_table_from_dbx_sdk(fqn, profile=profile)
+            remote = table_fetcher.fetch(fqn, profile=profile)
         except Exception as exc:  # noqa: BLE001
             _log(f"• skipped (not in remote): {fqn} ({exc})")
             if dry_run:
@@ -165,9 +167,14 @@ def sync_local_catalog(
         metric_views_checked += 1
         fqn = metric_view.get_qualified_name()
         try:
-            remote = get_metric_view_from_dbx_sdk(fqn, profile=profile)
+            remote = metric_view_fetcher.fetch(fqn, profile=profile)
         except Exception as exc:  # noqa: BLE001
             _log(f"• skipped (not in remote): {fqn} ({exc})")
+            if dry_run:
+                dry_run_skipped.append(f"{fqn} (not in remote)")
+            continue
+        if not remote:
+            _log(f"• skipped (not in remote): {fqn}")
             if dry_run:
                 dry_run_skipped.append(f"{fqn} (not in remote)")
             continue

@@ -378,14 +378,6 @@ class YamlManager:
         # Meta is written directly from source model and preserved by template merge when needed
         cls._set_or_remove(model, "meta", source_model.meta)
 
-        # Quality checks/config are written from source model
-        quality_dict = (
-            source_model.quality.model_dump(exclude_none=True, exclude_defaults=True)
-            if source_model.quality is not None
-            else None
-        )
-        cls._set_or_remove(model, "quality", quality_dict)
-
         # Only write constraints if no default or differs from default
         default_constraints = defaults.get("constraints")
         serialized_constraints = cls._serialize_constraints(source_model.constraints)
@@ -480,21 +472,13 @@ class YamlManager:
         elif "schema" in model:
             model.pop("schema", None)
 
-        # Only write description if it differs from default
-        default_description = defaults.get("description")
-        if source_metric_view.description != default_description:
-            cls._set_or_remove(model, "description", source_metric_view.description)
-        elif "description" in model:
-            model.pop("description", None)
-
         # Filter tags to exclude those matching defaults
         filtered_tags = cls._filter_tags(source_metric_view.tags, defaults.get("tags"))
         cls._set_or_remove(model, "tags", filtered_tags)
 
-        # Inject description as comment into definition if description exists
+        # Definition follows the Databricks metric view YAML spec verbatim
+        # (including its comment) — no description/comment normalization.
         definition = source_metric_view.definition.copy() if source_metric_view.definition else {}
-        if source_metric_view.description and definition:
-            definition = {"comment": source_metric_view.description, **definition}
 
         # Preserve existing source field from local model if present
         # (local source may contain variables like ${catalog}.${schema}.table)

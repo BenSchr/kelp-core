@@ -6,9 +6,9 @@ This guide explains how to define and organize metric views in your Kelp project
 
 Metric views in Databricks are semantic layer objects that define:
 
-- **Dimensions** - Grouping attributes (e.g., customer, region, time period)
-- **Metrics** - Aggregated measures (e.g., revenue, customer count, conversion rate)
-- **Source tables** - Underlying tables containing measure and dimension data
+- **Fields** - Grouping attributes (e.g., customer, region, time period)
+- **Measures** - Aggregated metrics (e.g., revenue, customer count, conversion rate)
+- **Source tables** - Underlying tables containing measure and field data
 
 They provide a single source of truth for business metrics across your organization, enabling consistent reporting and analytics.
 
@@ -52,7 +52,9 @@ kelp_project:
 
 ## Define Metric Views
 
-Metric views are defined using Databricks' metric view specification format.
+The `definition` block follows the [Databricks metric view YAML reference](https://docs.databricks.com/aws/en/uc-semantics/metric-views/yaml-reference) verbatim and is passed through to DDL as-is — including its `comment`. The only Kelp extension is an optional `tags` map on field/measure entries, which Kelp manages via `ALTER` statements and strips from the DDL body.
+
+The spec's `dimensions` synonym is accepted but canonicalized to `fields` when definitions are loaded (Unity Catalog currently returns stored definitions with `dimensions` even when created with `fields`, so canonicalizing keeps local and remote state comparable).
 
 ### Basic Structure
 
@@ -61,30 +63,31 @@ kelp_metric_views:
   - name: customer_revenue_metrics
     catalog: ${ catalog }
     schema: ${ metric_schema }
-    description: Customer-level revenue metrics by period
-    
+
     definition:
+      version: 1.1
+      source: ${ catalog }.gold.customer_orders
+      comment: Customer-level revenue metrics by period
+
       measures:
         - name: total_revenue
-          description: Total revenue generated
+          comment: Total revenue generated
           expr: SUM(amount)
         - name: transaction_count
-          description: Number of transactions
+          comment: Number of transactions
           expr: COUNT(*)
         - name: avg_transaction_value
-          description: Average transaction value
+          comment: Average transaction value
           expr: AVG(amount)
-      
-      dimensions:
+
+      fields:
         - name: customer_id
           expr: customer_id
         - name: order_date
           expr: order_date
         - name: region
           expr: region
-      
-      source: ${ catalog }.gold.customer_orders
-      
+
     tags:
       domain: customer
       sla: high
@@ -95,12 +98,13 @@ kelp_metric_views:
 - `name` - Metric view identifier
 - `catalog` - Unity Catalog name
 - `schema` - Schema name
-- `description` - Documentation
-- `definition` - Metric view specification
-  - `measures` - Aggregated metrics (with name, description, SQL expression)
-  - `dimensions` - Grouping attributes (with name and SQL expression)
-  - `source` - Underlying table (fully qualified)
-- `tags` - Metadata tags
+- `definition` - Metric view specification per the Databricks YAML reference
+  - `version` - Specification version (required)
+  - `source` - Underlying table, view, or SQL query (required)
+  - `comment` - Documentation for the metric view
+  - `measures` - Aggregated metrics (with name, comment, SQL expression)
+  - `fields` - Grouping attributes (with name and SQL expression)
+- `tags` - Metadata tags (Kelp-managed, also allowed per field/measure entry)
 
 ### Revenue Metrics Example
 
@@ -109,33 +113,34 @@ kelp_metric_views:
   - name: monthly_revenue
     catalog: analytics
     schema: metrics
-    description: Monthly revenue across all products
-    
+
     definition:
+      version: 1.1
+      source: analytics.gold.orders_with_customers
+      comment: Monthly revenue across all products
+
       measures:
         - name: gross_revenue
-          description: Total revenue before discounts
+          comment: Total revenue before discounts
           expr: SUM(gross_amount)
         - name: net_revenue
-          description: Revenue after discounts and returns
+          comment: Revenue after discounts and returns
           expr: SUM(net_amount)
         - name: discount_amount
-          description: Total discounts given
+          comment: Total discounts given
           expr: SUM(gross_amount - net_amount)
         - name: order_count
-          description: Number of orders
+          comment: Number of orders
           expr: COUNT(DISTINCT order_id)
-      
-      dimensions:
+
+      fields:
         - name: year_month
           expr: TO_DATE(order_date, 'YYYY-MM')
         - name: product_category
           expr: product_category
         - name: region
           expr: customer_region
-      
-      source: analytics.gold.orders_with_customers
-    
+
     tags:
       domain: financial
       frequency: monthly
@@ -148,33 +153,34 @@ kelp_metric_views:
   - name: customer_cohort_metrics
     catalog: ${ catalog }
     schema: ${ metric_schema }
-    description: Customer metrics grouped by acquisition cohort
-    
+
     definition:
+      version: 1.1
+      source: ${ catalog }.gold.customer_cohorts
+      comment: Customer metrics grouped by acquisition cohort
+
       measures:
         - name: customer_count
           expr: COUNT(DISTINCT customer_id)
         - name: total_ltv
-          description: Total lifetime value
+          comment: Total lifetime value
           expr: SUM(lifetime_value)
         - name: avg_ltv
-          description: Average lifetime value per customer
+          comment: Average lifetime value per customer
           expr: AVG(lifetime_value)
         - name: churn_rate
-          description: Percentage of churned customers
+          comment: Percentage of churned customers
           expr: SUM(CASE WHEN churned THEN 1 ELSE 0 END) / COUNT(*) * 100
-      
-      dimensions:
+
+      fields:
         - name: acquisition_cohort
-          description: Customer acquisition month-year
+          comment: Customer acquisition month-year
           expr: DATE_TRUNC('MONTH', acquisition_date)
         - name: country
           expr: country
         - name: plan_type
           expr: subscription_plan
-      
-      source: ${ catalog }.gold.customer_cohorts
-    
+
     tags:
       domain: customer
       sla: critical
@@ -311,45 +317,45 @@ definition:
     
     # New measure for reporting
     - name: revenue_growth_pct
-      description: Period-over-period revenue growth percentage
+      comment: Period-over-period revenue growth percentage
       expr: (SUM(amount) - LAG(SUM(amount)) OVER (ORDER BY date)) / LAG(SUM(amount)) OVER (ORDER BY date) * 100
 ```
 
-### Renaming Dimensions
+### Renaming Fields
 
-Use aliases to support dimension renames without breaking downstream usage:
+Use aliases to support field renames without breaking downstream usage:
 
 ```yaml
 definition:
-  dimensions:
+  fields:
     - name: order_month           # New name
       expr: DATE_TRUNC('MONTH', order_date)
-    
+
     - name: order_date_month     # Old name (deprecated)
       expr: DATE_TRUNC('MONTH', order_date)
 ```
 
 ### Deprecating Metrics
 
-Document deprecated metrics in descriptions:
+Document deprecated metrics in comments:
 
 ```yaml
 definition:
   measures:
     - name: old_metric
-      description: "DEPRECATED: Use new_metric instead"
+      comment: "DEPRECATED: Use new_metric instead"
       expr: SUM(legacy_column)
-    
+
     - name: new_metric
-      description: "Improved calculation using updated data"
+      comment: "Improved calculation using updated data"
       expr: SUM(correct_column)
 ```
 
 ## Best Practices
 
-1. **Document clearly** - Add descriptions explaining what each metric and dimension represents.
+1. **Document clearly** - Add comments explaining what each measure and field represents.
 
-2. **Use consistent naming** - Follow naming conventions for measures and dimensions (e.g., `snake_case`).
+2. **Use consistent naming** - Follow naming conventions for measures and fields (e.g., `snake_case`).
 
 3. **Define at the right layer** - Base metric views on gold/aggregated tables, not raw data.
 
@@ -411,7 +417,7 @@ measures:
   - name: cumulative_revenue
     expr: SUM(revenue) OVER (ORDER BY order_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
   - name: mau
-    description: Monthly Active Users
+    comment: Monthly Active Users
     expr: COUNT(DISTINCT user_id)
 ```
 
@@ -432,4 +438,4 @@ measures:
 - [Project Configuration](project_config.md) - Configuring metric paths and hierarchies
 - [Sync Metadata with Your Catalog](catalog.md) - Syncing metric views to Unity Catalog
 - [Spark Declarative Pipelines](sdp.md) - Using metric views in SDP
-- [Databricks Metric Views Documentation](https://docs.databricks.com/en/metric-views/create/sql)
+- [Databricks Metric View YAML Reference](https://docs.databricks.com/aws/en/uc-semantics/metric-views/yaml-reference)

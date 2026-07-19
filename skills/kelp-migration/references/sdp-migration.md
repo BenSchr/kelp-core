@@ -93,7 +93,7 @@ Extract metadata to YAML:
 - Extract the table-schema to columns detect types as lowercase and also comments or any other relevant metadata. - Extract expectations to the quality section 
 - Extract any other relevant metadata like clustering, partitioning, table properties, comments, etc.
 
-**Important**:Only add provided metadata. Don't add any additinal fields not in source except the user intructed to do so.
+**Important**:Only add provided metadata. Don't add any additional fields not in source except the user instructed to do so.
 
 ```yaml
 kelp_models:

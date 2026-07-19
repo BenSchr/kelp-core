@@ -1,10 +1,7 @@
-"""DDL generation for Unity Catalog ABAC policies."""
+"""Query builder and DDL generation for Unity Catalog ABAC policies."""
 
+from kelp.catalog.query_builders._sql import esc
 from kelp.models.abac import AbacPolicy
-
-
-def _quote_sql_string(value: str) -> str:
-    return value.replace("'", "''")
 
 
 def _render_principals(principals: list[str]) -> str:
@@ -26,7 +23,7 @@ def generate_create_abac_policy_ddl(policy: AbacPolicy) -> str:
     ]
 
     if policy.description:
-        ddl_parts.append(f"COMMENT '{_quote_sql_string(policy.description)}'")
+        ddl_parts.append(f"COMMENT '{esc(policy.description)}'")
 
     if policy.mode == "ROW_FILTER":
         ddl_parts.append(f"ROW FILTER {policy.udf_name}")
@@ -62,3 +59,15 @@ def generate_create_abac_policy_ddl(policy: AbacPolicy) -> str:
 def generate_drop_abac_policy_ddl(policy: AbacPolicy) -> str:
     """Generate DROP POLICY SQL statement."""
     return f"DROP POLICY {policy.name} ON {policy.securable_type} {policy.securable_name}"
+
+
+class AbacPolicyQueryBuilder:
+    """Build SQL for syncing an ABAC policy.
+
+    Like functions, ABAC policies are pre-applied entities with no remote
+    diffing: every sync re-issues a full ``CREATE`` statement.
+    """
+
+    def build(self, policy: AbacPolicy) -> list[str]:
+        """Return the CREATE statement for *policy*."""
+        return [generate_create_abac_policy_ddl(policy)]

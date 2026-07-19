@@ -28,16 +28,12 @@ class TestMetricView:
             name="customer_revenue",
             catalog="analytics",
             schema_="metrics",
-            description="Customer revenue metrics",
             definition={
-                "dimensions": [{"name": "customer_id", "data_type": "bigint"}],
-                "metrics": [
-                    {
-                        "name": "total_revenue",
-                        "data_type": "decimal(10,2)",
-                        "expression": "SUM(amount)",
-                    }
-                ],
+                "version": "1.1",
+                "source": "analytics.gold.orders",
+                "comment": "Customer revenue metrics",
+                "fields": [{"name": "customer_id", "expr": "customer_id"}],
+                "measures": [{"name": "total_revenue", "expr": "SUM(amount)"}],
             },
             tags={"owner": "analytics_team", "category": "revenue"},
         )
@@ -45,9 +41,9 @@ class TestMetricView:
         assert metric.name == "customer_revenue"
         assert metric.catalog == "analytics"
         assert metric.schema_ == "metrics"
-        assert metric.description == "Customer revenue metrics"
-        assert "dimensions" in metric.definition
-        assert "metrics" in metric.definition
+        assert metric.definition["comment"] == "Customer revenue metrics"
+        assert "fields" in metric.definition
+        assert "measures" in metric.definition
         assert len(metric.tags) == 2
 
     def test_metric_view_qualified_name_full(self):
@@ -101,36 +97,24 @@ class TestMetricView:
             schema_="marketing",
             definition={
                 "source": "sales.transactions",
-                "dimensions": [
-                    {"name": "product_id", "data_type": "string"},
-                    {"name": "category", "data_type": "string"},
-                    {"name": "region", "data_type": "string"},
+                "fields": [
+                    {"name": "product_id", "expr": "product_id"},
+                    {"name": "category", "expr": "category"},
+                    {"name": "region", "expr": "region"},
                 ],
-                "metrics": [
-                    {
-                        "name": "total_sales",
-                        "data_type": "decimal(18,2)",
-                        "expression": "SUM(sale_amount)",
-                    },
-                    {
-                        "name": "avg_sale",
-                        "data_type": "decimal(18,2)",
-                        "expression": "AVG(sale_amount)",
-                    },
-                    {
-                        "name": "sale_count",
-                        "data_type": "bigint",
-                        "expression": "COUNT(*)",
-                    },
+                "measures": [
+                    {"name": "total_sales", "expr": "SUM(sale_amount)"},
+                    {"name": "avg_sale", "expr": "AVG(sale_amount)"},
+                    {"name": "sale_count", "expr": "COUNT(*)"},
                 ],
-                "filters": ["region != 'test'", "sale_amount > 0"],
+                "filter": "region != 'test' AND sale_amount > 0",
             },
         )
 
         assert "source" in metric.definition
-        assert len(metric.definition["dimensions"]) == 3
-        assert len(metric.definition["metrics"]) == 3
-        assert len(metric.definition["filters"]) == 2
+        assert len(metric.definition["fields"]) == 3
+        assert len(metric.definition["measures"]) == 3
+        assert metric.definition["filter"]
 
     def test_metric_view_serialization(self):
         """Test metric view serialization to dict."""
@@ -138,14 +122,14 @@ class TestMetricView:
             name="test_metric",
             catalog="main",
             schema_="default",
-            description="Test metric view",
+            definition={"version": "1.1", "source": "main.default.orders"},
         )
 
         data = metric.model_dump()
 
         assert data["name"] == "test_metric"
         assert data["catalog"] == "main"
-        assert data["description"] == "Test metric view"
+        assert "description" not in data
         # Schema should be serialized with alias
         assert "schema" in data or "schema_" in data
 
@@ -235,6 +219,35 @@ class TestMetricViewValidation:
         assert metric.definition["custom_field"] == "value"
         assert metric.definition["nested"]["deeply"]["nested"] == "structure"
         assert metric.definition["list_field"] == [1, 2, 3]
+
+
+def test_metric_view_canonicalizes_dimensions_to_fields() -> None:
+    """The 'dimensions' spec synonym is renamed to 'fields', preserving order."""
+    mv = MetricView(
+        name="m",
+        definition={
+            "version": "1.1",
+            "source": "cat.sch.orders",
+            "dimensions": [{"name": "region", "expr": "region"}],
+            "measures": [{"name": "revenue", "expr": "SUM(amount)"}],
+        },
+    )
+
+    assert "dimensions" not in mv.definition
+    assert mv.definition["fields"] == [{"name": "region", "expr": "region"}]
+    # Key order is preserved (fields stays where dimensions was)
+    assert list(mv.definition) == ["version", "source", "fields", "measures"]
+
+
+def test_metric_view_keeps_fields_when_both_keys_present() -> None:
+    """If both keys exist the definition is left untouched (user error surfaces remotely)."""
+    definition = {
+        "fields": [{"name": "a", "expr": "a"}],
+        "dimensions": [{"name": "b", "expr": "b"}],
+    }
+    mv = MetricView(name="m", definition=definition)
+
+    assert mv.definition == definition
 
 
 def test_metric_view_meta_defaults_to_empty_dict() -> None:

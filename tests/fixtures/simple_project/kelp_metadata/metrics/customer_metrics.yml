@@ -1,10 +1,10 @@
 kelp_metric_views:
   - name: customer_metrics
-    description: Customer metrics view
     definition:
       version: 1.1
+      comment: Customer metrics view
       source: ${ catalog_name }.${ schema_name }.orders
-      dimensions:
+      fields:
         - name: customer_id
           expr: customer_id
           comment: Customer identifier

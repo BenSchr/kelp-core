@@ -1,10 +1,10 @@
-"""Tests for Metric View DDL generation."""
+"""Tests for Metric View DDL generation (spec-verbatim definitions)."""
 
 import pytest
 
 from kelp.catalog.query_builders.metric_view import (
     _create_tag_diff,
-    _normalize_metric_definition,
+    _strip_managed_tags,
     generate_alter_metric_view_column_tags_ddl,
     generate_alter_metric_view_definition_ddl,
     generate_alter_metric_view_tags_ddl,
@@ -14,133 +14,43 @@ from kelp.catalog.query_builders.metric_view import (
 from kelp.models.metric_view import MetricView
 
 
-class TestNormalizeMetricDefinition:
-    """Tests for _normalize_metric_definition function."""
+class TestStripManagedTags:
+    """Tests for _strip_managed_tags — the only transformation applied to definitions."""
 
-    def test_adds_default_version(self):
-        """Test that version is added if missing."""
-        definition = {"source": "catalog.schema.table"}
-        normalized = _normalize_metric_definition(definition, None)
-
-        assert normalized["version"] == "1.1"
-
-    def test_preserves_existing_version(self):
-        """Test that existing version is preserved."""
-        definition = {"version": "1.0", "source": "catalog.schema.table"}
-        normalized = _normalize_metric_definition(definition, None)
-
-        assert normalized["version"] == "1.0"
-
-    def test_adds_comment_from_description(self):
-        """Test that comment is added from description if not present."""
-        definition = {"source": "catalog.schema.table"}
-        normalized = _normalize_metric_definition(definition, "Test description")
-
-        assert normalized["comment"] == "Test description"
-
-    def test_preserves_existing_comment(self):
-        """Test that existing comment is preserved over description."""
-        definition = {"comment": "Existing comment", "source": "catalog.schema.table"}
-        normalized = _normalize_metric_definition(definition, "Description")
-
-        assert normalized["comment"] == "Existing comment"
-
-    def test_maps_legacy_table_to_source(self):
-        """Test that legacy 'table' field is mapped to 'source'."""
-        definition = {"table": "catalog.schema.table"}
-        normalized = _normalize_metric_definition(definition, None)
-
-        assert "source" in normalized
-        assert normalized["source"] == "catalog.schema.table"
-        assert "table" not in normalized
-
-    def test_maps_legacy_metrics_to_measures(self):
-        """Test that legacy 'metrics' field is mapped to 'measures'."""
+    def test_removes_tags_from_fields_dimensions_and_measures(self):
         definition = {
-            "source": "catalog.schema.table",
-            "metrics": [{"name": "total_sales", "expression": "SUM(amount)"}],
+            "version": "1.1",
+            "source": "cat.sch.orders",
+            "fields": [{"name": "region", "expr": "region", "tags": {"pii": "false"}}],
+            "dimensions": [{"name": "store", "expr": "store", "tags": {"a": "b"}}],
+            "measures": [{"name": "revenue", "expr": "SUM(amount)", "tags": {"x": "y"}}],
         }
-        normalized = _normalize_metric_definition(definition, None)
 
-        assert "measures" in normalized
-        assert normalized["measures"][0]["name"] == "total_sales"
-        assert "metrics" not in normalized
+        stripped = _strip_managed_tags(definition)
 
-    def test_maps_expression_to_expr_in_measures(self):
-        """Test that 'expression' is mapped to 'expr' in measures."""
+        assert "tags" not in stripped["fields"][0]
+        assert "tags" not in stripped["dimensions"][0]
+        assert "tags" not in stripped["measures"][0]
+        # Original is untouched
+        assert definition["fields"][0]["tags"] == {"pii": "false"}
+
+    def test_passes_everything_else_through_verbatim(self):
+        """No normalization: comment, legacy keys, extra fields all stay as-is."""
         definition = {
-            "source": "catalog.schema.table",
-            "measures": [{"name": "total", "expression": "SUM(amount)"}],
+            "source": "cat.sch.orders",
+            "comment": "stays in the definition",
+            "table": "legacy-key-passed-through",
+            "filter": "region != 'test'",
+            "joins": [{"name": "c", "source": "cat.sch.customers", "on": "c.id = orders.cid"}],
+            "measures": [{"name": "m", "expr": "SUM(x)", "display_name": "Total"}],
         }
-        normalized = _normalize_metric_definition(definition, None)
 
-        assert "expr" in normalized["measures"][0]
-        assert normalized["measures"][0]["expr"] == "SUM(amount)"
-        assert "expression" not in normalized["measures"][0]
+        assert _strip_managed_tags(definition) == definition
 
-    def test_removes_type_from_dimensions(self):
-        """Test that 'type' field is removed from dimensions."""
-        definition = {
-            "source": "catalog.schema.table",
-            "dimensions": [{"name": "category", "type": "STRING", "expr": "category"}],
-        }
-        normalized = _normalize_metric_definition(definition, None)
+    def test_no_version_default_is_applied(self):
+        definition = {"source": "cat.sch.orders"}
 
-        assert "type" not in normalized["dimensions"][0]
-        assert normalized["dimensions"][0]["name"] == "category"
-
-    def test_removes_type_from_measures(self):
-        """Test that 'type' field is removed from measures."""
-        definition = {
-            "source": "catalog.schema.table",
-            "measures": [{"name": "total", "type": "DECIMAL", "expr": "SUM(amount)"}],
-        }
-        normalized = _normalize_metric_definition(definition, None)
-
-        assert "type" not in normalized["measures"][0]
-        assert normalized["measures"][0]["name"] == "total"
-
-    def test_removes_tags_from_dimensions(self):
-        """Test that tags are removed from dimensions in DDL."""
-        definition = {
-            "source": "catalog.schema.table",
-            "dimensions": [
-                {
-                    "name": "category",
-                    "expr": "category",
-                    "tags": {"pii": "false"},
-                },
-            ],
-        }
-        normalized = _normalize_metric_definition(definition, None)
-
-        assert "tags" not in normalized["dimensions"][0]
-
-    def test_removes_tags_from_measures(self):
-        """Test that tags are removed from measures in DDL."""
-        definition = {
-            "source": "catalog.schema.table",
-            "measures": [
-                {
-                    "name": "revenue",
-                    "expr": "SUM(amount)",
-                    "tags": {"sensitive": "true"},
-                },
-            ],
-        }
-        normalized = _normalize_metric_definition(definition, None)
-
-        assert "tags" not in normalized["measures"][0]
-
-    def test_adds_expr_to_dimension_from_name(self):
-        """Test that expr is added to dimension from name if missing."""
-        definition = {
-            "source": "catalog.schema.table",
-            "dimensions": [{"name": "category"}],
-        }
-        normalized = _normalize_metric_definition(definition, None)
-
-        assert normalized["dimensions"][0]["expr"] == "category"
+        assert "version" not in _strip_managed_tags(definition)
 
 
 class TestCreateMetricViewDDL:
@@ -152,10 +62,11 @@ class TestCreateMetricViewDDL:
             name="sales_metrics",
             catalog="main",
             schema_="analytics",
-            description="Sales metrics",
             definition={
+                "version": "1.1",
                 "source": "main.raw.sales",
-                "dimensions": [{"name": "category", "expr": "category"}],
+                "comment": "Sales metrics",
+                "fields": [{"name": "category", "expr": "category"}],
                 "measures": [{"name": "total_sales", "expr": "SUM(amount)"}],
             },
         )
@@ -168,8 +79,41 @@ class TestCreateMetricViewDDL:
         assert "AS $$" in ddl
         assert "$$" in ddl
         assert "source: main.raw.sales" in ddl
+        assert "comment: Sales metrics" in ddl
         assert "category" in ddl
         assert "total_sales" in ddl
+
+    def test_definition_is_not_normalized(self):
+        """Legacy keys are passed through untouched — no table/description mapping."""
+        metric_view = MetricView(
+            name="legacy_metrics",
+            definition={
+                "table": "cat.sch.orders",
+                "metrics": [{"name": "m", "expression": "SUM(x)"}],
+            },
+        )
+
+        ddl = generate_create_metric_view_ddl(metric_view)
+
+        assert "table: cat.sch.orders" in ddl
+        assert "source:" not in ddl
+        assert "expression: SUM(x)" in ddl
+        assert "version" not in ddl
+
+    def test_tags_are_stripped_from_ddl(self):
+        metric_view = MetricView(
+            name="tagged",
+            definition={
+                "version": "1.1",
+                "source": "cat.sch.orders",
+                "fields": [{"name": "region", "expr": "region", "tags": {"pii": "false"}}],
+            },
+        )
+
+        ddl = generate_create_metric_view_ddl(metric_view)
+
+        assert "tags" not in ddl
+        assert "pii" not in ddl
 
     def test_metric_view_without_catalog_schema(self):
         """Test metric view DDL without catalog/schema."""
@@ -213,8 +157,9 @@ class TestCreateMetricViewDDL:
             catalog="cat",
             schema_="sch",
             definition={
+                "version": "1.1",
                 "source": "cat.sch.sales",
-                "dimensions": [
+                "fields": [
                     {"name": "category", "expr": "category"},
                     {"name": "region", "expr": "region"},
                 ],
@@ -228,7 +173,7 @@ class TestCreateMetricViewDDL:
         ddl = generate_create_metric_view_ddl(metric_view)
 
         # Should have proper YAML structure
-        assert "dimensions:" in ddl
+        assert "fields:" in ddl
         assert "- name: category" in ddl
         assert "- name: region" in ddl
         assert "measures:" in ddl
@@ -336,10 +281,11 @@ class TestAlterMetricViewDefinitionDDL:
             name="sales_metrics",
             catalog="main",
             schema_="analytics",
-            description="Updated description",
             definition={
+                "version": "1.1",
                 "source": "main.raw.sales",
-                "dimensions": [{"name": "category", "expr": "category"}],
+                "comment": "Updated description",
+                "fields": [{"name": "category", "expr": "category"}],
                 "measures": [{"name": "revenue", "expr": "SUM(amount)"}],
             },
         )
@@ -418,8 +364,34 @@ class TestCreateTagDiff:
 class TestAlterMetricViewColumnTagsDDL:
     """Tests for generate_alter_metric_view_column_tags_ddl function."""
 
+    def test_field_tags_added(self):
+        """Test adding tags to fields (preferred spec key)."""
+        metric_view = MetricView(
+            name="metrics",
+            catalog="cat",
+            schema_="sch",
+            definition={"source": "table"},
+        )
+
+        local_def = {
+            "fields": [
+                {"name": "category", "expr": "category", "tags": {"pii": "false"}},
+            ],
+        }
+        remote_def = {
+            "fields": [
+                {"name": "category", "expr": "category"},
+            ],
+        }
+
+        statements = generate_alter_metric_view_column_tags_ddl(metric_view, local_def, remote_def)
+
+        assert len(statements) > 0
+        assert any("category" in s for s in statements)
+        assert any("SET TAG ON COLUMN" in s for s in statements)
+
     def test_dimension_tags_added(self):
-        """Test adding tags to dimensions."""
+        """The spec's 'dimensions' synonym is handled the same way."""
         metric_view = MetricView(
             name="metrics",
             catalog="cat",
@@ -441,7 +413,6 @@ class TestAlterMetricViewColumnTagsDDL:
         statements = generate_alter_metric_view_column_tags_ddl(metric_view, local_def, remote_def)
 
         assert len(statements) > 0
-        assert any("category" in s for s in statements)
         assert any("SET TAG ON COLUMN" in s for s in statements)
 
     def test_measure_tags_added(self):
@@ -469,8 +440,8 @@ class TestAlterMetricViewColumnTagsDDL:
         assert len(statements) > 0
         assert any("revenue" in s for s in statements)
 
-    def test_dimension_tags_removed(self):
-        """Test removing tags from dimensions."""
+    def test_field_tags_removed(self):
+        """Test removing tags from fields."""
         metric_view = MetricView(
             name="metrics",
             catalog="cat",
@@ -479,12 +450,12 @@ class TestAlterMetricViewColumnTagsDDL:
         )
 
         local_def = {
-            "dimensions": [
+            "fields": [
                 {"name": "category", "expr": "category"},
             ],
         }
         remote_def = {
-            "dimensions": [
+            "fields": [
                 {"name": "category", "expr": "category", "tags": {"old_tag": "value"}},
             ],
         }
@@ -495,8 +466,8 @@ class TestAlterMetricViewColumnTagsDDL:
         assert any("UNSET TAG ON COLUMN" in s for s in statements)
         assert any("old_tag" in s for s in statements)
 
-    def test_mixed_dimension_and_measure_tags(self):
-        """Test changes to both dimension and measure tags."""
+    def test_mixed_field_and_measure_tags(self):
+        """Test changes to both field and measure tags."""
         metric_view = MetricView(
             name="metrics",
             catalog="cat",
@@ -505,7 +476,7 @@ class TestAlterMetricViewColumnTagsDDL:
         )
 
         local_def = {
-            "dimensions": [
+            "fields": [
                 {"name": "category", "expr": "category", "tags": {"pii": "false"}},
             ],
             "measures": [
@@ -513,7 +484,7 @@ class TestAlterMetricViewColumnTagsDDL:
             ],
         }
         remote_def = {
-            "dimensions": [
+            "fields": [
                 {"name": "category", "expr": "category"},
             ],
             "measures": [
@@ -537,7 +508,7 @@ class TestAlterMetricViewColumnTagsDDL:
         )
 
         definition = {
-            "dimensions": [
+            "fields": [
                 {"name": "category", "expr": "category", "tags": {"pii": "false"}},
             ],
         }
@@ -557,12 +528,12 @@ class TestAlterMetricViewColumnTagsDDL:
         )
 
         local_def = {
-            "dimensions": [
+            "fields": [
                 {"name": "category", "expr": "category", "tags": {"pii": "false"}},
             ],
         }
         remote_def = {
-            "dimensions": [
+            "fields": [
                 {"name": "category", "expr": "category", "tags": {"old_tag": "keep_me"}},
             ],
         }
@@ -586,10 +557,11 @@ class TestComplexMetricViewScenarios:
             name="sales_analytics",
             catalog="prod",
             schema_="analytics",
-            description="Comprehensive sales analytics",
             definition={
+                "version": "1.1",
                 "source": "prod.raw.sales",
-                "dimensions": [
+                "comment": "Comprehensive sales analytics",
+                "fields": [
                     {"name": "category", "expr": "category"},
                     {"name": "region", "expr": "region"},
                     {"name": "date", "expr": "DATE(order_date)"},
@@ -606,8 +578,9 @@ class TestComplexMetricViewScenarios:
         # Test CREATE
         create_ddl = generate_create_metric_view_ddl(metric_view)
         assert "CREATE OR REPLACE VIEW prod.analytics.sales_analytics" in create_ddl
-        assert "dimensions:" in create_ddl
+        assert "fields:" in create_ddl
         assert "measures:" in create_ddl
+        assert "comment: Comprehensive sales analytics" in create_ddl
         assert "category" in create_ddl
         assert "total_revenue" in create_ddl
 

@@ -295,7 +295,7 @@ kelp_metric_views:
           expr: SUM(amount)
         - name: order_count
           expr: COUNT(*)
-      dimensions:
+      fields:
         - name: order_month
           expr: DATE_TRUNC('MONTH', order_date)
       source: ${ catalog }.gold.orders

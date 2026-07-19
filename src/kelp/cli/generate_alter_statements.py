@@ -62,7 +62,8 @@ def generate_alter_statements(
         manifest_file_path=manifest_file_path,
         log_level=log_level,
     )
-    queries = sync_catalog(sync_functions=include_functions, profile=profile)
+    # The CLI runs outside a Spark session, so it always uses the SDK engine.
+    queries = sync_catalog(sync_functions=include_functions, profile=profile, engine="sdk")
     if not silent:
         for q in queries:
             print_message(q + ";")

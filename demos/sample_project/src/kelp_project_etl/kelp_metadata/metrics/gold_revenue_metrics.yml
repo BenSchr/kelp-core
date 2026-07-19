@@ -1,16 +1,17 @@
 kelp_metric_views:
   - name: revenue_metrics
-    description: Key revenue and order metrics for business analytics and dashboards2
+    tags:
+      b: "c"
     definition:
-      comment: Key revenue and order metrics for business analytics and dashboards2
+      comment: Key revenue and order metrics for business analytics and dashboards
       version: 1.1
       source: ${ catalog }.kelp_gold.gold_orders_customers
-      dimensions:
+      fields:
         - name: order_state
           expr: order_state
           comment: order_state indicates the lifecycle state of an order (e.g., 'completed')
           tags:
-            hello: abcd
+            hello: abcde
         - name: store
           expr: store
           comment: Store is the storefront identifier (remote metadata preserved)2
@@ -30,6 +31,8 @@ kelp_metric_views:
         - name: avg_order_value
           expr: AVG(total_price)
           comment: Average revenue per order
+          tags:
+            a: "b"
         - name: total_quantity
           expr: SUM(quantity)
           comment: Total units sold for the grouping
@@ -37,12 +40,11 @@ kelp_metric_views:
           expr: COUNT(DISTINCT user_id)
           comment: Distinct customers who placed orders
   - name: product_performance_metrics
-    description: Product-level performance metrics for inventory and sales analytics
     definition:
       comment: Product-level performance metrics for inventory and sales analytics
       version: 1.1
       source: ${ catalog }.kelp_gold.gold_orders_customers
-      dimensions:
+      fields:
         - name: product
           expr: product
           comment: Product SKU or identifier

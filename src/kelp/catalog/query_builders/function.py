@@ -1,10 +1,7 @@
-"""DDL generation for Unity Catalog functions."""
+"""Query builder and DDL generation for Unity Catalog functions."""
 
+from kelp.catalog.query_builders._sql import esc
 from kelp.models.function import KelpFunction
-
-
-def _quote_sql_string(value: str) -> str:
-    return value.replace("'", "''")
 
 
 def _render_parameters(function: KelpFunction) -> str:
@@ -14,7 +11,7 @@ def _render_parameters(function: KelpFunction) -> str:
         if parameter.default_expression is not None:
             clause += f" DEFAULT {parameter.default_expression}"
         if parameter.comment:
-            clause += f" COMMENT '{_quote_sql_string(parameter.comment)}'"
+            clause += f" COMMENT '{esc(parameter.comment)}'"
         params.append(clause)
     return ", ".join(params)
 
@@ -25,7 +22,7 @@ def _render_returns(function: KelpFunction) -> str:
             [
                 (
                     f"{column.name} {column.data_type}"
-                    + (f" COMMENT '{_quote_sql_string(column.comment)}'" if column.comment else "")
+                    + (f" COMMENT '{esc(column.comment)}'" if column.comment else "")
                 )
                 for column in function.returns_table
             ],
@@ -71,7 +68,7 @@ def generate_create_function_ddl(function: KelpFunction) -> str:
         ddl_parts.append("NOT DETERMINISTIC")
 
     if function.description:
-        ddl_parts.append(f"COMMENT '{_quote_sql_string(function.description)}'")
+        ddl_parts.append(f"COMMENT '{esc(function.description)}'")
 
     if function.data_access:
         ddl_parts.append(function.data_access)
@@ -111,3 +108,15 @@ def generate_create_function_ddl(function: KelpFunction) -> str:
 def generate_drop_function_ddl(function: KelpFunction) -> str:
     """Generate DROP FUNCTION DDL."""
     return f"DROP FUNCTION IF EXISTS {function.get_qualified_name()}"
+
+
+class FunctionQueryBuilder:
+    """Build SQL for syncing a function.
+
+    Functions are pre-applied entities with no remote diffing: every sync
+    re-issues a full ``CREATE OR REPLACE FUNCTION`` statement.
+    """
+
+    def build(self, function: KelpFunction) -> list[str]:
+        """Return the ``CREATE OR REPLACE FUNCTION`` statement for *function*."""
+        return [generate_create_function_ddl(function)]

@@ -691,12 +691,11 @@ class TestYamlManagerMetricViewConversion:
         assert model["schema"] == "analytics"
         assert "definition" in model
 
-    def test_metric_view_to_model_dict_with_description(self):
-        """Test metric view includes description in definition comment."""
+    def test_metric_view_to_model_dict_passes_definition_through(self):
+        """The definition (including its comment) is written verbatim."""
         metric_view = MetricView(
             name="metrics",
-            description="Customer metrics",
-            definition={"source": "customers"},
+            definition={"version": "1.1", "source": "customers", "comment": "Customer metrics"},
         )
 
         with patch.object(YamlManager, "_get_hierarchy_defaults", return_value={}):
@@ -705,7 +704,12 @@ class TestYamlManagerMetricViewConversion:
                 include_hierarchy_defaults=False,
             )
 
-        assert model["definition"]["comment"] == "Customer metrics"
+        assert model["definition"] == {
+            "version": "1.1",
+            "source": "customers",
+            "comment": "Customer metrics",
+        }
+        assert "description" not in model
 
     def test_metric_view_excludes_default_catalog(self):
         """Test metric view excludes catalog matching default."""
@@ -939,7 +943,7 @@ class TestYamlManagerIntegration:
                     "tags": {"owner": "${ owner_tag }"},
                     "definition": {
                         "source": "${ catalog }.${ analytics_schema }.customers",
-                        "dimensions": [
+                        "fields": [
                             {"name": "customer_id", "expr": "${ customer_id_expr }"},
                         ],
                         "measures": [
@@ -960,7 +964,7 @@ class TestYamlManagerIntegration:
             tags={"owner": "finance"},
             definition={
                 "source": "prod.analytics.customers",
-                "dimensions": [
+                "fields": [
                     {"name": "customer_id", "expr": "customer_id"},
                 ],
                 "measures": [

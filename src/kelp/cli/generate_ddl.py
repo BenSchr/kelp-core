@@ -47,9 +47,9 @@ def generate_ddl(
 
     For tables, this currently shows metadata (CREATE TABLE DDL generation is not yet implemented).
     """
-    from kelp.catalog.abac_ddl import generate_create_abac_policy_ddl
-    from kelp.catalog.function_ddl import generate_create_function_ddl
-    from kelp.catalog.metric_view_ddl import generate_create_metric_view_ddl
+    from kelp.catalog.query_builders.abac import generate_create_abac_policy_ddl
+    from kelp.catalog.query_builders.function import generate_create_function_ddl
+    from kelp.catalog.query_builders.metric_view import generate_create_metric_view_ddl
     from kelp.cli.output import print_error, print_info, print_message, print_success, print_warning
     from kelp.config import get_context, init
     from kelp.service.model_manager import ModelManager
