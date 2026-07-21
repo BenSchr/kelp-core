@@ -499,7 +499,7 @@ class TestKelpImporterClass:
 class TestDQXRuleGeneration:
     """Test DQX rule generation from data contracts."""
 
-    def test_generate_dqx_rules_via_exporter(self) -> None:
+    def test_generate_dqx_rules_via_exporter(self, spark) -> None:
         """Test DQX rule generation via KelpExporter with generate_dqx_rules=True."""
         dc = DataContract(data_contract_file=str(FIXTURES_DIR / "orders_contract.yml"))
         result = dc.export(export_format="kelp", generate_dqx_rules=True)  # ty: ignore[invalid-argument-type]

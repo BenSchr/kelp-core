@@ -13,22 +13,22 @@ from kelp.catalog.remote_fetchers.spark import (
 )
 
 
-def test_default_engine_is_spark() -> None:
-    assert DEFAULT_ENGINE == "spark"
+def test_default_engine_is_sdk() -> None:
+    assert DEFAULT_ENGINE == "sdk"
 
 
-def test_get_table_fetcher_defaults_to_spark() -> None:
+def test_get_table_fetcher_defaults_to_sdk() -> None:
     factory = RemoteFetcherFactory()
 
-    assert isinstance(factory.get_table_fetcher(), SparkTableFetcher)
-    assert isinstance(factory.get_table_fetcher("sdk"), SdkTableFetcher)
+    assert isinstance(factory.get_table_fetcher("spark"), SparkTableFetcher)
+    assert isinstance(factory.get_table_fetcher(), SdkTableFetcher)
 
 
-def test_get_metric_view_fetcher_defaults_to_spark() -> None:
+def test_get_metric_view_fetcher_defaults_to_sdk() -> None:
     factory = RemoteFetcherFactory()
 
-    assert isinstance(factory.get_metric_view_fetcher(), SparkMetricViewFetcher)
-    assert isinstance(factory.get_metric_view_fetcher("sdk"), SdkMetricViewFetcher)
+    assert isinstance(factory.get_metric_view_fetcher("spark"), SparkMetricViewFetcher)
+    assert isinstance(factory.get_metric_view_fetcher(), SdkMetricViewFetcher)
 
 
 def test_spark_table_fetcher_requires_active_session() -> None:

@@ -628,6 +628,7 @@ class TestYamlManagerTableConversion:
         YamlManager._patch_model_dict(model_dict, source_model, defaults={})
 
         quality = model_dict.get("quality")
+
         assert isinstance(quality, dict)
         assert quality.get("engine") == "dqx"
         checks = quality.get("checks")

@@ -413,6 +413,13 @@ class YamlManager:
 
         model["columns"] = cls._patch_columns(existing_columns, source_model.columns)
 
+        if source_model.quality is not None:
+            cls._set_or_remove(
+                model,
+                "quality",
+                source_model.quality.model_dump(exclude_none=True, exclude_defaults=True),
+            )
+
     @classmethod
     def metric_view_to_model_dict(
         cls,

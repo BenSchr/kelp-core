@@ -64,7 +64,7 @@ def test_sync_catalog_passes_profile_to_remote_fetch_paths(monkeypatch) -> None:
             self,
             metric_views: list[SimpleNamespace],
             profile: str | None = None,
-            engine: str = "spark",
+            engine: str = "sdk",
         ) -> list[str]:
             captured["metric_views"] = metric_views
             captured["metric_views_profile"] = profile
@@ -88,8 +88,8 @@ def test_sync_catalog_passes_profile_to_remote_fetch_paths(monkeypatch) -> None:
     ]
     assert captured["tables_profile"] == "analytics"
     assert captured["metric_views_profile"] == "analytics"
-    assert captured["tables_engine"] == "spark"
-    assert captured["metric_views_engine"] == "spark"
+    assert captured["tables_engine"] == "sdk"
+    assert captured["metric_views_engine"] == "sdk"
 
 
 def test_sync_tables_passes_profile_to_adapter(monkeypatch) -> None:

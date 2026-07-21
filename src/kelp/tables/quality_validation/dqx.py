@@ -70,7 +70,7 @@ def apply_dqx_quality_checks(
     return check_result
 
 
-def build_dqx_stats_tabele(
+def build_dqx_stats_table(
     df: DataFrame, target_table: str | None = None, quarantine_table: str | None = None
 ) -> DataFrame:
     """Build a DQX stats table with the relevant metadata and metrics."""
@@ -151,5 +151,5 @@ def build_and_store_dqx_stats_table(
     stats_table_fqn: str,
 ) -> None:
     """Build the DQX stats table from the given DataFrame and store it in the specified table."""
-    stats_df = build_dqx_stats_tabele(df, target_table, quarantine_table)
+    stats_df = build_dqx_stats_table(df, target_table, quarantine_table)
     store_dqx_stats_table(stats_df, stats_table_fqn)
