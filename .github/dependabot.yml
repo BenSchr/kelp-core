@@ -26,7 +26,7 @@ updates:
           - "version-update:semver-minor"
           - "version-update:semver-major"
 
-    labels: [ "dependencies", "python" ]
+    labels: ["dependencies", "python"]
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -44,9 +44,9 @@ updates:
     cooldown:
       default-days: 10 # Same cooldown logic for Actions versions
     open-pull-requests-limit: 1
-    labels: [ "dependencies", "ci" ]
+    labels: ["dependencies", "ci"]
     commit-message:
-      prefix: "ci(deps)"
+      prefix: "ci"
       include: "scope"
     groups:
       github-actions:
