@@ -1,5 +1,16 @@
 # 0.0.13 (TBD)
 
+## ✨ Features
+
+- feat: improve-sync-metadata - Improved metadata sync code, added multi-threading to column-tag fetching in sdk, added optional spark metadata fetcher through describe and information-schema queries.
+
+## 🐛 Fixes
+
+## ⚠️ Breaking Changes
+
+- Metric Views don't allow old syntax `table` and `description` anymore, use the official current yaml reference `source` and `comment`. It is also recommended to move `dimensions` to `fields` syntax this may get deprecated in future.
+
+
 # 0.0.12 (2026-06-15)
 
 ## ✨ Features

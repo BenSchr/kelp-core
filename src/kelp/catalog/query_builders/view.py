@@ -2,19 +2,9 @@
 
 import logging
 
-from kelp.catalog.query_builders._sql import (
-    BASE_ALTER,
-    COMMENT_ON,
-    SET_TAG_ON,
-    SET_TAGS,
-    UNSET_TAG_ON,
-    UNSET_TAGS,
-    esc,
-    key_list,
-    kv_tags,
-)
+from kelp.catalog.query_builders._sql import SET_TAG_ON, UNSET_TAG_ON, esc
 from kelp.catalog.query_builders.base import BaseTableQueryBuilder, Capability
-from kelp.catalog.uc_models import DictDiff, TableDiff
+from kelp.catalog.uc_models import DictDiff
 
 logger = logging.getLogger(__name__)
 
@@ -36,55 +26,10 @@ class ViewQueryBuilder(BaseTableQueryBuilder):
             Capability.COLUMN_TAGS,
         }
     )
+    securable = "VIEW"
+    comment_on_type = "VIEW"
 
-    def description_queries(self, fqn: str, diff: TableDiff) -> list[str]:
-        """Generate ``COMMENT ON VIEW`` statement."""
-        if diff.table_description is None:
-            return []
-        query = COMMENT_ON.format(type="VIEW", path=fqn, comment=esc(diff.table_description))
-        logger.debug("Generated: %s", query)
-        return [query]
-
-    def table_tag_queries(self, fqn: str, tag_diff: DictDiff) -> list[str]:
-        """Generate ``ALTER VIEW … SET/UNSET TAGS`` statements."""
-        if not tag_diff.has_changes:
-            return []
-        queries: list[str] = []
-        if tag_diff.updates:
-            query = BASE_ALTER.format(
-                table_type="VIEW",
-                fqn=fqn,
-                action=SET_TAGS.format(tags=kv_tags(tag_diff.updates)),
-            )
-            logger.debug("Generated: %s", query)
-            queries.append(query)
-        if tag_diff.deletes:
-            query = BASE_ALTER.format(
-                table_type="VIEW",
-                fqn=fqn,
-                action=UNSET_TAGS.format(tags=key_list(tag_diff.deletes)),
-            )
-            logger.debug("Generated: %s", query)
-            queries.append(query)
-        return queries
-
-    def column_queries(self, fqn: str, diff: TableDiff) -> list[str]:
-        """Generate per-column ``COMMENT ON COLUMN`` and ``SET/UNSET TAG ON`` statements."""
-        queries: list[str] = []
-        for col_name, col_diff in diff.columns.items():
-            if col_diff.description is not None:
-                query = COMMENT_ON.format(
-                    type="COLUMN",
-                    path=f"{fqn}.{col_name}",
-                    comment=esc(col_diff.description),
-                )
-                logger.debug("Generated: %s", query)
-                queries.append(query)
-            if col_diff.tags is not None and col_diff.tags.has_changes:
-                queries.extend(self._column_tag_queries(fqn, col_name, col_diff.tags))
-        return queries
-
-    def _column_tag_queries(self, fqn: str, col_name: str, tag_diff: DictDiff) -> list[str]:
+    def column_tag_queries(self, fqn: str, col_name: str, tag_diff: DictDiff) -> list[str]:
         """Views require ``SET TAG ON`` / ``UNSET TAG ON`` for column tag mutations.
 
         Order: deletes → creates → updates (skipping keys already in creates).
@@ -92,24 +37,23 @@ class ViewQueryBuilder(BaseTableQueryBuilder):
         queries: list[str] = []
         col_path = f"{fqn}.{col_name}"
 
-        for key in tag_diff.deletes:
-            query = UNSET_TAG_ON.format(type="COLUMN", path=col_path, key=key)
-            logger.debug("Generated: %s", query)
-            queries.append(query)
+        queries.extend(
+            UNSET_TAG_ON.format(type="COLUMN", path=col_path, key=key) for key in tag_diff.deletes
+        )
 
         for key, value in tag_diff.creates.items():
-            query = SET_TAG_ON.format(type="COLUMN", path=col_path, key=key, value=esc(value))
-            logger.debug("Generated: %s", query)
-            queries.append(query)
+            queries.append(
+                SET_TAG_ON.format(type="COLUMN", path=col_path, key=key, value=esc(value))
+            )
 
         for key, value in tag_diff.updates.items():
             if key in tag_diff.creates:
                 continue  # already emitted above
-            unset = UNSET_TAG_ON.format(type="COLUMN", path=col_path, key=key)
-            logger.debug("Generated (pre-unset): %s", unset)
-            queries.append(unset)
-            query = SET_TAG_ON.format(type="COLUMN", path=col_path, key=key, value=esc(value))
-            logger.debug("Generated: %s", query)
-            queries.append(query)
+            queries.append(UNSET_TAG_ON.format(type="COLUMN", path=col_path, key=key))
+            queries.append(
+                SET_TAG_ON.format(type="COLUMN", path=col_path, key=key, value=esc(value))
+            )
 
+        for query in queries:
+            logger.debug("Generated: %s", query)
         return queries

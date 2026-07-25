@@ -1,4 +1,4 @@
-# Spark Tabl Migration
+# Spark Table Migration
 
 This reference provides guidance on how to migrate existing Spark tables to use Kelp metadata. It covers how to refactor hardcoded catalog/schema references, extract metadata from code to YAML, and convert manual expectations to Kelp quality checks.
 
@@ -26,7 +26,7 @@ TABLEPROPERTIES (
 df = spark.read.table(f"{source_catalog}.{source_schema}.source_table")
 
 # Quality checks with manual assertions etc.
-# Tranformations
+# Transformations
 # ...
 
 df.write.format("delta").mode("append").saveAsTable(f"{catalog}.{schema}.my_table")
@@ -79,7 +79,7 @@ Extract metadata to YAML:
 - Extract any other relevant metadata like clustering, partitioning, table properties, comments, etc.
 - Extract materialization parameters like write mode, unique keys for merge, etc.
 
-**Important**:Only add provided metadata. Don't add any additinal fields not in source except the user intructed to do so.
+**Important**:Only add provided metadata. Don't add any additional fields not in source except the user instructed to do so.
 
 ```yaml
 kelp_models:

@@ -1,13 +1,24 @@
-"""Factory for Unity Catalog table query builders.
+"""Factory for Unity Catalog query builders.
 
-Usage (drop-in replacement for ``UCQueryBuilder``)::
+Covers every syncable catalog entity — tables (by table type), metric
+views, functions, and ABAC policies — behind one lookup keyed by a logical
+"kind" string.
+
+Usage::
 
     from kelp.catalog.query_builders.factory import UCQueryBuilderFactory
 
     factory = UCQueryBuilderFactory()
     queries = factory.build("catalog.schema.my_table", diff, "managed")
 
-The factory also exposes a static :attr:`CAPABILITY_TABLE` for introspection::
+    # Entities that need constructor args (e.g. MetricViewQueryBuilder needs
+    # a RemoteCatalogConfig) pass them as kwargs to get_builder:
+    builder = factory.get_builder("metric_view", config=remote_catalog_config)
+    queries = builder.build(metric_view, remote)
+
+The factory also exposes a static :attr:`CAPABILITY_TABLE` for introspecting
+the four *table* builders (metric views, functions, and ABAC policies don't
+have per-type ``Capability`` variance, so they're not part of this table)::
 
     from kelp.catalog.query_builders.factory import UCQueryBuilderFactory, CAPABILITY_TABLE
 
@@ -16,10 +27,14 @@ The factory also exposes a static :attr:`CAPABILITY_TABLE` for introspection::
 """
 
 import logging
+from typing import Any
 
-from kelp.catalog.query_builders.base import BaseTableQueryBuilder, Capability
+from kelp.catalog.query_builders.abac import AbacPolicyQueryBuilder
+from kelp.catalog.query_builders.base import Capability
+from kelp.catalog.query_builders.function import FunctionQueryBuilder
 from kelp.catalog.query_builders.managed import ManagedTableQueryBuilder
 from kelp.catalog.query_builders.materialized_view import MaterializedViewQueryBuilder
+from kelp.catalog.query_builders.metric_view import MetricViewQueryBuilder
 from kelp.catalog.query_builders.streaming_table import StreamingTableQueryBuilder
 from kelp.catalog.query_builders.view import ViewQueryBuilder
 from kelp.catalog.uc_models import TableDiff
@@ -39,26 +54,25 @@ CAPABILITY_TABLE: dict[str, frozenset[Capability]] = {
     "streaming_table": StreamingTableQueryBuilder.capabilities,
 }
 
-_REGISTRY: dict[str, type[BaseTableQueryBuilder]] = {
+_REGISTRY: dict[str, type[Any]] = {
     "managed": ManagedTableQueryBuilder,
     "view": ViewQueryBuilder,
     "materialized_view": MaterializedViewQueryBuilder,
     "streaming_table": StreamingTableQueryBuilder,
+    "metric_view": MetricViewQueryBuilder,
+    "function": FunctionQueryBuilder,
+    "abac": AbacPolicyQueryBuilder,
 }
 
 
 class UCQueryBuilderFactory:
-    """Factory that resolves the correct :class:`BaseTableQueryBuilder` for a
-    given table type and provides the same ``build`` entry-point as the
-    original :class:`~kelp.catalog.uc_query_builder.UCQueryBuilder`.
+    """Factory that resolves the correct query builder for a given entity kind.
 
     The factory is stateless and safe to share across threads.
 
     Example::
 
         factory = UCQueryBuilderFactory()
-
-        # Equivalent to the old UCQueryBuilder().build(fqn, diff, table_type)
         queries = factory.build("catalog.schema.table", diff, "managed")
 
         # Retrieve a typed builder for direct use
@@ -67,33 +81,40 @@ class UCQueryBuilderFactory:
 
     """
 
-    def get_builder(self, table_type: str) -> BaseTableQueryBuilder:
-        """Return the builder instance for *table_type*.
+    def get_builder(self, kind: str, **kwargs: Any) -> Any:
+        """Return a builder instance for *kind*.
 
         Args:
-            table_type: Logical table-type key (``"managed"``, ``"view"``,
-                ``"materialized_view"``, or ``"streaming_table"``).
+            kind: Logical entity key — one of the four table types
+                (``"managed"``, ``"view"``, ``"materialized_view"``,
+                ``"streaming_table"``), or ``"metric_view"``, ``"function"``,
+                ``"abac"``.
+            **kwargs: Forwarded to the builder's constructor. Table builders,
+                ``FunctionQueryBuilder``, and ``AbacPolicyQueryBuilder`` take
+                none; ``MetricViewQueryBuilder`` requires ``config``.
 
         Returns:
-            A concrete :class:`BaseTableQueryBuilder` subclass instance.
+            A builder instance exposing its own ``build(...)`` method — the
+            table builders share :meth:`BaseTableQueryBuilder.build`, while
+            metric view/function/abac builders take entity-shaped arguments
+            instead of a ``TableDiff`` since they aren't diffed the same way.
 
         Raises:
-            KeyError: If *table_type* is not registered.
+            KeyError: If *kind* is not registered.
 
         """
-        builder_cls = _REGISTRY.get(table_type)
+        builder_cls = _REGISTRY.get(kind)
         if builder_cls is None:
             raise KeyError(
-                f"No query builder registered for table type '{table_type}'. "
-                f"Known types: {sorted(_REGISTRY)}"
+                f"No query builder registered for '{kind}'. Known kinds: {sorted(_REGISTRY)}"
             )
-        return builder_cls()
+        return builder_cls(**kwargs)
 
     def build(self, fqn: str, diff: TableDiff, table_type: str) -> list[str]:
-        """Build all SQL queries for the given diff.
+        """Build all SQL queries for a table diff.
 
-        This is a drop-in replacement for
-        ``UCQueryBuilder().build(fqn, diff, table_type)``.
+        Convenience wrapper over :meth:`get_builder` for the table-builder
+        case, where every builder shares the same ``build(fqn, diff)`` shape.
 
         Args:
             fqn: Fully-qualified table name (``catalog.schema.table``).

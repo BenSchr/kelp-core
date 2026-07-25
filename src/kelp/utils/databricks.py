@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any
 
 import yaml
 from databricks.sdk import WorkspaceClient
@@ -51,6 +53,33 @@ def _parse_clustering_columns(raw_value: str | list[object] | None) -> list[str]
     return columns
 
 
+def _fetch_tags(w: WorkspaceClient, entity_type: str, entity_name: str) -> dict[str, str]:
+    """Fetch tag assignments for a UC entity as a plain ``{key: value}`` dict."""
+    return {
+        tag.tag_key: tag.tag_value
+        for tag in w.entity_tag_assignments.list(entity_type, entity_name)
+        if tag.tag_key is not None and tag.tag_value is not None
+    }
+
+
+def _fetch_column_tags(w: WorkspaceClient, columns: list, fqn: str) -> dict[str, dict[str, str]]:
+    """Fetch tags for every column of *fqn*, one SDK call per column in parallel.
+
+    Returns a ``{column_name: {tag_key: tag_value}}`` mapping. Each column's
+    tags require a separate ``entity_tag_assignments.list`` call (there's no
+    batched "all columns" endpoint), so a wide table means many round trips —
+    threading keeps that latency from stacking up serially.
+    """
+    if not columns:
+        return {}
+
+    def _fetch_one(col: Any) -> tuple[str, dict[str, str]]:
+        return col.name, _fetch_tags(w, "columns", f"{fqn}.{col.name}")
+
+    with ThreadPoolExecutor() as executor:
+        return dict(executor.map(_fetch_one, columns))
+
+
 def get_table_from_dbx_sdk(
     full_table: str,
     w: WorkspaceClient | None = None,
@@ -63,11 +92,9 @@ def get_table_from_dbx_sdk(
     except Exception:  # noqa: BLE001
         # if message starts with not found
         return None
-    table_tags = {}
-    for tag in w.entity_tag_assignments.list("tables", full_table):
-        table_tags[tag.tag_key] = tag.tag_value
+    table_tags = _fetch_tags(w, "tables", full_table)
 
-    table_obj = {}
+    table_obj: dict[str, Any] = {}
     table_obj["name"] = info.name
     table_obj["catalog"] = info.catalog_name
     table_obj["schema"] = info.schema_name
@@ -105,10 +132,9 @@ def get_table_from_dbx_sdk(
             )
         ]
 
+        column_tags_by_name = _fetch_column_tags(w, info.columns, full_table)
         for col in info.columns:
-            col_tags = {}
-            for tag in w.entity_tag_assignments.list("columns", f"{full_table}.{col.name}"):
-                col_tags[tag.tag_key] = tag.tag_value
+            col_tags = column_tags_by_name.get(col.name, {}) if col.name else {}
             col_obj = {
                 "name": col.name,
                 "description": col.comment,
@@ -146,89 +172,68 @@ def get_table_from_dbx_sdk(
     return Model(**table_obj)
 
 
+def inject_metric_view_column_metadata(
+    definition: dict,
+    comments_by_column: dict[str, str],
+    tags_by_column: dict[str, dict[str, str]],
+) -> None:
+    """Inject column comments/tags into a metric view definition in-place.
+
+    Comments and tags live in Unity Catalog column metadata, not in the
+    view's YAML body — this merges them back into the definition's
+    ``dimensions``/``fields``/``measures`` entries by name so the resulting
+    definition reflects the full remote state.
+    """
+    for section in ("dimensions", "fields", "measures"):
+        entries = definition.get(section)
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            name = entry.get("name")
+            if name in comments_by_column:
+                entry["comment"] = comments_by_column[name]
+            if tags_by_column.get(name):
+                entry["tags"] = tags_by_column[name]
+
+
 def get_metric_view_from_dbx_sdk(
     full_metric_view: str,
     w: WorkspaceClient | None = None,
     profile: str | None = None,
-) -> MetricView:
-    """Retrieve metric view metadata from Databricks SDK and convert to Kelp MetricView format."""
-    w = w or WorkspaceClient(profile=profile)
-    info = w.tables.get(full_metric_view)
+) -> MetricView | None:
+    """Retrieve metric view metadata from Databricks SDK and convert to Kelp MetricView format.
 
-    metric_tags = {}
-    for tag in w.entity_tag_assignments.list("tables", full_metric_view):
-        metric_tags[tag.tag_key] = tag.tag_value
+    The returned ``definition`` follows the Databricks metric view YAML
+    reference verbatim (including its ``comment``); column comments and
+    Kelp-managed tags are merged into the dimension/field/measure entries.
+    """
+    w = w or WorkspaceClient(profile=profile)
+    try:
+        info = w.tables.get(full_metric_view)
+    except Exception:  # noqa: BLE001
+        return None
 
     view_definition = info.view_definition or ""
     definition_payload = yaml.safe_load(view_definition) if view_definition else {}
     if not isinstance(definition_payload, dict):
         definition_payload = {}
 
-    description = info.comment
-    if not description and isinstance(definition_payload, dict):
-        description = definition_payload.get("comment")
+    # The view-level comment is part of the YAML spec; if Unity Catalog only
+    # reports it as the object comment, mirror it back into the definition.
+    if "comment" not in definition_payload and info.comment:
+        definition_payload["comment"] = info.comment
 
-    if isinstance(definition_payload, dict) and "comment" in definition_payload:
-        definition_payload = {k: v for k, v in definition_payload.items() if k != "comment"}
+    columns = info.columns or []
+    comments_by_column = {col.name: col.comment for col in columns if col.name and col.comment}
+    tags_by_column = _fetch_column_tags(w, columns, full_metric_view)
+    inject_metric_view_column_metadata(definition_payload, comments_by_column, tags_by_column)
 
-    # Extract comments and tags from columns and inject into definition
-    # Comments and tags are stored in columns metadata, not in view_definition
-    dimension_comments = {}
-    measure_comments = {}
-    dimension_tags = {}
-    measure_tags = {}
-
-    for col in info.columns or []:
-        try:
-            # Parse type_json to get metric_view metadata
-            type_data = json.loads(col.type_json) if col.type_json else {}
-            metadata = type_data.get("metadata", {})
-            mv_type = metadata.get("metric_view.type")
-
-            # Fetch column tags
-            col_tags = {}
-            for tag in w.entity_tag_assignments.list("columns", f"{full_metric_view}.{col.name}"):
-                col_tags[tag.tag_key] = tag.tag_value
-
-            if mv_type == "dimension":
-                if col.comment:
-                    dimension_comments[col.name] = col.comment
-                if col_tags:
-                    dimension_tags[col.name] = col_tags
-            elif mv_type == "measure":
-                if col.comment:
-                    measure_comments[col.name] = col.comment
-                if col_tags:
-                    measure_tags[col.name] = col_tags
-        except (json.JSONDecodeError, AttributeError):
-            pass  # Skip if type_json is invalid
-
-    # Inject comments and tags into definition dimensions
-    if isinstance(definition_payload.get("dimensions"), list):
-        for dim in definition_payload["dimensions"]:
-            if isinstance(dim, dict):
-                dim_name = dim.get("name")
-                if dim_name in dimension_comments:
-                    dim["comment"] = dimension_comments[dim_name]
-                if dim_name in dimension_tags:
-                    dim["tags"] = dimension_tags[dim_name]
-
-    # Inject comments and tags into definition measures
-    if isinstance(definition_payload.get("measures"), list):
-        for measure in definition_payload["measures"]:
-            if isinstance(measure, dict):
-                measure_name = measure.get("name")
-                if measure_name in measure_comments:
-                    measure["comment"] = measure_comments[measure_name]
-                if measure_name in measure_tags:
-                    measure["tags"] = measure_tags[measure_name]
-
-    payload = {}
-    payload["name"] = info.name
-    payload["catalog"] = info.catalog_name
-    payload["schema_"] = info.schema_name
-    payload["description"] = description
-    payload["tags"] = metric_tags
-    payload["definition"] = definition_payload
-
-    return MetricView(**payload)
+    return MetricView(
+        name=info.name or "",
+        catalog=info.catalog_name,
+        schema_=info.schema_name,
+        tags=_fetch_tags(w, "tables", full_metric_view),
+        definition=definition_payload,
+    )

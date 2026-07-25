@@ -1,6 +1,6 @@
 """Tests for function DDL generation."""
 
-from kelp.catalog.function_ddl import generate_create_function_ddl
+from kelp.catalog.query_builders.function import generate_create_function_ddl
 from kelp.models.function import FunctionParameter, KelpFunction
 
 

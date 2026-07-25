@@ -30,7 +30,7 @@ def test_sync_table_passes_profile_to_databricks_lookup(monkeypatch) -> None:
             return ["ALTER TABLE main.sales.orders SET TAGS ('owner'='data')"]
 
     monkeypatch.setattr(
-        "kelp.catalog.uc_adapter.get_table_from_dbx_sdk",
+        "kelp.catalog.remote_fetchers.sdk.get_table_from_dbx_sdk",
         fake_get_table_from_dbx_sdk,
     )
     monkeypatch.setattr(
@@ -46,7 +46,7 @@ def test_sync_table_passes_profile_to_databricks_lookup(monkeypatch) -> None:
 
     monkeypatch.setattr(adapter._differ, "calculate", fake_calculate)
 
-    queries = adapter.sync_table(local, profile="analytics")
+    queries = adapter.sync_table(local, profile="analytics", engine="sdk")
 
     assert queries == ["ALTER TABLE main.sales.orders SET TAGS ('owner'='data')"]
     assert captured["fqn"] == "main.sales.orders"
@@ -61,16 +61,14 @@ def test_sync_metric_view_passes_profile_to_databricks_lookup(monkeypatch) -> No
         name="order_metrics",
         catalog="main",
         schema_="sales",
-        description="Order metrics",
-        definition={"source": "main.sales.orders"},
+        definition={"source": "main.sales.orders", "comment": "Order metrics"},
         tags={"owner": "data"},
     )
     remote = MetricView(
         name="order_metrics",
         catalog="main",
         schema_="sales",
-        description="Order metrics",
-        definition={"source": "main.sales.orders"},
+        definition={"source": "main.sales.orders", "comment": "Order metrics"},
         tags={"owner": "data"},
     )
     adapter = UnityCatalogAdapter(config=RemoteCatalogConfig())
@@ -85,12 +83,35 @@ def test_sync_metric_view_passes_profile_to_databricks_lookup(monkeypatch) -> No
         return remote
 
     monkeypatch.setattr(
-        "kelp.utils.databricks.get_metric_view_from_dbx_sdk",
+        "kelp.catalog.remote_fetchers.sdk.get_metric_view_from_dbx_sdk",
         fake_get_metric_view_from_dbx_sdk,
     )
 
-    queries = adapter.sync_metric_view(metric_view, profile="analytics")
+    queries = adapter.sync_metric_view(metric_view, profile="analytics", engine="sdk")
 
     assert queries == []
     assert captured["fqn"] == "main.sales.order_metrics"
     assert captured["profile"] == "analytics"
+
+
+def test_sync_metric_view_creates_when_remote_missing(monkeypatch) -> None:
+    """sync_metric_view switches to create mode when the remote lookup returns None."""
+    metric_view = MetricView(
+        name="order_metrics",
+        catalog="main",
+        schema_="sales",
+        definition={"source": "main.sales.orders", "comment": "Order metrics"},
+        tags={"owner": "data"},
+    )
+    adapter = UnityCatalogAdapter(config=RemoteCatalogConfig())
+
+    monkeypatch.setattr(
+        "kelp.catalog.remote_fetchers.sdk.get_metric_view_from_dbx_sdk",
+        lambda fqn, w=None, profile=None: None,
+    )
+
+    queries = adapter.sync_metric_view(metric_view, engine="sdk")
+
+    assert len(queries) == 2
+    assert queries[0].startswith("CREATE OR REPLACE VIEW main.sales.order_metrics")
+    assert "ALTER VIEW main.sales.order_metrics SET TAGS ('owner' = 'data')" in queries[1]

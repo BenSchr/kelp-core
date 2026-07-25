@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 
+from kelp.catalog.remote_fetchers import DEFAULT_ENGINE
 from kelp.catalog.uc_adapter import UnityCatalogAdapter
 from kelp.config import get_context
 
@@ -50,6 +51,7 @@ def sync_catalog(
     sync_abacs: bool = True,
     filter_by_meta: dict[str, Any] | None = None,
     profile: str | None = None,
+    engine: str = DEFAULT_ENGINE,
 ) -> list[str]:
     """Synchronize all tables and metric views to remote Databricks catalog.
 
@@ -65,6 +67,8 @@ def sync_catalog(
         filter_by_meta: Optional dict filter applied against each object's ``meta``
             field using recursive dict-subset matching.
         profile: Databricks CLI profile to use for remote metadata lookups.
+        engine: Remote-fetch engine — ``"spark"`` (default, requires an active
+            Spark session) or ``"sdk"`` (works anywhere, used by the CLI).
 
     Returns:
         List of SQL queries executed for synchronization.
@@ -84,6 +88,7 @@ def sync_catalog(
             uc_adapter.sync_all_tables(
                 _get_objects("models", filter_by_meta=filter_by_meta),
                 profile=profile,
+                engine=engine,
             )
         )
     if sync_metric_views:
@@ -91,6 +96,7 @@ def sync_catalog(
             uc_adapter.sync_all_metric_views(
                 _get_objects("metric_views", filter_by_meta=filter_by_meta),
                 profile=profile,
+                engine=engine,
             )
         )
     if sync_abacs:
@@ -147,6 +153,7 @@ def sync_metric_views(
     view_names: list[str] | None = None,
     filter_by_meta: dict[str, Any] | None = None,
     profile: str | None = None,
+    engine: str = DEFAULT_ENGINE,
 ) -> list[str]:
     """Synchronize specified metric views to the remote catalog.
 
@@ -158,6 +165,7 @@ def sync_metric_views(
         filter_by_meta: Optional dict filter applied against each object's ``meta``
             field using recursive dict-subset matching.
         profile: Databricks CLI profile to use for remote metadata lookups.
+        engine: Remote-fetch engine — ``"spark"`` (default) or ``"sdk"``.
 
     Returns:
         List of SQL queries executed for synchronization.
@@ -169,7 +177,7 @@ def sync_metric_views(
     metric_views = _get_objects("metric_views", names=view_names, filter_by_meta=filter_by_meta)
     uc_adapter = UnityCatalogAdapter()
     logger.info("Starting sync for metric views...")
-    queries = uc_adapter.sync_all_metric_views(metric_views, profile=profile)
+    queries = uc_adapter.sync_all_metric_views(metric_views, profile=profile, engine=engine)
     return queries
 
 
@@ -188,6 +196,7 @@ def sync_tables(
     model_names: list[str] | None = None,
     filter_by_meta: dict[str, Any] | None = None,
     profile: str | None = None,
+    engine: str = DEFAULT_ENGINE,
 ) -> list[str]:
     """Synchronize specified tables to the remote catalog.
 
@@ -200,6 +209,7 @@ def sync_tables(
         filter_by_meta: Optional dict filter applied against each object's ``meta``
             field using recursive dict-subset matching.
         profile: Databricks CLI profile to use for remote metadata lookups.
+        engine: Remote-fetch engine — ``"spark"`` (default) or ``"sdk"``.
 
     Returns:
         List of SQL queries executed for synchronization.
@@ -210,5 +220,5 @@ def sync_tables(
     """
     tables = _get_objects("models", names=model_names, filter_by_meta=filter_by_meta)
     uc_adapter = UnityCatalogAdapter()
-    queries = uc_adapter.sync_tables(tables, profile=profile)
+    queries = uc_adapter.sync_tables(tables, profile=profile, engine=engine)
     return queries

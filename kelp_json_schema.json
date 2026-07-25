@@ -128,6 +128,12 @@
           },
           "title": "Using Columns",
           "type": "array"
+        },
+        "meta": {
+          "additionalProperties": true,
+          "description": "Generic user-defined metadata for filtering and grouping",
+          "title": "Meta",
+          "type": "object"
         }
       },
       "required": [
@@ -140,8 +146,28 @@
       "title": "AbacPolicy",
       "type": "object"
     },
+    "AutoTTLConfig": {
+      "properties": {
+        "timestamp_column": {
+          "description": "Name of the timestamp column used for TTL",
+          "title": "Timestamp Column",
+          "type": "string"
+        },
+        "expire_in_days": {
+          "description": "Number of days after which data expires",
+          "title": "Expire In Days",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "timestamp_column",
+        "expire_in_days"
+      ],
+      "title": "AutoTTLConfig",
+      "type": "object"
+    },
     "Column": {
-      "description": "Column definition for a table.\n\nRepresents a column with its name, description, data type, nullability,\nand optional generated column configuration.\n\nAttributes:\n    name: Column name.\n    description: Human-readable description of the column.\n    data_type: SQL data type of the column.\n    nullable: Whether the column allows NULL values.\n    generated: Configuration for generated columns (identity or expression).\n    tags: Metadata tags for the column.",
+      "description": "Column definition for a model.",
       "properties": {
         "name": {
           "description": "Column name",
@@ -214,6 +240,12 @@
           "description": "Metadata tags for the column",
           "title": "Tags",
           "type": "object"
+        },
+        "meta": {
+          "additionalProperties": true,
+          "description": "Generic user-defined metadata for filtering and grouping columns",
+          "title": "Meta",
+          "type": "object"
         }
       },
       "required": [
@@ -222,8 +254,66 @@
       "title": "Column",
       "type": "object"
     },
+    "ColumnPolicyRule": {
+      "description": "Policy rules for column-level governance checks.\n\nAttributes:\n    require_description: Each column must have a non-empty description.\n    require_tags: Specific tag keys that must be present on each column.\n    require_any_tag: At least one tag must exist on each column.\n    naming_pattern: Regex pattern that column names must match.\n    naming_patterns_by_type: Naming patterns for specific data types.\n    not_: Negate checks for this rule block (YAML key: ``not``).\n    severity: Severity when this rule is violated.",
+      "properties": {
+        "require_description": {
+          "default": false,
+          "description": "Each column must have a non-empty description",
+          "title": "Require Description",
+          "type": "boolean"
+        },
+        "require_tags": {
+          "description": "Specific tag keys that must be present on each column",
+          "items": {
+            "type": "string"
+          },
+          "title": "Require Tags",
+          "type": "array"
+        },
+        "require_any_tag": {
+          "default": false,
+          "description": "At least one tag must exist on each column",
+          "title": "Require Any Tag",
+          "type": "boolean"
+        },
+        "naming_pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Regex pattern that all column names must match",
+          "title": "Naming Pattern"
+        },
+        "naming_patterns_by_type": {
+          "description": "Regex patterns for column names by data type",
+          "items": {
+            "$ref": "#/$defs/NamingPattern"
+          },
+          "title": "Naming Patterns By Type",
+          "type": "array"
+        },
+        "not": {
+          "default": false,
+          "description": "Negate checks for this rule block",
+          "title": "Not",
+          "type": "boolean"
+        },
+        "severity": {
+          "$ref": "#/$defs/PolicySeverity",
+          "default": "warn",
+          "description": "Severity level when a rule is violated"
+        }
+      },
+      "title": "ColumnPolicyRule",
+      "type": "object"
+    },
     "DQXQuality": {
-      "description": "Databricks DQX quality checks configuration.\n\nAttributes:\n    engine: Quality engine type (always \"dqx\").\n    sdp_expect_level: Action for quality violations in SDP layer.\n    sdp_quarantine: Whether to quarantine rows failing quality checks.\n    checks: List of quality check configurations.",
       "properties": {
         "engine": {
           "const": "dqx",
@@ -259,6 +349,23 @@
           "title": "Sdp Quarantine",
           "type": "boolean"
         },
+        "spark_violation_action": {
+          "default": "error",
+          "description": "Action for quality violations at the Spark level: error (raise exception), ignore (store errors in output), or drop (exclude from output)",
+          "enum": [
+            "error",
+            "ignore",
+            "drop"
+          ],
+          "title": "Spark Violation Action",
+          "type": "string"
+        },
+        "spark_quarantine": {
+          "default": false,
+          "description": "Whether to write rows failing quality checks to a quarantine table at the Spark level",
+          "title": "Spark Quarantine",
+          "type": "boolean"
+        },
         "checks": {
           "description": "Quality check configurations",
           "items": {
@@ -276,7 +383,6 @@
       "type": "object"
     },
     "ForeignKeyConstraint": {
-      "description": "Foreign key constraint definition.\n\nAttributes:\n    type: Constraint type identifier (always \"foreign_key\").\n    columns: List of local column names.\n    reference_table: Fully qualified name of the referenced table.\n    reference_columns: List of column names in the referenced table.",
       "properties": {
         "name": {
           "description": "Constraint name",
@@ -428,7 +534,6 @@
       "type": "object"
     },
     "GeneratedExpressionColumnConfig": {
-      "description": "Configuration for expression-based generated columns.\n\nAttributes:\n    type: Column type identifier (always \"expression\").\n    expression: SQL expression used to generate the column value.",
       "properties": {
         "type": {
           "const": "expression",
@@ -450,7 +555,6 @@
       "type": "object"
     },
     "GeneratedIdentityColumnConfig": {
-      "description": "Configuration for auto-incrementing identity columns.\n\nAttributes:\n    type: Column type identifier (always \"identity\").\n    as_default: If True, identity is generated as default; if False, always generated.\n    start_with: Starting value for the identity sequence.\n    increment_by: Increment step for the identity sequence.",
       "properties": {
         "type": {
           "const": "identity",
@@ -668,6 +772,12 @@
           "description": "Metadata tags",
           "title": "Tags",
           "type": "object"
+        },
+        "meta": {
+          "additionalProperties": true,
+          "description": "Generic user-defined metadata for filtering and grouping",
+          "title": "Meta",
+          "type": "object"
         }
       },
       "required": [
@@ -677,7 +787,7 @@
       "type": "object"
     },
     "MetricView": {
-      "description": "Metric View definition for Databricks.\n\nAttributes:\n    name: The name of the metric view.\n    catalog: The catalog where the metric view will be created.\n    schema_: The schema where the metric view will be created.\n    description: Optional description of the metric view.\n    definition: The metric view definition as a dictionary. This should contain\n               the full metric view specification including dimensions, metrics,\n               and the underlying table.\n    tags: Optional tags for the metric view.\n    origin_file_path: Path to the source YAML file (internal use).\n    raw_config: Preserve original, unparsed config (including placeholder vars).",
+      "description": "Metric View definition for Databricks.\n\nThe ``dimensions`` key (the spec synonym for ``fields``) is canonicalized\nto ``fields`` on construction, so local YAML and remote-fetched state\nalways compare and render consistently \u2014 Unity Catalog currently returns\nstored definitions with ``dimensions`` even when created with ``fields``.\n\nAttributes:\n    name: The name of the metric view.\n    catalog: The catalog where the metric view will be created.\n    schema_: The schema where the metric view will be created.\n    definition: The metric view specification as a dictionary, following\n                the Databricks metric view YAML reference (``version``,\n                ``source``, ``comment``, ``filter``, ``joins``,\n                ``fields``, ``measures``, \u2026).\n    tags: Optional tags for the metric view.\n    origin_file_path: Path to the source YAML file (internal use).\n    raw_config: Preserve original, unparsed config (including placeholder vars).",
       "properties": {
         "name": {
           "title": "Name",
@@ -707,6 +817,71 @@
           "default": null,
           "title": "Schema"
         },
+        "definition": {
+          "additionalProperties": true,
+          "description": "The metric view specification following the Databricks metric view YAML reference, passed through to DDL verbatim (plus optional Kelp-managed 'tags' on field/measure entries)",
+          "title": "Definition",
+          "type": "object"
+        },
+        "tags": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "object"
+        },
+        "meta": {
+          "additionalProperties": true,
+          "description": "Generic user-defined metadata for filtering and grouping",
+          "title": "Meta",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "MetricView",
+      "type": "object"
+    },
+    "Model": {
+      "description": "Model definition in Unity Catalog.\n\nRepresents a metadata model in Kelp with configuration that maps to\nDatabricks Unity Catalog objects.",
+      "properties": {
+        "table_type": {
+          "$ref": "#/$defs/TableType",
+          "default": "managed",
+          "description": "Type of table: managed, external, view, streaming_table, etc."
+        },
+        "catalog": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Unity Catalog name",
+          "title": "Catalog"
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schema/database name",
+          "title": "Schema"
+        },
+        "name": {
+          "description": "Model name",
+          "title": "Name",
+          "type": "string"
+        },
         "description": {
           "anyOf": [
             {
@@ -717,30 +892,603 @@
             }
           ],
           "default": null,
+          "description": "Human-readable description of the model",
           "title": "Description"
         },
-        "definition": {
+        "spark_conf": {
           "additionalProperties": true,
-          "description": "The metric view definition including dimensions, metrics, and source table",
-          "title": "Definition",
+          "description": "Spark configuration properties",
+          "title": "Spark Conf",
           "type": "object"
+        },
+        "table_properties": {
+          "additionalProperties": true,
+          "description": "Databricks table properties",
+          "title": "Table Properties",
+          "type": "object"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Physical path for external tables or custom locations",
+          "title": "Path"
+        },
+        "partition_cols": {
+          "description": "List of column names for partitioning",
+          "items": {
+            "type": "string"
+          },
+          "title": "Partition Cols",
+          "type": "array"
+        },
+        "cluster_by_auto": {
+          "default": false,
+          "description": "Enable automatic clustering optimization",
+          "title": "Cluster By Auto",
+          "type": "boolean"
+        },
+        "cluster_by": {
+          "description": "List of column names for explicit clustering (max 4)",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 4,
+          "title": "Cluster By",
+          "type": "array"
+        },
+        "row_filter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SQL expression to filter rows based on security policies",
+          "title": "Row Filter"
+        },
+        "columns": {
+          "description": "Column definitions for the model",
+          "items": {
+            "$ref": "#/$defs/Column"
+          },
+          "title": "Columns",
+          "type": "array"
+        },
+        "quality": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "dqx": "#/$defs/DQXQuality",
+                  "sdp": "#/$defs/SDPQuality"
+                },
+                "propertyName": "engine"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/SDPQuality"
+                },
+                {
+                  "$ref": "#/$defs/DQXQuality"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Data quality configuration using SDPQuality or DQXQuality",
+          "title": "Quality"
+        },
+        "materialization": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelMaterializationConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Configuration controlling how the model is materialized."
+        },
+        "constraints": {
+          "description": "Constraints like primary key or foreign key",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PrimaryKeyConstraint"
+              },
+              {
+                "$ref": "#/$defs/ForeignKeyConstraint"
+              }
+            ]
+          },
+          "title": "Constraints",
+          "type": "array"
+        },
+        "auto_ttl": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AutoTTLConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Configuration for automatic TTL (Time To Live) based on a timestamp column"
         },
         "tags": {
           "additionalProperties": {
             "type": "string"
           },
+          "description": "Metadata tags for the model",
           "title": "Tags",
+          "type": "object"
+        },
+        "meta": {
+          "additionalProperties": true,
+          "description": "Generic user-defined metadata for filtering and grouping",
+          "title": "Meta",
           "type": "object"
         }
       },
       "required": [
         "name"
       ],
-      "title": "MetricView",
+      "title": "Model",
       "type": "object"
     },
+    "ModelMaterializationConfig": {
+      "description": "Configuration controlling how a kelp model is materialized.\n\nAll fields are optional; set only what you need.\n\nArgs:\n    write_mode: How to write the result \u2014 ``'append'``, ``'overwrite'``, or ``'merge'``.\n    When ``None`` (default) the DataFrame\n        is returned without writing.\n    options: Extra DataFrameWriter options\n        (e.g. ``{'mergeSchema': 'true'}``).\n    unique_keys: List of unique key columns for merge operations. Required when ``write_mode='merge'``.\n    target_alias: Alias to use for the target table in merge conditions. Default is ``'target'``.\n    source_alias: Alias to use for the source table in merge conditions. Default is ``'source'``.\n    predicates: Extra predicates to prefilter source and target data before the merge condition is applied.\n    matched_condition: Additional SQL condition to apply to matched rows in a merge.\n    matched_condition_exclude_cols: List of columns to exclude from the matched condition in a merge. Used to prevent certain columns from being evaluated in the matched condition, which can be useful for handling cases where certain columns may have non-deterministic values or should not be considered for matching.\n    matched_condition_include_cols: List of columns to include in the matched condition in a merge. Used to specify a subset of columns to be evaluated in the matched condition, which can be useful for optimizing the merge operation by only considering relevant columns for matching.\n    not_matched_condition: Additional SQL condition to apply to unmatched source rows in a merge.\n    not_matched_by_source_condition: Additional SQL condition to apply to target rows not found in source in a merge.\n    not_matched_by_source_action: Action to take for target rows not found in source in a merge. If ``'delete'`` rows will be deleted, else a update with the provided condition will be performed. Only applicable when ``write_mode='merge'``.\n    matched_update_exclude_cols: List of columns to exclude from updates in a merge. Only applicable when ``write_mode='merge'``. Used to prevent certain columns from being updated during a merge operation.\n    matched_update_include_cols: List of columns to include in updates in a merge. Only applicable when ``write_mode='merge'``. Used to specify a subset of columns to be updated during a merge operation.\n    merge_with_schema_evolution: Whether to enable schema evolution during merge operations. Only applicable when ``write_mode='merge'``.\n    exclude_at_target_cols: List of columns to exclude from the target dataset during a merge operation. Only applicable when ``write_mode='merge'.\n    include_at_target_cols: List of columns to include from the target dataset during a merge operation. Only applicable when ``write_mode='merge'``.\n    sequence_by: List of columns to order source and target datasets by before applying the merge condition. Only applicable when ``write_mode='merge'``.\n    ignore_null_updates: Whether to ignore updates to columns where the source value is null during a merge operation. Only applicable when ``write_mode='merge'``.\n    apply_as_delete: Used for CDC scenarios. Whether to apply a condition as a delete operation instead of an update or insert during a merge. Only applicable when ``write_mode='merge'``.\n    prevent_full_refresh: Whether to prevent full refreshes for this model. If True, attempts to perform a full refresh (e.g. via the ``'full_refresh'`` flag in the materialization context) will\n        be overridden to perform an append or merge instead, and a warning will be logged. This can be useful for protecting critical tables from accidental full refreshes.",
+      "properties": {
+        "write_mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "append",
+                "overwrite",
+                "merge"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How to write the model: 'append', 'overwrite', or 'merge'. When None the DataFrame is returned without writing.",
+          "title": "Write Mode"
+        },
+        "options": {
+          "additionalProperties": true,
+          "description": "Extra DataFrameWriter options (e.g. {'mergeSchema': 'true'}).",
+          "title": "Options",
+          "type": "object"
+        },
+        "unique_keys": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "List of unique key columns for merge operations. Required when write_mode='merge'. Used to validate the merge condition and ensure it references a unique key.",
+          "title": "Unique Keys"
+        },
+        "target_alias": {
+          "default": "target",
+          "description": "Alias to use for the target table in merge conditions. Default is 'target'.",
+          "title": "Target Alias",
+          "type": "string"
+        },
+        "source_alias": {
+          "default": "source",
+          "description": "Alias to use for the source table in merge conditions. Default is 'source'.",
+          "title": "Source Alias",
+          "type": "string"
+        },
+        "predicates": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Extra predicates to prefilter source and target data before the merge condition is applied.",
+          "title": "Predicates"
+        },
+        "matched_condition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Additional SQL condition to apply to matched rows in a merge. ",
+          "title": "Matched Condition"
+        },
+        "matched_condition_exclude_cols": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "List of columns to exclude from the matched condition in a merge. Used to prevent certain columns from being evaluated in the matched condition, which can be useful for handling cases where certain columns may have non-deterministic values or should not be considered for matching.",
+          "title": "Matched Condition Exclude Cols"
+        },
+        "matched_condition_include_cols": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "List of columns to include in the matched condition in a merge. Used to specify a subset of columns to be evaluated in the matched condition, which can be useful for optimizing the merge operation by only considering relevant columns for matching.",
+          "title": "Matched Condition Include Cols"
+        },
+        "not_matched_condition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Additional SQL condition to apply to unmatched source rows in a merge. ",
+          "title": "Not Matched Condition"
+        },
+        "not_matched_by_source_condition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Additional SQL condition to apply to target rows not found in source in a merge. ",
+          "title": "Not Matched By Source Condition"
+        },
+        "not_matched_by_source_action": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action to take for target rows not found in source in a merge. If 'delete' rows will be deleted, else a update with the provided condition will be performed. Only applicable when write_mode='merge'. ",
+          "title": "Not Matched By Source Action"
+        },
+        "matched_update_exclude_cols": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "List of columns to exclude from updates in a merge. Only applicable when write_mode='merge'. Used to prevent certain columns from being updated during a merge operation.",
+          "title": "Matched Update Exclude Cols"
+        },
+        "matched_update_include_cols": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "List of columns to include in updates in a merge. Only applicable when write_mode='merge'. Used to specify a subset of columns to be updated during a merge operation.",
+          "title": "Matched Update Include Cols"
+        },
+        "merge_with_schema_evolution": {
+          "default": true,
+          "description": "Whether to enable schema evolution during merge operations. Only applicable when write_mode='merge'. ",
+          "title": "Merge With Schema Evolution",
+          "type": "boolean"
+        },
+        "exclude_at_target_cols": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "List of columns to exclude from the target dataset during a merge operation. Only applicable when write_mode='merge'. ",
+          "title": "Exclude At Target Cols"
+        },
+        "include_at_target_cols": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "List of columns to include from the target dataset during a merge operation. Only applicable when write_mode='merge'. ",
+          "title": "Include At Target Cols"
+        },
+        "sequence_by": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "List of columns to order source and target datasets by before applying the merge condition. Only applicable when write_mode='merge'. ",
+          "title": "Sequence By"
+        },
+        "ignore_null_updates": {
+          "default": false,
+          "description": "Whether to ignore updates to columns where the source value is null during a merge operation. Only applicable when write_mode='merge'. ",
+          "title": "Ignore Null Updates",
+          "type": "boolean"
+        },
+        "apply_as_delete": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Used for CDC scenarios. Whether to apply a condition as a delete operation instead of an update or insert during a merge. Only applicable when write_mode='merge'. ",
+          "title": "Apply As Delete"
+        },
+        "prevent_full_refresh": {
+          "default": false,
+          "description": "Whether to prevent full refreshes for this model. If True, attempts to perform a full refresh (e.g. via the 'full_refresh' flag in the materialization context) will be overridden to perform an append or merge instead, and a warning will be logged. This can be useful for protecting critical tables from accidental full refreshes.",
+          "title": "Prevent Full Refresh",
+          "type": "boolean"
+        }
+      },
+      "title": "ModelMaterializationConfig",
+      "type": "object"
+    },
+    "ModelPolicyRule": {
+      "description": "Policy rules for table-level governance checks.\n\nAttributes:\n    require_description: Table must have a non-empty description.\n    require_tags: Specific tag keys that must be present on the table.\n    require_any_tag: At least one tag must exist on the table.\n    require_constraints: Constraint types that must be defined (e.g. \"primary_key\").\n    naming_pattern: Regex pattern that table names must match.\n    has_columns: Column names that must be present in the table.\n    has_table_property: Table properties that must exist (partial match, allows extra keys).\n    has_quality_check: Table must have quality checks configured.\n    not_: Negate checks for this rule block (YAML key: ``not``).\n    severity: Severity when this rule is violated.",
+      "properties": {
+        "require_description": {
+          "default": false,
+          "description": "Table must have a non-empty description",
+          "title": "Require Description",
+          "type": "boolean"
+        },
+        "require_tags": {
+          "description": "Specific tag keys that must be present on the table",
+          "items": {
+            "type": "string"
+          },
+          "title": "Require Tags",
+          "type": "array"
+        },
+        "require_any_tag": {
+          "default": false,
+          "description": "At least one tag must exist on the table",
+          "title": "Require Any Tag",
+          "type": "boolean"
+        },
+        "require_constraints": {
+          "description": "Constraint types that must be defined (e.g. 'primary_key', 'foreign_key')",
+          "items": {
+            "type": "string"
+          },
+          "title": "Require Constraints",
+          "type": "array"
+        },
+        "naming_pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Regex pattern that table names must match",
+          "title": "Naming Pattern"
+        },
+        "has_columns": {
+          "description": "Column names that must be present in the table",
+          "items": {
+            "type": "string"
+          },
+          "title": "Has Columns",
+          "type": "array"
+        },
+        "has_table_property": {
+          "additionalProperties": true,
+          "description": "Table properties that must exist (partial match, allows extra keys)",
+          "title": "Has Table Property",
+          "type": "object"
+        },
+        "has_quality_check": {
+          "default": false,
+          "description": "Table must have quality checks configured",
+          "title": "Has Quality Check",
+          "type": "boolean"
+        },
+        "not": {
+          "default": false,
+          "description": "Negate checks for this rule block",
+          "title": "Not",
+          "type": "boolean"
+        },
+        "severity": {
+          "$ref": "#/$defs/PolicySeverity",
+          "default": "warn",
+          "description": "Severity level when a rule is violated"
+        }
+      },
+      "title": "ModelPolicyRule",
+      "type": "object"
+    },
+    "NamingPattern": {
+      "description": "Naming convention rule for a specific data type.\n\nAttributes:\n    data_type: SQL data type this pattern applies to (e.g., \"STRING\", \"BOOLEAN\").\n    pattern: Regex pattern that column names must match (e.g., \"^(is_|has_).*\").",
+      "properties": {
+        "data_type": {
+          "description": "SQL data type (e.g. STRING, BOOLEAN, INT)",
+          "title": "Data Type",
+          "type": "string"
+        },
+        "pattern": {
+          "description": "Regex pattern column names must match",
+          "title": "Pattern",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data_type",
+        "pattern"
+      ],
+      "title": "NamingPattern",
+      "type": "object"
+    },
+    "Policy": {
+      "description": "Policy definition for a specific scope or layer.\n\nRepresents a set of governance rules that apply to tables in specified paths.\n\nAttributes:\n    origin_file_path: Path to the source YAML file defining this policy.\n    name: Policy name (e.g., \"bronze_layer\", \"data_quality\").\n    applies_to: Glob pattern for models this policy applies to (e.g., \"models/bronze/*\").\n        Must start with \"models/\" and use forward slashes. Matched against the\n        `origin_file_path` of models. See module docstring for examples.\n    model: Rules applied at the model level.\n    column: Rules applied at the column level.\n    raw_config: Original unparsed configuration.",
+      "properties": {
+        "name": {
+          "description": "Policy name",
+          "title": "Name",
+          "type": "string"
+        },
+        "applies_to": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Glob pattern for models this applies to (e.g. 'models/bronze/*'). Must start with 'models/' and use forward slashes.",
+          "title": "Applies To"
+        },
+        "model": {
+          "$ref": "#/$defs/ModelPolicyRule",
+          "description": "Model-level policy rules"
+        },
+        "column": {
+          "$ref": "#/$defs/ColumnPolicyRule",
+          "description": "Column-level policy rules"
+        },
+        "meta": {
+          "additionalProperties": true,
+          "description": "Generic user-defined metadata for filtering and grouping",
+          "title": "Meta",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Policy",
+      "type": "object"
+    },
+    "PolicyConfig": {
+      "description": "Top-level policy execution switch.\n\nPolicy rules are authored in policy files (``kelp_policies``). This model\nintentionally keeps only the global enable/disable flag for applying policy\nchecks during context initialization and via the ``check-policies`` CLI.\n\nAttributes:\n    enabled: Master switch to activate policy checks (default: False).\n    fast_exit: Stop policy evaluation on first violating policy per model.",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Master switch to activate policy checks",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "fast_exit": {
+          "default": false,
+          "description": "Stop policy evaluation on first violating policy per model",
+          "title": "Fast Exit",
+          "type": "boolean"
+        }
+      },
+      "title": "PolicyConfig",
+      "type": "object"
+    },
+    "PolicySeverity": {
+      "description": "Severity level for policy violations.\n\nAttributes:\n    warn: Log a warning but do not fail.\n    error: Raise an error and stop processing.",
+      "enum": [
+        "warn",
+        "error"
+      ],
+      "title": "PolicySeverity",
+      "type": "string"
+    },
     "PrimaryKeyConstraint": {
-      "description": "Primary key constraint definition.\n\nAttributes:\n    type: Constraint type identifier (always \"primary_key\").\n    columns: List of column names that form the primary key.",
       "properties": {
         "name": {
           "description": "Constraint name",
@@ -866,20 +1614,37 @@
           "title": "Sources",
           "type": "object"
         },
+        "policies_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Path to policy definitions",
+          "title": "Policies Path"
+        },
         "quality_config": {
-          "$ref": "#/$defs/QuarantineConfig",
+          "$ref": "#/$defs/QualityConfig",
           "description": "Configuration for table quarantine and validation"
         },
         "remote_catalog_config": {
           "$ref": "#/$defs/RemoteCatalogConfig",
           "description": "Configuration for remote catalog synchronization"
+        },
+        "policy_config": {
+          "$ref": "#/$defs/PolicyConfig",
+          "description": "Metadata governance policy configuration"
         }
       },
       "title": "ProjectConfig",
       "type": "object"
     },
-    "QuarantineConfig": {
-      "description": "Configuration for table quarantine and validation.\n\nAttributes:\n    quarantine_catalog: Catalog name for quarantined data (defaults to project catalog).\n    quarantine_schema: Schema name for quarantined data (defaults to project schema).\n    quarantine_prefix: Prefix for quarantine table names.\n    quarantine_suffix: Suffix for quarantine table names.\n    validation_prefix: Prefix for validation table names.\n    validation_suffix: Suffix for validation table names.",
+    "QualityConfig": {
+      "description": "Configuration for table quarantine and validation.\n\nAttributes:\n    quarantine_catalog: Catalog name for quarantined data (defaults to project catalog).\n    quarantine_schema: Schema name for quarantined data (defaults to project schema).\n    quarantine_prefix: Prefix for quarantine table names.\n    quarantine_suffix: Suffix for quarantine table names.\n    validation_prefix: Prefix for validation table names.\n    validation_suffix: Suffix for validation table names.\n    dqx_quality_monitoring_table: Fully qualified name of the table to store quality violation details.\n    dqx_quality_monitoring_enabled: Whether to enable quality monitoring and storing violation details.",
       "properties": {
         "quarantine_catalog": {
           "anyOf": [
@@ -930,9 +1695,28 @@
           "description": "Suffix for validation table names",
           "title": "Validation Suffix",
           "type": "string"
+        },
+        "dqx_monitoring_fqn": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Fully qualified name of the table to store quality violation details",
+          "title": "Dqx Monitoring Fqn"
+        },
+        "dqx_monitoring_enabled": {
+          "default": false,
+          "description": "Whether to enable quality monitoring and storing violation details",
+          "title": "Dqx Monitoring Enabled",
+          "type": "boolean"
         }
       },
-      "title": "QuarantineConfig",
+      "title": "QualityConfig",
       "type": "object"
     },
     "RemoteCatalogConfig": {
@@ -999,7 +1783,6 @@
       "type": "object"
     },
     "SDPQuality": {
-      "description": "Spark Data Pruning (SDP) quality configuration.\n\nAttributes:\n    engine: Quality engine type (always \"sdp\").\n    level: Level at which quality is enforced (always \"row\" for SDP).\n    expect_all: Dictionary of SQL expressions that must pass.\n    expect_all_or_drop: Dictionary of SQL expressions; rows failing drop.\n    expect_all_or_fail: Dictionary of SQL expressions; job fails if any fail.\n    expect_all_or_quarantine: Dictionary of SQL expressions; failures quarantine rows.",
       "properties": {
         "engine": {
           "const": "sdp",
@@ -1053,13 +1836,37 @@
       "title": "SDPQuality",
       "type": "object"
     },
-    "Table": {
-      "description": "Table definition in Unity Catalog.\n\nRepresents a table in Databricks Unity Catalog with all its configuration,\nincluding schema, properties, quality checks, and constraints.\n\nAttributes:\n    origin_file_path: Path to the source YAML file defining this table.\n    table_type: Type of table (managed, external, view, streaming_table, etc.).\n    catalog: Unity Catalog name where the table resides.\n    schema_: Schema/database name where the table resides.\n    name: Table name.\n    description: Human-readable description of the table.\n    spark_conf: Spark configuration properties for the table.\n    table_properties: Databricks table properties.\n    path: Physical path for external tables or custom locations.\n    partition_cols: List of column names to use for partitioning.\n    cluster_by_auto: Enable automatic clustering optimization.\n    cluster_by: List of column names to use for explicit clustering (max 4).\n    row_filter: SQL expression to filter rows based on security policies.\n    columns: List of column definitions for the table.\n    quality: Data quality configuration (SDPQuality or DQXQuality).\n    constraints: List of constraints (primary key, foreign key).\n    tags: Metadata tags for the table.\n    raw_config: Original unparsed configuration (preserves placeholder variables).",
+    "Source": {
+      "description": "Source definition for Kelp projects.\n\nRepresents a data source (volume, table, or raw path) that can be referenced\nin pipelines using kp.source(). Sources provide a single point of configuration\nfor data locations and connection options.\n\nAttributes:\n    origin_file_path: Path to the source YAML file defining this source.\n    name: Source name (unique identifier).\n    source_type: Type of source ('volume', 'table', 'raw_path').\n    path: Physical path for volume or raw_path sources (e.g., '/Volumes/catalog/schema/volume').\n    catalog: Catalog name for table or volume sources.\n    schema_: Schema name for table or volume sources.\n    table_name: Name for table or view sources.\n    volume_name: Volume name for volume sources (constructs path as /Volumes/catalog/schema/volume_name).\n    options: Dictionary of options specific to this source (e.g., format, headers).\n    description: Human-readable description of the source.",
       "properties": {
-        "table_type": {
-          "$ref": "#/$defs/TableType",
-          "default": "managed",
-          "description": "Type of table: managed, external, view, streaming_table, etc."
+        "name": {
+          "description": "Source name (unique identifier)",
+          "title": "Name",
+          "type": "string"
+        },
+        "source_type": {
+          "default": "table",
+          "description": "Type of source: volume, table, or raw_path",
+          "enum": [
+            "volume",
+            "table",
+            "raw_path"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Physical path for volume or raw_path sources",
+          "title": "Path"
         },
         "catalog": {
           "anyOf": [
@@ -1071,7 +1878,7 @@
             }
           ],
           "default": null,
-          "description": "Unity Catalog name",
+          "description": "Catalog name for table or volume sources",
           "title": "Catalog"
         },
         "schema": {
@@ -1084,13 +1891,40 @@
             }
           ],
           "default": null,
-          "description": "Schema/database name",
+          "description": "Schema name for table or volume sources",
           "title": "Schema"
         },
-        "name": {
-          "description": "Table name",
-          "title": "Name",
-          "type": "string"
+        "table_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Name for table or view sources",
+          "title": "Table Name"
+        },
+        "volume_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Volume name for volume sources (constructs /Volumes/catalog/schema/volume_name)",
+          "title": "Volume Name"
+        },
+        "options": {
+          "additionalProperties": true,
+          "description": "Source-specific options (e.g., format, headers, encoding)",
+          "title": "Options",
+          "type": "object"
         },
         "description": {
           "anyOf": [
@@ -1102,133 +1936,20 @@
             }
           ],
           "default": null,
-          "description": "Human-readable description of the table",
+          "description": "Human-readable description of the source",
           "title": "Description"
         },
-        "spark_conf": {
+        "meta": {
           "additionalProperties": true,
-          "description": "Spark configuration properties",
-          "title": "Spark Conf",
-          "type": "object"
-        },
-        "table_properties": {
-          "additionalProperties": true,
-          "description": "Databricks table properties",
-          "title": "Table Properties",
-          "type": "object"
-        },
-        "path": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Physical path for external tables or custom locations",
-          "title": "Path"
-        },
-        "partition_cols": {
-          "description": "List of column names for partitioning",
-          "items": {
-            "type": "string"
-          },
-          "title": "Partition Cols",
-          "type": "array"
-        },
-        "cluster_by_auto": {
-          "default": false,
-          "description": "Enable automatic clustering optimization",
-          "title": "Cluster By Auto",
-          "type": "boolean"
-        },
-        "cluster_by": {
-          "description": "List of column names for explicit clustering (max 4)",
-          "items": {
-            "type": "string"
-          },
-          "maxItems": 4,
-          "title": "Cluster By",
-          "type": "array"
-        },
-        "row_filter": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "SQL expression to filter rows based on security policies",
-          "title": "Row Filter"
-        },
-        "columns": {
-          "description": "Column definitions for the table",
-          "items": {
-            "$ref": "#/$defs/Column"
-          },
-          "title": "Columns",
-          "type": "array"
-        },
-        "quality": {
-          "anyOf": [
-            {
-              "discriminator": {
-                "mapping": {
-                  "dqx": "#/$defs/DQXQuality",
-                  "sdp": "#/$defs/SDPQuality"
-                },
-                "propertyName": "engine"
-              },
-              "oneOf": [
-                {
-                  "$ref": "#/$defs/SDPQuality"
-                },
-                {
-                  "$ref": "#/$defs/DQXQuality"
-                }
-              ]
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Data quality configuration using SDPQuality or DQXQuality",
-          "title": "Quality"
-        },
-        "constraints": {
-          "description": "Constraints like primary key or foreign key",
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/$defs/PrimaryKeyConstraint"
-              },
-              {
-                "$ref": "#/$defs/ForeignKeyConstraint"
-              }
-            ]
-          },
-          "title": "Constraints",
-          "type": "array"
-        },
-        "tags": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Metadata tags for the table",
-          "title": "Tags",
+          "description": "Generic user-defined metadata for filtering and grouping",
+          "title": "Meta",
           "type": "object"
         }
       },
       "required": [
         "name"
       ],
-      "title": "Table",
+      "title": "Source",
       "type": "object"
     },
     "TableType": {
@@ -1266,7 +1987,7 @@
       "anyOf": [
         {
           "items": {
-            "$ref": "#/$defs/Table"
+            "$ref": "#/$defs/Model"
           },
           "type": "array"
         },
@@ -1277,6 +1998,22 @@
       "default": null,
       "description": "List of table models defined in the configuration.",
       "title": "Kelp Models"
+    },
+    "kelp_sources": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Source"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "List of data sources defined in the configuration.",
+      "title": "Kelp Sources"
     },
     "kelp_metric_views": {
       "anyOf": [
@@ -1309,6 +2046,22 @@
       "default": null,
       "description": "List of functions defined in the configuration.",
       "title": "Kelp Functions"
+    },
+    "kelp_policies": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Policy"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "List of policies defined in the configuration.",
+      "title": "Kelp Policies"
     },
     "kelp_abacs": {
       "anyOf": [

@@ -53,18 +53,22 @@ def test_sync_catalog_passes_profile_to_remote_fetch_paths(monkeypatch) -> None:
             self,
             tables: list[SimpleNamespace],
             profile: str | None = None,
+            engine: str = "spark",
         ) -> list[str]:
             captured["tables"] = tables
             captured["tables_profile"] = profile
+            captured["tables_engine"] = engine
             return ["ALTER TABLE"]
 
         def sync_all_metric_views(
             self,
             metric_views: list[SimpleNamespace],
             profile: str | None = None,
+            engine: str = "sdk",
         ) -> list[str]:
             captured["metric_views"] = metric_views
             captured["metric_views_profile"] = profile
+            captured["metric_views_engine"] = engine
             return ["ALTER VIEW"]
 
         def sync_all_abac_policies(self, policies: list[SimpleNamespace]) -> list[str]:
@@ -84,6 +88,8 @@ def test_sync_catalog_passes_profile_to_remote_fetch_paths(monkeypatch) -> None:
     ]
     assert captured["tables_profile"] == "analytics"
     assert captured["metric_views_profile"] == "analytics"
+    assert captured["tables_engine"] == "sdk"
+    assert captured["metric_views_engine"] == "sdk"
 
 
 def test_sync_tables_passes_profile_to_adapter(monkeypatch) -> None:
@@ -98,20 +104,23 @@ def test_sync_tables_passes_profile_to_adapter(monkeypatch) -> None:
             self,
             tables: list[SimpleNamespace],
             profile: str | None = None,
+            engine: str = "spark",
         ) -> list[str]:
             captured["tables"] = tables
             captured["profile"] = profile
+            captured["engine"] = engine
             return ["ALTER TABLE"]
 
     monkeypatch.setattr(api, "get_context", lambda: ctx)
     monkeypatch.setattr(api, "UnityCatalogAdapter", StubAdapter)
 
-    queries = api.sync_tables(model_names=["orders"], profile="analytics")
+    queries = api.sync_tables(model_names=["orders"], profile="analytics", engine="sdk")
     tables = cast(list[SimpleNamespace], captured["tables"])
 
     assert queries == ["ALTER TABLE"]
     assert [table.name for table in tables] == ["orders"]
     assert captured["profile"] == "analytics"
+    assert captured["engine"] == "sdk"
 
 
 def test_sync_metric_views_passes_profile_to_adapter(monkeypatch) -> None:
@@ -126,9 +135,11 @@ def test_sync_metric_views_passes_profile_to_adapter(monkeypatch) -> None:
             self,
             metric_views: list[SimpleNamespace],
             profile: str | None = None,
+            engine: str = "spark",
         ) -> list[str]:
             captured["metric_views"] = metric_views
             captured["profile"] = profile
+            captured["engine"] = engine
             return ["ALTER VIEW"]
 
     monkeypatch.setattr(api, "get_context", lambda: ctx)
@@ -155,11 +166,11 @@ def test_sync_catalog_with_filter_by_meta(monkeypatch) -> None:
             captured["functions"] = functions
             return []
 
-        def sync_all_tables(self, tables, profile=None):
+        def sync_all_tables(self, tables, profile=None, engine="spark"):
             captured["tables"] = tables
             return []
 
-        def sync_all_metric_views(self, metric_views, profile=None):
+        def sync_all_metric_views(self, metric_views, profile=None, engine="spark"):
             captured["metric_views"] = metric_views
             return []
 
@@ -195,7 +206,7 @@ def test_sync_tables_with_filter_by_meta(monkeypatch) -> None:
     ctx = SimpleNamespace(catalog_index=_CatalogIndex())
 
     class StubAdapter:
-        def sync_tables(self, tables, profile=None):
+        def sync_tables(self, tables, profile=None, engine="spark"):
             captured["tables"] = tables
             return ["ALTER TABLE"]
 
@@ -215,7 +226,7 @@ def test_sync_tables_with_names_and_meta_uses_and(monkeypatch) -> None:
     ctx = SimpleNamespace(catalog_index=_CatalogIndex())
 
     class StubAdapter:
-        def sync_tables(self, tables, profile=None):
+        def sync_tables(self, tables, profile=None, engine="spark"):
             captured["tables"] = tables
             return []
 
@@ -235,7 +246,7 @@ def test_sync_tables_no_filter_returns_all(monkeypatch) -> None:
     ctx = SimpleNamespace(catalog_index=_CatalogIndex())
 
     class StubAdapter:
-        def sync_tables(self, tables, profile=None):
+        def sync_tables(self, tables, profile=None, engine="spark"):
             captured["tables"] = tables
             return []
 

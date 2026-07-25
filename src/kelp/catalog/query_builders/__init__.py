@@ -4,7 +4,6 @@ Public API::
 
     from kelp.catalog.query_builders import UCQueryBuilderFactory, Capability, CAPABILITY_TABLE
 
-    # Drop-in replacement for UCQueryBuilder
     factory = UCQueryBuilderFactory()
     queries = factory.build("catalog.schema.table", diff, "managed")
 
@@ -14,19 +13,25 @@ Public API::
 
 """
 
+from kelp.catalog.query_builders.abac import AbacPolicyQueryBuilder
 from kelp.catalog.query_builders.base import BaseTableQueryBuilder, Capability
 from kelp.catalog.query_builders.factory import CAPABILITY_TABLE, UCQueryBuilderFactory
+from kelp.catalog.query_builders.function import FunctionQueryBuilder
 from kelp.catalog.query_builders.managed import ManagedTableQueryBuilder
 from kelp.catalog.query_builders.materialized_view import MaterializedViewQueryBuilder
+from kelp.catalog.query_builders.metric_view import MetricViewQueryBuilder
 from kelp.catalog.query_builders.streaming_table import StreamingTableQueryBuilder
 from kelp.catalog.query_builders.view import ViewQueryBuilder
 
 __all__ = [
     "CAPABILITY_TABLE",
+    "AbacPolicyQueryBuilder",
     "BaseTableQueryBuilder",
     "Capability",
+    "FunctionQueryBuilder",
     "ManagedTableQueryBuilder",
     "MaterializedViewQueryBuilder",
+    "MetricViewQueryBuilder",
     "StreamingTableQueryBuilder",
     "UCQueryBuilderFactory",
     "ViewQueryBuilder",

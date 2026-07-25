@@ -27,6 +27,7 @@ def test_generate_alter_statements_passes_profile_to_sync_catalog(
         sync_tables: bool = True,
         sync_abacs: bool = True,
         profile: str | None = None,
+        engine: str = "spark",
     ) -> list[str]:
         captured["sync_catalog_args"] = {
             "sync_functions": sync_functions,
@@ -34,6 +35,7 @@ def test_generate_alter_statements_passes_profile_to_sync_catalog(
             "sync_tables": sync_tables,
             "sync_abacs": sync_abacs,
             "profile": profile,
+            "engine": engine,
         }
         return ["ALTER TABLE main.sales.orders SET TAGS ('owner'='data')"]
 
@@ -63,4 +65,5 @@ def test_generate_alter_statements_passes_profile_to_sync_catalog(
         "sync_tables": True,
         "sync_abacs": True,
         "profile": "analytics",
+        "engine": "sdk",
     }

@@ -1,6 +1,6 @@
 """Tests for ABAC policy DDL generation."""
 
-from kelp.catalog.abac_ddl import generate_create_abac_policy_ddl
+from kelp.catalog.query_builders.abac import generate_create_abac_policy_ddl
 from kelp.models.abac import AbacMatchColumn, AbacPolicy
 
 
