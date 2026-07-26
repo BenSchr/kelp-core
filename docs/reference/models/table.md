@@ -10,7 +10,19 @@ Reference for the core model and column configuration models.
 
 ::: kelp.models.model.Model
 
-::: kelp.models.model_mat_config.ModelMaterializationConfig
+::: kelp.models.model_mat_config.AppendConfig
+
+::: kelp.models.model_mat_config.OverwriteConfig
+
+::: kelp.models.model_mat_config.MergeConfig
+
+::: kelp.models.model_mat_config.Scd2Config
+
+::: kelp.models.model_mat_config.Scd2Columns
+
+::: kelp.models.model_mat_config.ColumnSelector
+
+::: kelp.models.model_mat_config.SqlConditions
 
 ::: kelp.models.model.Column
 

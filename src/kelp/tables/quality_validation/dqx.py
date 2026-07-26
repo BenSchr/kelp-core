@@ -1,73 +1,183 @@
+import logging
+from dataclasses import dataclass
+from typing import Any
+
 from pyspark.sql import DataFrame
 
-# from base import
-from kelp.tables.quality_validation.base import (
-    get_quality_monitorng_table_name,
-    should_apply_quality_monitoring,
-)
+logger = logging.getLogger(__name__)
 
 
-def apply_dqx_quality_checks(
+@dataclass
+class QualityResult:
+    """Outcome of running DQX checks, with nothing written yet.
+
+    Attributes:
+        dataframe: Rows to materialize into the target.
+        quarantine_df: Rows failing checks, or None when there are none to quarantine.
+        stats_df: Monitoring rows, or None when monitoring is off or there is nothing to report.
+        has_errors: Whether any error-severity violation was found.
+    """
+
+    dataframe: DataFrame
+    quarantine_df: DataFrame | None = None
+    stats_df: DataFrame | None = None
+    has_errors: bool = False
+
+
+class _OfflineConfig:
+    """Minimal stand-in for ``databricks.sdk.core.Config`` used off Databricks."""
+
+    _product_info: tuple[str, str] | None = None
+
+    def copy(self) -> "_OfflineConfig":
+        """Return a copy of this config (itself, since it carries no state)."""
+        return self
+
+    def with_user_agent_extra(self, key: str, value: str) -> "_OfflineConfig":
+        """Ignore the telemetry user-agent extra and return this config."""
+        return self
+
+
+class _OfflineClusters:
+    """Minimal stand-in for the ``clusters`` API of ``WorkspaceClient``."""
+
+    def select_spark_version(self, *args: Any, **kwargs: Any) -> str:
+        """Answer DQX's workspace connectivity probe without contacting a workspace."""
+        return ""
+
+
+class _OfflineWorkspaceClient:
+    """Minimal stand-in for ``WorkspaceClient`` for runs without a workspace.
+
+    DQX only touches two things on the client while applying checks: ``config``
+    (it reads and writes the private ``_product_info`` attribute and calls
+    ``copy()`` / ``with_user_agent_extra()`` for telemetry) and
+    ``clusters.select_spark_version()`` (a connectivity probe that is not
+    error-handled at construction time). Telemetry also rebuilds the client as
+    ``type(client)(config=...)``, hence the keyword argument.
+
+    Args:
+        config: Config object to expose; a fresh offline config by default.
+    """
+
+    def __init__(self, config: _OfflineConfig | None = None) -> None:
+        self.config = config if config is not None else _OfflineConfig()
+        self.clusters = _OfflineClusters()
+
+
+def _resolve_workspace_client(workspace_client: Any | None) -> Any:
+    """Resolve the workspace client handed to ``DQEngine``.
+
+    Args:
+        workspace_client: Explicit client, used as-is when provided.
+
+    Returns:
+        The injected client, a real ``WorkspaceClient`` when running on
+        Databricks, or an offline placeholder for local development.
+    """
+    if workspace_client is not None:
+        return workspace_client
+
+    from kelp.utils.databricks import on_databricks
+
+    if on_databricks():
+        from databricks.sdk import WorkspaceClient
+
+        return WorkspaceClient()
+
+    logger.debug(
+        "Not running on Databricks: using an offline placeholder workspace client for DQX."
+    )
+    return _OfflineWorkspaceClient()
+
+
+def run_dqx_quality_checks(
+    *,
     dataframe: DataFrame,
     checks: list[dict],
     violation_action: str,
     target_table: str | None = None,
     quarantine_enabled: bool = False,
     quarantine_fqn: str | None = None,
-) -> DataFrame:
-    """Apply DQX quality checks to the given DataFrame and handle violations based on the configured action. Returns observers for monitoring if enabled."""
+    monitoring_fqn: str | None = None,
+    workspace_client: Any | None = None,
+) -> QualityResult:
+    """Run DQX checks and return the resulting DataFrames.
+
+    Writes nothing and raises nothing for violations: the caller decides what to
+    persist, in which order, and whether violations are fatal.
+
+    Args:
+        dataframe: Input DataFrame to check.
+        checks: DQX checks in metadata (dict) form.
+        violation_action: One of ``"error"``, ``"ignore"`` or ``"drop"``. Anything
+            other than ``"ignore"`` splits the frame into good and bad rows;
+            ``"ignore"`` returns the annotated frame unchanged.
+        target_table: Fully qualified name of the target table, recorded in the
+            monitoring rows.
+        quarantine_enabled: Whether failing rows should be quarantined.
+        quarantine_fqn: Fully qualified name of the quarantine table.
+        monitoring_fqn: Fully qualified name of the monitoring table; None
+            disables stats building.
+        workspace_client: Optional ``WorkspaceClient`` for DQX. When omitted, a
+            real client is created on Databricks and an offline placeholder is
+            used elsewhere.
+
+    Returns:
+        A QualityResult with the rows to materialize plus the optional quarantine
+        and monitoring frames.
+    """
     from databricks.labs.dqx.engine import DQEngine
-    from databricks.sdk import WorkspaceClient
 
-    from kelp.utils.databricks import on_databricks
+    dqx_engine = DQEngine(_resolve_workspace_client(workspace_client))
 
-    # If not on Databricks mock client for local development and testing
-    if not on_databricks():
-        from unittest.mock import MagicMock
-
-        ws = MagicMock(WorkspaceClient)
-    else:
-        ws = WorkspaceClient()
-
-    dqx_engine = DQEngine(ws)
-    apply_monitoring = should_apply_quality_monitoring()
-    monitoring_fqn = get_quality_monitorng_table_name()
-
-    if violation_action != "ignore":
-        check_result, bad_df = dqx_engine.apply_checks_by_metadata_and_split(
-            df=dataframe, checks=checks
+    if violation_action == "ignore":
+        annotated_df = dqx_engine.apply_checks_by_metadata(df=dataframe, checks=checks)
+        return QualityResult(
+            dataframe=annotated_df,
+            stats_df=build_dqx_stats_table(annotated_df, target_table, None)
+            if monitoring_fqn
+            else None,
         )
-        if not bad_df.isEmpty():
-            if quarantine_enabled and quarantine_fqn:
-                bad_df.write.format("delta").mode("append").saveAsTable(quarantine_fqn)
 
-            if apply_monitoring and monitoring_fqn:
-                build_and_store_dqx_stats_table(
-                    df=bad_df,
-                    target_table=target_table,
-                    quarantine_table=quarantine_fqn if quarantine_enabled else None,
-                    stats_table_fqn=monitoring_fqn,
-                )
+    good_df, bad_df = dqx_engine.apply_checks_by_metadata_and_split(df=dataframe, checks=checks)
 
-            if violation_action == "error":
-                # Check if _errors column has no values
-                has_errors = bad_df.filter("_errors IS NOT NULL").isEmpty() is False
-                if has_errors:
-                    raise ValueError("Data quality checks failed with action 'error'.")
+    if bad_df.isEmpty():
+        return QualityResult(dataframe=good_df)
 
-        # Action 'drop' just returns the good_df, effectively dropping the bad records
+    return QualityResult(
+        dataframe=good_df,
+        quarantine_df=bad_df if quarantine_enabled and quarantine_fqn else None,
+        stats_df=build_dqx_stats_table(
+            bad_df, target_table, quarantine_fqn if quarantine_enabled else None
+        )
+        if monitoring_fqn
+        else None,
+        has_errors=not bad_df.filter("_errors IS NOT NULL").isEmpty(),
+    )
 
-    else:
-        check_result = dqx_engine.apply_checks_by_metadata(df=dataframe, checks=checks)
-        if apply_monitoring and monitoring_fqn:
-            build_and_store_dqx_stats_table(
-                df=check_result,
-                target_table=target_table,
-                quarantine_table=None,
-                stats_table_fqn=monitoring_fqn,
-            )
 
-    return check_result
+def store_quarantine_rows(
+    quarantine_df: DataFrame,
+    quarantine_fqn: str,
+    merge_schema: bool = True,
+) -> None:
+    """Append failing rows to the quarantine table.
+
+    Args:
+        quarantine_df: Failing rows to append.
+        quarantine_fqn: Fully qualified name of the quarantine table.
+        merge_schema: Whether columns missing from the target are added to it
+            (Delta ``mergeSchema``). The DQX result columns evolve with the kelp
+            and DQX versions, so an additive schema change must not fail a write
+            into an existing quarantine table.
+    """
+    (
+        quarantine_df.write.format("delta")
+        .option("mergeSchema", "true" if merge_schema else "false")
+        .mode("append")
+        .saveAsTable(quarantine_fqn)
+    )
 
 
 def build_dqx_stats_table(
@@ -97,10 +207,9 @@ def build_dqx_stats_table(
     result = errors.unionByName(warnings)
 
     result = (
-        result.groupBy("rule_fingerprint")
+        result.groupBy("rule_fingerprint", "severity")
         .agg(
             count("*").alias("issue_count"),
-            first("severity", ignorenulls=True).alias("severity"),
             first("name", ignorenulls=True).alias("name"),
             first("message", ignorenulls=True).alias("message"),
             first("columns", ignorenulls=True).alias("columns"),
@@ -139,9 +248,24 @@ def build_dqx_stats_table(
 def store_dqx_stats_table(
     stats_df: DataFrame,
     stats_table_fqn: str,
+    merge_schema: bool = True,
 ) -> None:
-    """Store the DQX stats DataFrame in the specified table."""
-    stats_df.write.format("delta").mode("append").saveAsTable(stats_table_fqn)
+    """Store the DQX stats DataFrame in the specified table.
+
+    Args:
+        stats_df: Stats rows to append.
+        stats_table_fqn: Fully qualified name of the monitoring table.
+        merge_schema: Whether columns missing from the target are added to it
+            (Delta ``mergeSchema``). Independent pipelines on different kelp or DQX
+            versions append to the same central monitoring table, so an additive
+            schema change must not fail whichever producer is not upgraded yet.
+    """
+    (
+        stats_df.write.format("delta")
+        .option("mergeSchema", "true" if merge_schema else "false")
+        .mode("append")
+        .saveAsTable(stats_table_fqn)
+    )
 
 
 def build_and_store_dqx_stats_table(
@@ -149,7 +273,8 @@ def build_and_store_dqx_stats_table(
     target_table: str | None,
     quarantine_table: str | None,
     stats_table_fqn: str,
+    merge_schema: bool = True,
 ) -> None:
     """Build the DQX stats table from the given DataFrame and store it in the specified table."""
     stats_df = build_dqx_stats_table(df, target_table, quarantine_table)
-    store_dqx_stats_table(stats_df, stats_table_fqn)
+    store_dqx_stats_table(stats_df, stats_table_fqn, merge_schema=merge_schema)

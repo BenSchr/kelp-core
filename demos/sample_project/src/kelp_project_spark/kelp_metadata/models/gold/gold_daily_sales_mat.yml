@@ -20,7 +20,7 @@ kelp_models:
       - order_date
       - country
     materialization:
-      write_mode: merge
-      unique_keys:
+      mode: merge
+      keys:
         - order_date
         - country

@@ -115,18 +115,18 @@ def sync_from_pipeline(
         ctx = get_context()
     except Exception as e:
         logger.error("Failed to load project context: %s", e)
-        raise Exception(f"Failed to load project context: {e}") from e
+        raise Exception(f"Failed to load project context: {e}") from e  # noqa: TRY002
     # Fetch tables from pipeline
     tables = []
-    for pipeline_id in pipeline_ids:
+    for pipeline_id_r in pipeline_ids:
         p_tables = pipeline_manager.fetch_pipeline_models(
-            pipeline_id,
+            pipeline_id_r,
             quality_config=ctx.project_settings.quality_config,
         )
         for table in p_tables:
             _log(f"  • {table.name}")
         tables.extend(p_tables)
-        _log(f"Fetched {len(p_tables)} tables from pipeline {pipeline_id}")
+        _log(f"Fetched {len(p_tables)} tables from pipeline {pipeline_id_r}")
 
     if not tables:
         logger.warning("No tables found in pipeline.")

@@ -52,7 +52,7 @@ kelp_project:
 
 ## Define Metric Views
 
-The `definition` block follows the [Databricks metric view YAML reference](https://docs.databricks.com/aws/en/uc-semantics/metric-views/yaml-reference) verbatim and is passed through to DDL as-is — including its `comment`. The only Kelp extension is an optional `tags` map on field/measure entries, which Kelp manages via `ALTER` statements and strips from the DDL body.
+The `definition` block follows the [Databricks metric view YAML reference](https://docs.databricks.com/aws/en/uc-semantics/metric-views/yaml-reference) verbatim and is passed through to DDL as-is - including its `comment`. The only Kelp extension is an optional `tags` map on field/measure entries, which Kelp manages via `ALTER` statements and strips from the DDL body.
 
 The spec's `dimensions` synonym is accepted but canonicalized to `fields` when definitions are loaded (Unity Catalog currently returns stored definitions with `dimensions` even when created with `fields`, so canonicalizing keeps local and remote state comparable).
 
@@ -258,11 +258,7 @@ df = spark.read.table("analytics_prod.metrics.customer_revenue_metrics")
 monthly_summary = (
     spark.read.table(kp.ref("customer_revenue_metrics"))
     .groupBy("order_date", "region")
-    .agg({
-        "total_revenue": "sum",
-        "transaction_count": "sum",
-        "avg_transaction_value": "avg"
-    })
+    .agg({"total_revenue": "sum", "transaction_count": "sum", "avg_transaction_value": "avg"})
     .orderBy("order_date")
 )
 

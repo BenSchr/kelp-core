@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 from pydantic.json_schema import SkipJsonSchema
 
+from kelp.models.model_mat_config import MaterializationOptions
 from kelp.models.policy import PolicyConfig
 
 
@@ -180,6 +181,10 @@ class ProjectConfig(BaseModel):
     policy_config: PolicyConfig = Field(
         default_factory=PolicyConfig,
         description="Metadata governance policy configuration",
+    )
+    materialization_options: MaterializationOptions = Field(
+        default_factory=MaterializationOptions,
+        description="Project-wide defaults for the steps run around a materialization write",
     )
     runtime_vars: SkipJsonSchema[dict] = Field(
         default_factory=dict,

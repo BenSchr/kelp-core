@@ -148,8 +148,8 @@ kelp check-policies \
 **Output with violations:**
 
 ```
-⚠ [WARN]  catalog.schema.bronze_customers — Table 'catalog.schema.bronze_customers' is missing a description.
-✗ [ERROR] catalog.schema.silver_orders.order_id — Column 'order_id' in table '...' is missing a description.
+⚠ [WARN]  catalog.schema.bronze_customers - Table 'catalog.schema.bronze_customers' is missing a description.
+✗ [ERROR] catalog.schema.silver_orders.order_id - Column 'order_id' in table '...' is missing a description.
 
 Policy check complete: 1 error(s), 1 warning(s) across 15 models(s).
 ```

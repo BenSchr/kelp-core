@@ -8,7 +8,7 @@ from pyspark.sql import DataFrame, SparkSession
 from kelp.config import init
 from kelp.models.model import DQXQuality
 from kelp.tables import materialize
-from kelp.tables.materialization import factory as materialization_factory
+from kelp.tables.materialization import orchestrator as materialization_orchestrator
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ def _patch_dqx_config(
     dqx_quality: DQXQuality,
 ) -> None:
     """Patch the resolved DQX quality for a specific table during materialization."""
-    original = materialization_factory._resolve_materialization_inputs
+    original = materialization_orchestrator.resolve_materialization_inputs
 
     def _patched(*, table_name: str, config):
         resolved = original(table_name=table_name, config=config)
@@ -56,7 +56,7 @@ def _patch_dqx_config(
             resolved.dqx_quality = dqx_quality
         return resolved
 
-    monkeypatch.setattr(materialization_factory, "_resolve_materialization_inputs", _patched)
+    monkeypatch.setattr(materialization_orchestrator, "resolve_materialization_inputs", _patched)
 
 
 def test_materialize_quality_checks_drop_with_quarantine(
@@ -81,8 +81,7 @@ def test_materialize_quality_checks_drop_with_quarantine(
         dataframe=source_df,
         name=table_name,
         config=None,
-        apply_vacuum=False,
-        apply_optimize=False,
+        options={"apply_vacuum": False, "apply_optimize": False},
     )
 
     assert _row_count(spark, table_name) == 2
@@ -130,8 +129,7 @@ def test_materialize_quality_checks_drop_without_quarantine(
         dataframe=source_df,
         name=table_name,
         config=None,
-        apply_vacuum=False,
-        apply_optimize=False,
+        options={"apply_vacuum": False, "apply_optimize": False},
     )
 
     assert _row_count(spark, table_name) == 2
@@ -180,8 +178,7 @@ def test_materialize_quality_checks_error_mode_raises(
             dataframe=source_df,
             name=table_name,
             config=None,
-            apply_vacuum=False,
-            apply_optimize=False,
+            options={"apply_vacuum": False, "apply_optimize": False},
         )
 
     assert _row_count(spark, table_name) == 1
@@ -209,9 +206,7 @@ def test_materialize_quality_checks_can_be_disabled_at_runtime(
         dataframe=source_df,
         name=table_name,
         config=None,
-        apply_quality_checks=False,
-        apply_vacuum=False,
-        apply_optimize=False,
+        options={"apply_quality_checks": False, "apply_vacuum": False, "apply_optimize": False},
     )
 
     assert _row_count(spark, table_name) == 3

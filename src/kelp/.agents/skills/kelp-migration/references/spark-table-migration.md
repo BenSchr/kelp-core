@@ -94,10 +94,12 @@ kelp_models:
     table_properties:
       key: value
     materialization:
-      write_mode: merge # or append or overwrite
-      unique_keys:
+      mode: merge # or append, overwrite, scd2
+      keys:
         - order_nk
-      merge_with_schema_evolution: true
+      sequence_by:
+        - order_updated_at
+      schema_evolution: true
     quality:
         engine: dqx
         spark_violation_action: drop # or error, or ignore

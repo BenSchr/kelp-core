@@ -24,16 +24,17 @@ kelp_models:
       - ingest_date
       - customer_updated_at
     materialization:
-      write_mode: merge
-      unique_keys:
+      mode: merge
+      keys:
         - user_id
       sequence_by:
         - customer_updated_at
       ignore_null_updates: true
-      include_at_target_cols:
-        - user_id
-        - full_name
-        - country
-        - email
-        - customer_updated_at
-        - ingest_date
+      columns:
+        include:
+          - user_id
+          - full_name
+          - country
+          - email
+          - customer_updated_at
+          - ingest_date

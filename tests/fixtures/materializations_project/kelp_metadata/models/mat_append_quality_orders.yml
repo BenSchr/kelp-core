@@ -9,7 +9,7 @@ kelp_models:
         data_type: string
         nullable: true
     materialization:
-      write_mode: append
+      mode: append
     quality:
       engine: dqx
       spark_violation_action: drop

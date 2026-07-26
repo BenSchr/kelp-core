@@ -1,0 +1,33 @@
+kelp_models:
+  - name: silver_customers_history_mat
+    description: >-
+      Silver customer dimension with full change history (SCD type 2). Kelp adds the
+      __START_AT/__END_AT interval columns and the is_current flag from this config.
+    columns:
+      - name: user_id
+        data_type: string
+        nullable: false
+      - name: full_name
+        data_type: string
+      - name: country
+        data_type: string
+      - name: email
+        data_type: string
+      - name: customer_updated_at
+        data_type: timestamp
+        nullable: false
+    cluster_by:
+      # The rebuild reads back the history of the keys in the batch, so cluster by them.
+      - user_id
+    materialization:
+      mode: scd2
+      keys:
+        - user_id
+      sequence_by:
+        - customer_updated_at
+      track_changes:
+        # A new source timestamp on its own is not a change worth a new version.
+        exclude:
+          - customer_updated_at
+      history:
+        is_current: is_current

@@ -5,7 +5,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.json_schema import SkipJsonSchema
 
-from kelp.models.model_mat_config import ModelMaterializationConfig
+from kelp.models.model_mat_config import DEFAULT_MODE, MaterializationConfig
 
 
 class TableType(Enum):
@@ -228,6 +228,14 @@ class Model(BaseModel):
         description="Databricks table properties",
     )
 
+    @field_validator("materialization", mode="before")
+    @classmethod
+    def _default_materialization_mode(cls, v: Any) -> Any:
+        """Default the materialization mode to append when the block omits it."""
+        if isinstance(v, dict) and "mode" not in v:
+            return {"mode": DEFAULT_MODE, **v}
+        return v
+
     @field_validator("table_properties", mode="before")
     @classmethod
     def _serialize_complex_property_values(cls, v: dict) -> dict:
@@ -302,7 +310,7 @@ class Model(BaseModel):
         discriminator="engine",
         description="Data quality configuration using SDPQuality or DQXQuality",
     )
-    materialization: ModelMaterializationConfig | None = Field(
+    materialization: MaterializationConfig | None = Field(
         default=None,
         description="Configuration controlling how the model is materialized.",
     )

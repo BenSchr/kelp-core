@@ -63,8 +63,8 @@ if ddl:
 
 Kelp now provides two non-SDP materialization entry points in `kelp.tables`:
 
-- `@kt.materialized(...)` — decorate a function that returns a DataFrame.
-- `kt.materialize(...)` — materialize an already-built DataFrame directly.
+- `@kt.materialized(...)` - decorate a function that returns a DataFrame.
+- `kt.materialize(...)` - materialize an already-built DataFrame directly.
 
 Both paths use Delta Lake writes and can resolve model configuration from metadata.
 
@@ -82,8 +82,9 @@ kt.init(target="prod")
 def build_orders():
     return spark.read.table("raw.orders")
 
-@kt.materialized # Name will be inferred from function name
-def cusomters(): 
+
+@kt.materialized  # Name will be inferred from function name
+def cusomters():
     return spark.read.table("raw.customers")
 
 
@@ -100,7 +101,7 @@ import kelp.tables as kt
 @kt.materialized(
     name="orders",
     config={
-        "write_mode": "append",
+        "mode": "append",
         "options": {"mergeSchema": "true"},
     },
 )
@@ -112,22 +113,49 @@ def build_orders_incremental():
 
 ```python
 import kelp.tables as kt
-from kelp.models.model_mat_config import ModelMaterializationConfig
 
 df = spark.read.table("staging.orders")
 
 kt.materialize(
     dataframe=df,
-    name="orders",  # model name or fully qualified table name
-    config=ModelMaterializationConfig(
-        write_mode="overwrite",
-        options={"overwriteSchema": "true"},
-    ),
+    name="orders",  # unqualified: a kelp model name
+    config=kt.OverwriteConfig(options={"overwriteSchema": "true"}),
 )
 ```
 
 If `config` is omitted, Kelp will use metadata materialization settings when available;
 otherwise it falls back to append behavior.
+
+Materialization does not require a kelp project - but the target must then be named in
+full. An **unqualified** `name` is resolved against kelp metadata and raises `LookupError`
+when no model matches it, so a typo or a renamed model cannot silently create a new table
+in the session's default catalog and schema. A **qualified** `name`
+(`catalog.schema.table`) is written exactly as given, with all metadata-driven steps -
+target FQN resolution, `CREATE TABLE` DDL, DQX checks and catalog sync - skipped.
+
+### Write modes
+
+Materialization config is a discriminated union on `mode`, so each mode only accepts the
+settings that apply to it. See [Materialization](materialization.md) for the full reference.
+
+| Mode | Purpose |
+|------|---------|
+| `append` | Add rows to the target |
+| `overwrite` | Replace the target contents (optionally scoped with `replace_where`) |
+| `merge` | Merge rows by `keys`, one current version per key (SCD type 1) |
+| `scd2` | Track full row history per key with `valid_from`/`valid_to` intervals |
+
+```yaml
+kelp_models:
+  - name: orders
+    materialization:
+      mode: merge
+      keys: [order_id]
+      sequence_by: [updated_at]
+      columns:
+        exclude: [_op]        # keep CDC bookkeeping out of the target
+      when_deleted: "_op = 'D'"
+```
 
 ### Use context for incremental logic
 
@@ -254,9 +282,53 @@ runlog_rows = [
 schema = "model STRING, status STRING, started_at STRING, finished_at STRING, duration_seconds DOUBLE, error STRING"
 
 print("\n🧾 Runner runlog")
-spark.createDataFrame(runlog_rows,schema=schema).orderBy("model").show(truncate=False)
-
+spark.createDataFrame(runlog_rows, schema=schema).orderBy("model").show(truncate=False)
 ```
+
+Models that do not depend on each other can run concurrently. This is off by default:
+
+```python
+runner.run_all(parallel=True, max_workers=4)
+```
+
+Execution stays level by level - every model in a dependency level finishes before the
+next level starts - so `depends_on` is always respected. `runner.registry.levels()` shows
+the grouping, and `Runner(registry=...)` takes an isolated `ModelRegistry` when one
+process needs more than one set of models.
+
+PySpark's active session is tracked per thread, so the runner resolves it once when a run
+starts and hands it to each model rather than letting worker threads look for it. Pass one
+explicitly with `Runner(spark=spark)` when the session the models should use is not the
+one active where `run_all()` is called.
+
+## Materialization Options
+
+The steps kelp runs around a write - quality checks, catalog sync, `OPTIMIZE`, `VACUUM` -
+are set project-wide and overridden per call. Unset switches fall back to the project
+value:
+
+```yaml
+kelp_project:
+  materialization_options:
+    apply_vacuum: false      # e.g. never VACUUM in dev
+```
+
+```python
+kt.materialize(dataframe=df, name="orders", options={"apply_optimize": False})
+
+
+@kt.materialized(name="orders", options=kt.MaterializationOptions(sync_metadata=False))
+def build_orders():
+    return spark.read.table("staging.orders")
+```
+
+| Option | Default | Meaning |
+|--------|---------|---------|
+| `apply_quality_checks` | `true` | Apply DQX checks declared in model metadata |
+| `sync_metadata` | `true` | Sync catalog metadata afterwards (requires a model, Databricks only) |
+| `apply_optimize` | `true` | Run `OPTIMIZE` after the write |
+| `apply_vacuum` | `true` | Run `VACUUM` after the write |
+| `vacuum_lite` | `true` | Use `VACUUM ... LITE` (Databricks only) |
 
 ## Apply Schemas with `apply_schema()`
 
@@ -272,9 +344,7 @@ clean_df = raw_df.transform(apply_schema("customers", safe_cast=True))
 You can also pass explicit DDL:
 
 ```python
-clean_df = raw_df.transform(
-    apply_schema(schema="id INT, email STRING, created_at TIMESTAMP")
-)
+clean_df = raw_df.transform(apply_schema(schema="id INT, email STRING, created_at TIMESTAMP"))
 ```
 
 ## Apply Unity Catalog Functions with `apply_func()`
