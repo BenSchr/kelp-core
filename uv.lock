@@ -471,19 +471,19 @@ wheels = [
 
 [[package]]
 name = "databricks-labs-blueprint"
-version = "0.9.3"
+version = "0.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "databricks-sdk" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c9/d0/9d818b50dc4fa86a9b5fdc0d74b96eacbd06410d7bd10b9e5f75dc416e35/databricks_labs_blueprint-0.9.3.tar.gz", hash = "sha256:a40628c0d58b6a9c8cf776b3ffa31237a8eec2f4d7a21142464cd2c285a2cd61", size = 76667, upload-time = "2024-11-14T13:33:23.73Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0a/92/c3a15d7d1de5b684408189de899628df9b920a123c7e02a396953de85e2c/databricks_labs_blueprint-0.12.0.tar.gz", hash = "sha256:247c3394c2172c35993041a3c4de4418581b1881a6d8fcbe026ceb287a27c3db", size = 85036, upload-time = "2025-12-30T17:27:36.589Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/73/f7/4e77bdcd83fb5e53d79526f4532dd05af53e5dcbb2c2854ae536baecf133/databricks_labs_blueprint-0.9.3-py3-none-any.whl", hash = "sha256:0e640953deef5e41bc324d1035ce8c5d549023178ce50708700ab34c438451f3", size = 61549, upload-time = "2024-11-14T13:33:21.818Z" },
+    { url = "https://files.pythonhosted.org/packages/46/fa/68da7f40a645efdefed57b606b034ae992f62e3bc691762318f69003ae63/databricks_labs_blueprint-0.12.0-py3-none-any.whl", hash = "sha256:62d17f9a4c6fd42fb814ddc544926d247edc82463863d837a77be7aa26fe5d20", size = 70275, upload-time = "2025-12-30T17:27:35.02Z" },
 ]
 
 [[package]]
 name = "databricks-labs-dqx"
-version = "0.13.0"
+version = "0.15.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "databricks-labs-blueprint" },
@@ -491,9 +491,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "sqlalchemy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0c/d9/dfd3a07892ef90dc389b3cdfa483ce2549838cb3ec384bb2bd3b1a6a85a5/databricks_labs_dqx-0.13.0.tar.gz", hash = "sha256:51e25471ef9c911951446e48335352500edd8d427eb03d6ca9531cdb79692a21", size = 245314, upload-time = "2026-02-09T17:18:30.022Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9e/95/cae0ea13e15d974dba03f9d6c63a96d75971833583d5e2a4e655adc52bb4/databricks_labs_dqx-0.15.0.tar.gz", hash = "sha256:27cb6436ab6be098e12c710ad2df30c0da3627a5e979c0c918bff26bb580015a", size = 291588, upload-time = "2026-06-15T23:54:34.766Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/62/d8/624a3b6bc138c4844f28bd369a1db4724907f1a3238cc34887d52db286c8/databricks_labs_dqx-0.13.0-py3-none-any.whl", hash = "sha256:5a248d0420ed26f161669245e412b5217f0ad2e786a46460c5492b49189478f5", size = 299235, upload-time = "2026-02-09T17:18:28.055Z" },
+    { url = "https://files.pythonhosted.org/packages/52/cd/cf1bdb0b2785b3a02218efb5ce2df2becce61615f9a47ca8abf89cd95927/databricks_labs_dqx-0.15.0-py3-none-any.whl", hash = "sha256:6c5d7e9fd54ffa30c5b7b07052f493a3dd943e6c181c01956a9761f7897e2795", size = 335746, upload-time = "2026-06-15T23:54:33.46Z" },
 ]
 
 [package.optional-dependencies]
@@ -518,11 +518,10 @@ wheels = [
 
 [[package]]
 name = "datacontract-cli"
-version = "1.0.14"
+version = "0.12.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
-    { name = "click" },
     { name = "datacontract-specification" },
     { name = "deepdiff" },
     { name = "fastjsonschema" },
@@ -537,14 +536,13 @@ dependencies = [
     { name = "pyyaml" },
     { name = "requests" },
     { name = "rich" },
-    { name = "ruamel-yaml" },
+    { name = "setuptools" },
     { name = "sqlglot" },
-    { name = "truststore" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2b/71/b68bc6fcde2b1678e9f4a07817496afee7c1ba506cb44e4175fbd3e36b84/datacontract_cli-1.0.14.tar.gz", hash = "sha256:fd04a4e9f72d5e8ea724d5147a6490580f65ad8d51f2080c65e8b5b3406e1790", size = 3056339, upload-time = "2026-07-23T17:36:41.367Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/3f/20b452334caaa2a115fe3fcf397176040ec47692b16f2bc5744f207446ca/datacontract_cli-0.12.5.tar.gz", hash = "sha256:d4052cb97f0fde513610a3f3e409521f21c568a313c137a2c630a020e217bf56", size = 426678, upload-time = "2026-05-30T11:34:56.576Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5d/5c/091a7b44154dc121c1a58df609c71af348df2f877fd45df6d7e28b132341/datacontract_cli-1.0.14-py3-none-any.whl", hash = "sha256:95f9b4f5ea8a41158fad354e414a4105b1a73ca0d4a1508b95fb3a77f25f3f1d", size = 3050115, upload-time = "2026-07-23T17:36:39.304Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/24/7db45d483f28beb7c14bad04bc08a0edc1bb50d04d4e27fcc1f8b50bbba1/datacontract_cli-0.12.5-py3-none-any.whl", hash = "sha256:fc6efeead304c358c201a1430c2c4eba4fa7ae75859a193743375daad0411a9a", size = 346596, upload-time = "2026-05-30T11:34:54.869Z" },
 ]
 
 [[package]]
@@ -936,7 +934,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "codespell", specifier = ">=2.4.2" },
-    { name = "databricks-labs-dqx", extras = ["datacontract"], specifier = ">=0.12.0" },
+    { name = "databricks-labs-dqx", extras = ["datacontract"], specifier = ">=0.15.0" },
     { name = "datacontract-cli", specifier = ">=0.12.4" },
     { name = "delta-spark", specifier = ">=4.2.0" },
     { name = "faker", specifier = ">=40.4.0" },
@@ -1655,11 +1653,11 @@ wheels = [
 
 [[package]]
 name = "pytz"
-version = "2026.2"
+version = "2026.3.post1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ff/46/dd499ec9038423421951e4fad73051febaa13d2df82b4064f87af8b8c0c3/pytz-2026.2.tar.gz", hash = "sha256:0e60b47b29f21574376f218fe21abc009894a2321ea16c6754f3cad6eb7cdd6a", size = 320861, upload-time = "2026-05-04T01:35:29.667Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fb/48/fb042503b6ca6cd271261dc559fd6432f7d8c713153e9ec5c591af4dfc1c/pytz-2026.3.post1.tar.gz", hash = "sha256:2211d3fcf9a797d3405cac96ac7f61d80e6a644f72a3309607282fe8a2010c5d", size = 319745, upload-time = "2026-07-25T15:12:07.385Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ec/dd/96da98f892250475bdf2328112d7468abdd4acc7b902b6af23f4ed958ea0/pytz-2026.2-py2.py3-none-any.whl", hash = "sha256:04156e608bee23d3792fd45c94ae47fae1036688e75032eea2e3bf0323d1f126", size = 510141, upload-time = "2026-05-04T01:35:27.408Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/7b/39c34ca613b0b198cb866466651b26b045e2009864c5183c979a3b83f383/pytz-2026.3.post1-py2.py3-none-any.whl", hash = "sha256:dd95840dd199baea12d9cc096a1d452caa6596a1c1e4b5f3dbd1541855d5e815", size = 508283, upload-time = "2026-07-25T15:12:05.782Z" },
 ]
 
 [[package]]
@@ -1859,15 +1857,6 @@ wheels = [
 ]
 
 [[package]]
-name = "ruamel-yaml"
-version = "0.19.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c7/3b/ebda527b56beb90cb7652cb1c7e4f91f48649fbcd8d2eb2fb6e77cd3329b/ruamel_yaml-0.19.1.tar.gz", hash = "sha256:53eb66cd27849eff968ebf8f0bf61f46cdac2da1d1f3576dd4ccee9b25c31993", size = 142709, upload-time = "2026-01-02T16:50:31.84Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/0c/51f6841f1d84f404f92463fc2b1ba0da357ca1e3db6b7fbda26956c3b82a/ruamel_yaml-0.19.1-py3-none-any.whl", hash = "sha256:27592957fedf6e0b62f281e96effd28043345e0e66001f97683aa9a40c667c93", size = 118102, upload-time = "2026-01-02T16:50:29.201Z" },
-]
-
-[[package]]
 name = "ruff"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1902,6 +1891,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/76/43/35e4d8aa320bffe8287fe8f65f578fa2d2db0a64212f0e710dce58267854/s3transfer-0.19.2.tar.gz", hash = "sha256:ba0309fd86be3c27dbf78cdd813c13c5e1df16e5874b99d2535ebbdfb9892993", size = 165592, upload-time = "2026-07-22T19:30:44.432Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bc/e7/5c595c75e9f41a44f30e526eda465ea0b4eec93470e074e4a111b253f13a/s3transfer-0.19.2-py3-none-any.whl", hash = "sha256:d8168eccca828cbb2cd573675333f3bddd254313a9c42494b84c76b539e8ba25", size = 90216, upload-time = "2026-07-22T19:30:43.251Z" },
+]
+
+[[package]]
+name = "setuptools"
+version = "83.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/34/26/f5d29e25ffdb535afef2d35cdb55b325298f96debd670da4c325e08d70f4/setuptools-83.0.0.tar.gz", hash = "sha256:025bccbbf0fa05b6192bc64ae1e7b16e001fd6d6d4d5de03c97b1c1ade523bef", size = 1154254, upload-time = "2026-07-04T15:31:22.699Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5d/40/e1e72872c6354b306daef1703549e8e83b4d43cfea356311bf722a043752/setuptools-83.0.0-py3-none-any.whl", hash = "sha256:29b23c360f22f414dc7336bb39178cc7bcbf6021ed2733cde173f09dba19abb3", size = 1008090, upload-time = "2026-07-04T15:31:20.885Z" },
 ]
 
 [[package]]
@@ -1973,15 +1971,6 @@ wheels = [
 ]
 
 [[package]]
-name = "truststore"
-version = "0.10.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/53/a3/1585216310e344e8102c22482f6060c7a6ea0322b63e026372e6dcefcfd6/truststore-0.10.4.tar.gz", hash = "sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301", size = 26169, upload-time = "2025-08-12T18:49:02.73Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/19/97/56608b2249fe206a67cd573bc93cd9896e1efb9e98bce9c163bcdc704b88/truststore-0.10.4-py3-none-any.whl", hash = "sha256:adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981", size = 18660, upload-time = "2025-08-12T18:49:01.46Z" },
-]
-
-[[package]]
 name = "ty"
 version = "0.0.32"
 source = { registry = "https://pypi.org/simple" }
@@ -2007,17 +1996,17 @@ wheels = [
 
 [[package]]
 name = "typer"
-version = "0.27.0"
+version = "0.25.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-doc" },
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "click" },
     { name = "rich" },
     { name = "shellingham" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/37/78/fda3361b56efc27944f24225f6ecd13d96d6fcfe37bd0eb34e2f4c63f9fc/typer-0.27.0.tar.gz", hash = "sha256:629bd12ea5d13a17148125d9a264f949eb171fb3f120f9b04d85873cab054fa5", size = 203430, upload-time = "2026-07-15T19:21:07.007Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/51/9aed62104cea109b820bbd6c14245af756112017d309da813ef107d42e7e/typer-0.25.1.tar.gz", hash = "sha256:9616eb8853a09ffeabab1698952f33c6f29ffdbceb4eaeecf571880e8d7664cc", size = 122276, upload-time = "2026-04-30T19:32:16.964Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/40/03/26a383c9e58c213199d1aad1c3d353cfc22d4444ec6d2c0bf8ad02523843/typer-0.27.0-py3-none-any.whl", hash = "sha256:6f4b27631e47f077871b7dc30e933ec0131c1390fbe0e387ea5574b5bac9ccf1", size = 122716, upload-time = "2026-07-15T19:21:05.553Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/f9/2b3ff4e56e5fa7debfaf9eb135d0da96f3e9a1d5b27222223c7296336e5f/typer-0.25.1-py3-none-any.whl", hash = "sha256:75caa44ed46a03fb2dab8808753ffacdbfea88495e74c85a28c5eefcf5f39c89", size = 58409, upload-time = "2026-04-30T19:32:18.271Z" },
 ]
 
 [[package]]

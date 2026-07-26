@@ -6,7 +6,7 @@ Policy checks:
 
 - Run automatically on every `init()` call when `policy_config.enabled: true`
 - Run on demand with `kelp check-policies`
-- Operate on your **local YAML metadata only** — no Unity Catalog connection needed
+- Operate on your **local YAML metadata only** - no Unity Catalog connection needed
 
 ## Setup
 
@@ -247,7 +247,7 @@ column:
 The `applies_to` field uses glob patterns to match model file paths. Patterns are matched against the `origin_file_path` of models (e.g., `models/bronze/customers.yml`).
 
 **Important guidelines:**
-- Patterns must start with `models/` — this ensures they match the models directory
+- Patterns must start with `models/` - this ensures they match the models directory
 - Use forward slashes `/` (not backslashes)
 - Glob wildcards (`*`, `?`, `**`) are supported
 
@@ -528,5 +528,5 @@ When a model fails these checks, Kelp reports violations like:
 
 ## See Also
 
-- [Project Configuration](project_config.md) — Setting `policies_path`, `policy_config.enabled`, and `policy_config.fast_exit`
-- [CLI Reference](../cli.md) — `kelp check-policies` options
+- [Project Configuration](project_config.md) - Setting `policies_path`, `policy_config.enabled`, and `policy_config.fast_exit`
+- [CLI Reference](../cli.md) - `kelp check-policies` options

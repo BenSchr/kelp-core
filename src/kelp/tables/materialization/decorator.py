@@ -2,14 +2,22 @@ import functools
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, overload
 
 from pyspark.sql import DataFrame, SparkSession
 
-from kelp.models.model_mat_config import ModelMaterializationConfig
+from kelp.models.model_mat_config import (
+    MaterializationConfig,
+    MaterializationOptions,
+    parse_materialization_config,
+)
 from kelp.tables.materialization.base import table_exists
-from kelp.tables.materialization.factory import _resolve_materialization_inputs, materialize
-from kelp.tables.materialization.runner import _REGISTRY, ModelSpec
+from kelp.tables.materialization.orchestrator import materialize_resolved
+from kelp.tables.materialization.resolve import (
+    FullRefreshStrategy,
+    resolve_materialization_inputs,
+)
+from kelp.tables.materialization.runner import REGISTRY, ModelSpec
 
 
 @dataclass
@@ -33,31 +41,60 @@ class MaterializedContext:
         return self.target_exists and not self.full_refresh
 
 
+@overload
+def materialized(func: Callable[..., DataFrame]) -> Callable[..., DataFrame]: ...
+
+
+@overload
+def materialized(
+    *,
+    name: str | None = None,
+    config: MaterializationConfig | dict | None = None,
+    options: MaterializationOptions | dict | None = None,
+    depends_on: list[str] | None = None,
+    full_refresh: bool = False,
+    full_refresh_strategy: FullRefreshStrategy = "drop",
+) -> Callable[[Callable[..., DataFrame]], Callable[..., DataFrame]]: ...
+
+
 def materialized(
     func: Callable[..., DataFrame] | None = None,
     *,
     name: str | None = None,
-    config: ModelMaterializationConfig | dict | None = None,
+    config: MaterializationConfig | dict | None = None,
+    options: MaterializationOptions | dict | None = None,
     depends_on: list[str] | None = None,
     full_refresh: bool = False,
-    apply_vacuum: bool = True,
-    vacuum_lite: bool = True,
-    apply_optimize: bool = True,
-    apply_quality_checks: bool = True,
-) -> Callable[[Callable[..., DataFrame]], Callable[..., DataFrame]]:
+    full_refresh_strategy: FullRefreshStrategy = "drop",
+) -> Callable[..., DataFrame] | Callable[[Callable[..., DataFrame]], Callable[..., DataFrame]]:
     """Decorator that materializes the returned DataFrame.
 
+    Usable bare (``@materialized``) or called (``@materialized(name=...)``).
     Model matching uses `name` when provided; otherwise the wrapped function
-    name is used.
+    name is used. An unqualified name must match a kelp model; pass a qualified
+    table name to materialize without metadata.
+
+    The wrapper accepts ``full_refresh`` and ``spark`` keywords at call time, which
+    override the decorator's value and the active session and are not passed on to
+    the wrapped function.
 
     Args:
-        name: Optional kelp model/table name.
-        config: Optional materialization override config.
+        func: The decorated function when used bare.
+        name: Optional kelp model name, or a qualified table name.
+        config: Optional materialization config, replacing the model's config.
+        options: Overrides for the steps run around the write — quality checks,
+            catalog sync, OPTIMIZE and VACUUM. Unset switches fall back to the
+            project's ``materialization_options``.
+        depends_on: Model names this model must run after, for the runner.
+        full_refresh: Whether to rebuild the target from scratch before writing.
+        full_refresh_strategy: How a full refresh resets the target — ``drop`` to
+            drop and recreate it, ``replace`` to keep the table (and its grants and
+            history) in place.
 
     Returns:
-        Decorated callable returning the same DataFrame after materialization.
+        The decorated callable, or the decorator when called with options.
     """
-    cfg = ModelMaterializationConfig(**config) if isinstance(config, dict) else config
+    cfg = parse_materialization_config(config)
     depends_on = depends_on or []
 
     def decorator(fn: Callable[..., DataFrame]) -> Callable[..., DataFrame]:
@@ -83,22 +120,23 @@ def materialized(
         def wrapper(*args: Any, **kwargs: Any) -> DataFrame:
             runtime_full_refresh = kwargs.pop("full_refresh", full_refresh)
 
-            spark = SparkSession.getActiveSession()
+            # A caller may hand the session over: PySpark's active session is
+            # thread-local, so a model run by the Runner in a worker thread cannot
+            # find it itself.
+            spark = kwargs.pop("spark", None) or SparkSession.getActiveSession()
             if spark is None:
                 raise RuntimeError("No active SparkSession available for materialization.")
 
-            resolved_inputs = _resolve_materialization_inputs(
-                table_name=target_name,
-                config=cfg,
-            )
-            resolved_target_name = resolved_inputs.target_name
+            # Resolved once here and handed to the orchestrator, so metadata is not
+            # looked up twice for the same run.
+            resolved = resolve_materialization_inputs(table_name=target_name, config=cfg)
 
             call_args = args
             if inject_ctx:
                 context = MaterializedContext(
                     spark=spark,
-                    this=resolved_target_name,
-                    target_exists=table_exists(spark, resolved_target_name),
+                    this=resolved.target_name,
+                    target_exists=table_exists(spark, resolved.target_name),
                     full_refresh=runtime_full_refresh,
                 )
                 call_args = (context, *args)
@@ -110,24 +148,21 @@ def materialized(
                     f"got {type(result).__name__}."
                 )
 
-            materialize(
-                spark=spark,
+            return materialize_resolved(
                 dataframe=result,
-                name=target_name,
-                config=cfg,
+                resolved=resolved,
+                options=options,
                 full_refresh=runtime_full_refresh,
-                apply_vacuum=apply_vacuum,
-                vacuum_lite=vacuum_lite,
-                apply_optimize=apply_optimize,
-                apply_quality_checks=apply_quality_checks,
+                full_refresh_strategy=full_refresh_strategy,
+                spark=spark,
             )
-            return result
 
-        effective_name = target_name.split(".")[-1]
-        _REGISTRY[effective_name] = ModelSpec(
-            name=effective_name,
-            fn=wrapper,
-            depends_on=list(depends_on),
+        REGISTRY.register(
+            ModelSpec(
+                name=target_name,
+                fn=wrapper,
+                depends_on=list(depends_on),
+            )
         )
         return wrapper
 

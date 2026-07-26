@@ -33,10 +33,12 @@ kelp_models:
   - name: silver_orders_refined_mat
     # ...
     materialization:
-      write_mode: merge # or append or overwrite
-      unique_keys:
+      mode: merge # or append, overwrite, scd2
+      keys:
         - order_nk
-      merge_with_schema_evolution: true
+      sequence_by:
+        - order_updated_at
+      schema_evolution: true
       # Other options...
 ```
 

@@ -93,7 +93,7 @@ class TestBasicCasting:
         df = spark.createDataFrame([("2025-01-15 10:30:00",)], ["ts"])
         result = df.transform(apply_schema(schema="ts TIMESTAMP"))
         assert result.schema["ts"].dataType == TimestampType()
-        assert result.collect()[0].ts == datetime(2025, 1, 15, 10, 30)
+        assert result.collect()[0].ts == datetime(2025, 1, 15, 10, 30)  # noqa: DTZ001
 
 
 # ---------------------------------------------------------------------------
@@ -464,7 +464,7 @@ class TestKelpCatalogLookup:
         assert row.id == 1
         assert row.name == "Alice"
         assert row.email is None
-        assert row.created_at == datetime(2025, 1, 15, 10, 30)
+        assert row.created_at == datetime(2025, 1, 15, 10, 30)  # noqa: DTZ001
 
 
 # ---------------------------------------------------------------------------

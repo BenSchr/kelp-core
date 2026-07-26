@@ -1,0 +1,25 @@
+kelp_models:
+  - name: mat_scd2_customers
+    description: Fixture model for SCD2 materialization tests
+    columns:
+      - name: id
+        data_type: bigint
+        nullable: false
+      - name: name
+        data_type: string
+        nullable: true
+      - name: city
+        data_type: string
+        nullable: true
+      - name: sequence_num
+        data_type: bigint
+        nullable: false
+    materialization:
+      mode: scd2
+      keys:
+        - id
+      sequence_by:
+        - sequence_num
+      track_changes:
+        exclude:
+          - sequence_num

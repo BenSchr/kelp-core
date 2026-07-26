@@ -189,7 +189,7 @@ class PipelineManager:
     @staticmethod
     def _to_iso_ts(ms: int) -> str:
         """Convert millisecond epoch to RFC3339 UTC timestamp."""
-        ts = dt.datetime.fromtimestamp(ms / 1000.0).replace(tzinfo=dt.UTC)
+        ts = dt.datetime.fromtimestamp(ms / 1000.0).replace(tzinfo=dt.UTC)  # noqa: DTZ006
         return ts.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
     @classmethod

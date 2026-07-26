@@ -9,4 +9,4 @@ kelp_models:
         data_type: string
         nullable: true
     materialization:
-      write_mode: overwrite
+      mode: overwrite

@@ -7,7 +7,7 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as f
 
 from kelp.config import init
-from kelp.models.model_mat_config import ModelMaterializationConfig
+from kelp.models.model_mat_config import AppendConfig, MergeConfig
 from kelp.tables import MaterializedContext, materialize, materialized
 
 
@@ -90,7 +90,7 @@ def test_materialize_creates_table_when_missing(
     initialized_materializations_context: None,
 ) -> None:
     """Materialize should create a missing target table during append writes."""
-    table_name = "mat_runtime_create_orders"
+    table_name = "default.mat_runtime_create_orders"
     _drop_table_if_exists(spark, table_name)
 
     source_df = _csv_df(spark, materializations_project_dir / "data/append/source.csv")
@@ -98,10 +98,43 @@ def test_materialize_creates_table_when_missing(
         spark=spark,
         dataframe=source_df,
         name=table_name,
-        config=ModelMaterializationConfig(write_mode="append"),
+        config=AppendConfig(),
     )
 
     assert spark.catalog.tableExists(table_name)
+    _assert_table_matches_csv(
+        spark,
+        table_name,
+        materializations_project_dir / "data/append/source.csv",
+    )
+
+
+def test_full_refresh_replace_recreates_model_table_from_ddl(
+    spark: SparkSession,
+    materializations_project_dir: Path,
+    initialized_materializations_context: None,
+) -> None:
+    """With a model, replace re-applies the DDL so a stale schema is reset in place."""
+    table_name = "mat_append_orders"
+    _drop_table_if_exists(spark, table_name)
+
+    spark.createDataFrame(
+        [(9, "stale", "obsolete")],
+        "id BIGINT, name STRING, dropped_column STRING",
+    ).write.format("delta").mode("overwrite").saveAsTable(table_name)
+
+    source_df = _csv_df(spark, materializations_project_dir / "data/append/source.csv")
+    materialize(
+        spark=spark,
+        dataframe=source_df,
+        name=table_name,
+        config=None,
+        full_refresh=True,
+        full_refresh_strategy="replace",
+        options={"apply_vacuum": False, "apply_optimize": False},
+    )
+
+    assert "dropped_column" not in spark.table(table_name).columns
     _assert_table_matches_csv(
         spark,
         table_name,
@@ -139,7 +172,7 @@ def test_merge_materialization_from_yaml(
     materializations_project_dir: Path,
     initialized_materializations_context: None,
 ) -> None:
-    """Merge mode should upsert source rows into the target using YAML unique_keys."""
+    """Merge mode should merge source rows into the target using YAML unique_keys."""
     table_name = "mat_merge_orders"
     _drop_table_if_exists(spark, table_name)
 
@@ -193,7 +226,7 @@ def test_materialized_decorator_without_model_uses_runtime_config(
     initialized_materializations_context: None,
 ) -> None:
     """Decorator should fully work with runtime config when no model exists."""
-    table_name = "mat_runtime_decorator_orders"
+    table_name = "default.mat_runtime_decorator_orders"
     _drop_table_if_exists(spark, table_name)
 
     target_df = _csv_df(spark, materializations_project_dir / "data/append/target.csv")
@@ -201,9 +234,8 @@ def test_materialized_decorator_without_model_uses_runtime_config(
 
     @materialized(
         name=table_name,
-        config=ModelMaterializationConfig(write_mode="append"),
-        apply_vacuum=False,
-        apply_optimize=False,
+        config=AppendConfig(),
+        options={"apply_vacuum": False, "apply_optimize": False},
     )
     def build_df() -> DataFrame:
         return _csv_df(spark, materializations_project_dir / "data/append/source.csv")
@@ -223,7 +255,7 @@ def test_materialized_decorator_merge_schema_evolution_updates_existing_rows(
     initialized_materializations_context: None,
 ) -> None:
     """Decorator merge should evolve schema and apply new column values on matched updates."""
-    table_name = "mat_runtime_merge_schema_evolution_orders"
+    table_name = "default.mat_runtime_merge_schema_evolution_orders"
     _drop_table_if_exists(spark, table_name)
 
     spark.createDataFrame(
@@ -236,14 +268,12 @@ def test_materialized_decorator_merge_schema_evolution_updates_existing_rows(
 
     @materialized(
         name=table_name,
-        config=ModelMaterializationConfig(
-            write_mode="merge",
-            unique_keys=["id"],
+        config=MergeConfig(
+            keys=["id"],
             sequence_by=["updated_at"],
-            merge_with_schema_evolution=True,
+            schema_evolution=True,
         ),
-        apply_vacuum=False,
-        apply_optimize=False,
+        options={"apply_vacuum": False, "apply_optimize": False},
     )
     def build_df() -> DataFrame:
         return spark.createDataFrame(
@@ -285,7 +315,7 @@ def test_materialized_decorator_ctx_incremental_append(
     target_df = _csv_df(spark, materializations_project_dir / "data/append_incremental/target.csv")
     target_df.write.format("delta").mode("overwrite").saveAsTable(table_name)
 
-    @materialized(name=table_name, apply_vacuum=False, apply_optimize=False)
+    @materialized(name=table_name, options={"apply_vacuum": False, "apply_optimize": False})
     def build_incremental_df(ctx: MaterializedContext) -> DataFrame:
         source_df = _csv_df(
             spark, materializations_project_dir / "data/append_incremental/source.csv"
@@ -326,8 +356,6 @@ def test_runner_multi_step_refinement_pipeline(
     initialized_materializations_context: None,
 ) -> None:
     """Runner should execute dependent steps where each step refines prior-step data."""
-    from kelp.tables.materialization.runner import _REGISTRY
-
     append_table = "mat_append_orders"
     overwrite_table = "mat_overwrite_orders"
     merge_table = "mat_merge_orders"
@@ -346,84 +374,125 @@ def test_runner_multi_step_refinement_pipeline(
         "delta"
     ).mode("overwrite").saveAsTable(merge_table)
 
-    registry_snapshot = dict(_REGISTRY)
-    _REGISTRY.clear()
-
-    try:
-
-        @materialized(
-            name=append_table,
-            apply_vacuum=False,
-            apply_optimize=False,
+    @materialized(
+        name=append_table,
+        options={"apply_vacuum": False, "apply_optimize": False},
+    )
+    def bronze_step(ctx: MaterializedContext) -> DataFrame:
+        source_df = _csv_df(spark, materializations_project_dir / "data/append/source.csv")
+        return source_df.select(
+            f.col("id").cast("bigint").alias("id"),
+            f.lower(f.col("name")).alias("name"),
         )
-        def bronze_step(ctx: MaterializedContext) -> DataFrame:
-            source_df = _csv_df(spark, materializations_project_dir / "data/append/source.csv")
-            return source_df.select(
-                f.col("id").cast("bigint").alias("id"),
-                f.lower(f.col("name")).alias("name"),
-            )
 
-        @materialized(
-            name=overwrite_table,
-            depends_on=[append_table],
-            apply_vacuum=False,
-            apply_optimize=False,
+    @materialized(
+        name=overwrite_table,
+        depends_on=[append_table],
+        options={"apply_vacuum": False, "apply_optimize": False},
+    )
+    def silver_step(ctx: MaterializedContext) -> DataFrame:
+        previous_df = spark.read.table(append_table)
+        return (
+            previous_df.filter(f.col("id") > f.lit(1))
+            .withColumn("name", f.concat(f.lit("silver_"), f.col("name")))
+            .withColumn("id", f.col("id").cast("bigint"))
+            .select("id", "name")
         )
-        def silver_step(ctx: MaterializedContext) -> DataFrame:
-            previous_df = spark.read.table(append_table)
-            return (
-                previous_df.filter(f.col("id") > f.lit(1))
-                .withColumn("name", f.concat(f.lit("silver_"), f.col("name")))
-                .withColumn("id", f.col("id").cast("bigint"))
-                .select("id", "name")
-            )
 
-        @materialized(
-            name=merge_table,
-            depends_on=[overwrite_table],
-            apply_vacuum=False,
-            apply_optimize=False,
+    @materialized(
+        name=merge_table,
+        depends_on=[overwrite_table],
+        options={"apply_vacuum": False, "apply_optimize": False},
+    )
+    def gold_step(ctx: MaterializedContext) -> DataFrame:
+        previous_df = spark.read.table(overwrite_table)
+        return (
+            previous_df.withColumn("name", f.concat(f.col("name"), f.lit("_gold")))
+            .withColumn("id", f.col("id").cast("bigint"))
+            .withColumn("updated_at", (f.col("id") * f.lit(100)).cast("bigint"))
+            .withColumn("_op", f.lit("U"))
+            .select("id", "name", "updated_at", "_op")
         )
-        def gold_step(ctx: MaterializedContext) -> DataFrame:
-            previous_df = spark.read.table(overwrite_table)
-            return (
-                previous_df.withColumn("name", f.concat(f.col("name"), f.lit("_gold")))
-                .withColumn("id", f.col("id").cast("bigint"))
-                .withColumn("updated_at", (f.col("id") * f.lit(100)).cast("bigint"))
-                .withColumn("_op", f.lit("U"))
-                .select("id", "name", "updated_at", "_op")
-            )
 
-        # Keep local references to avoid function redefinition lint warnings.
-        _ = bronze_step, silver_step, gold_step
+    # Keep local references to avoid function redefinition lint warnings.
+    _ = bronze_step, silver_step, gold_step
 
-        from kelp.tables import Runner
+    from kelp.tables import Runner
 
-        runner = Runner()
+    runner = Runner()
 
-        assert runner.plan_all() == [append_table, overwrite_table, merge_table]
+    assert runner.plan_all() == [append_table, overwrite_table, merge_table]
 
-        runner.run_all()
+    runner.run_all()
 
-        assert [entry.model for entry in runner.runlog.entries] == [
-            append_table,
-            overwrite_table,
-            merge_table,
-        ]
-        assert all(entry.status == "success" for entry in runner.runlog.entries)
+    assert [entry.model for entry in runner.runlog.entries] == [
+        append_table,
+        overwrite_table,
+        merge_table,
+    ]
+    assert all(entry.status == "success" for entry in runner.runlog.entries)
 
-        append_rows = {row["id"]: row["name"] for row in spark.table(append_table).collect()}
-        assert append_rows == {1: "alice", 2: "bob"}
+    append_rows = {row["id"]: row["name"] for row in spark.table(append_table).collect()}
+    assert append_rows == {1: "alice", 2: "bob"}
 
-        overwrite_rows = {row["id"]: row["name"] for row in spark.table(overwrite_table).collect()}
-        assert overwrite_rows == {2: "silver_bob"}
+    overwrite_rows = {row["id"]: row["name"] for row in spark.table(overwrite_table).collect()}
+    assert overwrite_rows == {2: "silver_bob"}
 
-        merge_rows = [
-            (row["id"], row["name"], row["updated_at"])
-            for row in spark.table(merge_table).collect()
-        ]
-        assert merge_rows == [(2, "silver_bob_gold", 200)]
+    merge_rows = [
+        (row["id"], row["name"], row["updated_at"]) for row in spark.table(merge_table).collect()
+    ]
+    assert merge_rows == [(2, "silver_bob_gold", 200)]
 
-    finally:
-        _REGISTRY.clear()
-        _REGISTRY.update(registry_snapshot)
+
+def test_runner_parallel_runs_independent_models_in_threads(
+    spark: SparkSession,
+    materializations_project_dir: Path,
+    initialized_materializations_context: None,
+) -> None:
+    """Independent models run concurrently and still find the SparkSession.
+
+    PySpark's active session is thread-local, so a worker thread cannot discover it:
+    the runner resolves it once and hands it to each model.
+    """
+    append_table = "mat_append_orders"
+    overwrite_table = "mat_overwrite_orders"
+
+    for table in (append_table, overwrite_table):
+        _drop_table_if_exists(spark, table)
+
+    @materialized(
+        name=append_table,
+        options={"apply_vacuum": False, "apply_optimize": False},
+    )
+    def append_step() -> DataFrame:
+        return spark.createDataFrame([(1, "alice")], "id BIGINT, name STRING")
+
+    @materialized(
+        name=overwrite_table,
+        options={"apply_vacuum": False, "apply_optimize": False},
+    )
+    def overwrite_step() -> DataFrame:
+        return spark.createDataFrame([(2, "bob")], "id BIGINT, name STRING")
+
+    _ = append_step, overwrite_step
+
+    from kelp.tables import Runner
+
+    runner = Runner()
+
+    # Both models are independent, so they share a level and run in the pool.
+    assert [sorted(level) for level in runner.registry.levels()] == [
+        sorted([append_table, overwrite_table])
+    ]
+
+    runner.run_all(parallel=True, max_workers=2)
+
+    assert sorted(entry.model for entry in runner.runlog.successes()) == sorted(
+        [append_table, overwrite_table]
+    )
+    assert [(row["id"], row["name"]) for row in spark.table(append_table).collect()] == [
+        (1, "alice")
+    ]
+    assert [(row["id"], row["name"]) for row in spark.table(overwrite_table).collect()] == [
+        (2, "bob")
+    ]

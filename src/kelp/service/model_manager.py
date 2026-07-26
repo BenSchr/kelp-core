@@ -13,7 +13,7 @@ from kelp.models.model import (
     PrimaryKeyConstraint,
     SDPQuality,
 )
-from kelp.models.model_mat_config import ModelMaterializationConfig
+from kelp.models.model_mat_config import MaterializationConfig, Scd2Config
 from kelp.models.project_config import ProjectConfig
 
 
@@ -40,13 +40,13 @@ class KelpModel:
     quarantine_table: str | None = None
     target_table: str | None = None
     root_model: Model | None = None
-    materialization: ModelMaterializationConfig | None = None
+    materialization: MaterializationConfig | None = None
     meta: dict[str, Any] | None = None
 
     # def get_dqx_check_obj(self) -> DQXQuality | None:
     #     return self.dqx_quality
 
-    def build_ddl(self, if_not_exists: bool = True) -> str | None:
+    def build_ddl(self, if_not_exists: bool = True, or_replace: bool = False) -> str | None:
         """Build a CREATE TABLE DDL statement directly from this model's properties.
 
         Unlike :meth:`get_ddl`, this does not require ``root_model`` — it uses
@@ -56,17 +56,26 @@ class KelpModel:
 
         Args:
             if_not_exists: Emit ``IF NOT EXISTS`` in the statement.
+            or_replace: Emit ``OR REPLACE``, replacing an existing table in place.
 
         Returns:
             DDL string, or ``None`` when ``schema`` is not set.
+
+        Raises:
+            ValueError: If ``or_replace`` is combined with ``if_not_exists``.
         """
+        if or_replace and if_not_exists:
+            raise ValueError("'or_replace' cannot be combined with 'if_not_exists'.")
         if not self.schema:
             return None
 
         mapped_type = _UC_TYPE.get(self.table_type.lower(), "TABLE") if self.table_type else "TABLE"
         target = self.fqn or self.name
 
-        ddl = f"CREATE {mapped_type} "
+        ddl = "CREATE "
+        if or_replace:
+            ddl += "OR REPLACE "
+        ddl += f"{mapped_type} "
         if if_not_exists:
             ddl += "IF NOT EXISTS "
         ddl += f"{target} (\n{self.schema}\n)"
@@ -97,6 +106,25 @@ class KelpModel:
             )
         # Fallback to building DDL from dataclass fields when root_model is not available
         return self.build_ddl(if_not_exists=if_not_exists)
+
+    def get_replace_ddl(self) -> str | None:
+        """Build a ``CREATE OR REPLACE TABLE`` statement for this model.
+
+        Used by the ``replace`` full-refresh strategy: unlike ``DROP`` + ``CREATE``,
+        replacing keeps the table's identity, so Unity Catalog grants, tags and
+        history survive the refresh.
+
+        Returns:
+            DDL string, or ``None`` when no schema is available.
+        """
+        mapped_type = _UC_TYPE.get(self.table_type.lower(), "TABLE") if self.table_type else "TABLE"
+        if self.root_model:
+            return ModelManager.get_spark_schema_ddl(
+                self.root_model,
+                table_type=mapped_type,
+                or_replace=True,
+            )
+        return self.build_ddl(if_not_exists=False, or_replace=True)
 
 
 @dataclass
@@ -204,13 +232,17 @@ class ModelManager:
         table_type: str = "Table",
         if_not_exists: bool = False,
         or_refresh: bool = False,
+        or_replace: bool = False,
     ) -> str | None:
         builder = SparkSchemaBuilder(model)
         builder.add_columns(
             add_generated=True
-        ).add_constraints().add_clustering().add_table_properties()
+        ).add_history_columns().add_constraints().add_clustering().add_table_properties()
         return builder.build_ddl(
-            table_type=table_type, if_not_exists=if_not_exists, or_refresh=or_refresh
+            table_type=table_type,
+            if_not_exists=if_not_exists,
+            or_refresh=or_refresh,
+            or_replace=or_replace,
         )
 
     @classmethod
@@ -427,6 +459,50 @@ class SparkSchemaBuilder:
             self.table_parts.append(self._column_to_string(col, add_generated=add_generated))
         return self
 
+    def add_history_columns(self) -> "SparkSchemaBuilder":
+        """Append the SCD2 history columns for models materialized as ``mode: scd2``.
+
+        The interval bounds take the type of the model's ``sequence_by`` columns, so
+        the generated table matches what the SCD2 strategy writes. Only the DDL path
+        adds these columns — ``schema``/``schema_lite`` stay business-only so that
+        :func:`kelp.transformations.apply_schema` keeps working on source data.
+
+        Returns:
+            The builder, for chaining.
+
+        Raises:
+            ValueError: If a ``sequence_by`` column is not declared on the model.
+        """
+        config = self.model.materialization
+        if not isinstance(config, Scd2Config):
+            return self
+
+        declared = {col.name.lower(): col for col in self.model.columns}
+        fields: list[tuple[str, str]] = []
+        for name in config.sequence_by:
+            column = declared.get(name.lower())
+            if column is None or not column.data_type:
+                raise ValueError(
+                    f"Model '{self.model.name}' uses mode: scd2 with sequence_by column "
+                    f"'{name}', which is not declared with a data_type."
+                )
+            fields.append((column.name, column.data_type))
+
+        if len(fields) == 1:
+            bound_type = fields[0][1]
+        else:
+            bound_type = "STRUCT<" + ", ".join(f"{name}: {dtype}" for name, dtype in fields) + ">"
+
+        history = config.history
+        existing = {name.lower() for name in declared}
+        if history.valid_from.lower() not in existing:
+            self.table_parts.append(f"{history.valid_from} {bound_type} NOT NULL")
+        if history.valid_to.lower() not in existing:
+            self.table_parts.append(f"{history.valid_to} {bound_type}")
+        if history.is_current and history.is_current.lower() not in existing:
+            self.table_parts.append(f"{history.is_current} BOOLEAN")
+        return self
+
     def add_constraints(self) -> "SparkSchemaBuilder":
         for constraint in self.model.constraints:
             if isinstance(constraint, PrimaryKeyConstraint):
@@ -482,10 +558,20 @@ class SparkSchemaBuilder:
         return ", ".join(self.table_parts)
 
     def build_ddl(
-        self, table_type: str = "Table", if_not_exists: bool = False, or_refresh: bool = False
+        self,
+        table_type: str = "Table",
+        if_not_exists: bool = False,
+        or_refresh: bool = False,
+        or_replace: bool = False,
     ) -> str:
+        if or_replace and (if_not_exists or or_refresh):
+            raise ValueError(
+                "'or_replace' cannot be combined with 'if_not_exists' or 'or_refresh'."
+            )
         table_schema = ",\n".join(self.table_parts)
         ddl = "CREATE "
+        if or_replace:
+            ddl += "OR REPLACE "
         if or_refresh:
             ddl += "OR REFRESH "
         ddl += f"{table_type} "

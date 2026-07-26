@@ -414,7 +414,7 @@ kelp_project:
 
 Kelp can enforce governance standards on your local YAML metadata via a separate policy system. When enabled, policies are evaluated on every `kelp init()` call and on demand via `kelp check-policies`.
 
-> **Note:** Policy checks operate on your **local YAML metadata** — they do not connect to Unity Catalog.
+> **Note:** Policy checks operate on your **local YAML metadata** - they do not connect to Unity Catalog.
 
 ### Enabling Policies
 
@@ -583,10 +583,7 @@ ctx = init(target="dev")
 ctx = init(config_path="./config/kelp_project.yml", target="prod")
 
 # Override variables
-ctx = init(
-    target="prod",
-    overwrite_vars={"data_catalog": "custom_catalog"}
-)
+ctx = init(target="prod", overwrite_vars={"data_catalog": "custom_catalog"})
 
 # Access configuration
 print(ctx.project_settings.models_path)

@@ -88,8 +88,8 @@ for query in kc.sync_abac_policies(policy_names=["my_policy1"]):
 
 Sync functions read the current remote state before generating statements. Two engines are available via the `engine` parameter:
 
-- `"spark"` — uses the active Spark session (`DESCRIBE EXTENDED … AS JSON` plus `information_schema` tag queries).
-- `"sdk"` (default) — uses the Databricks SDK REST APIs and works from anywhere with a configured profile or token. The Kelp CLI (`generate-alter-statements`, `sync-local-catalog`) always uses this engine.
+- `"spark"` - uses the active Spark session (`DESCRIBE EXTENDED … AS JSON` plus `information_schema` tag queries).
+- `"sdk"` (default) - uses the Databricks SDK REST APIs and works from anywhere with a configured profile or token. The Kelp CLI (`generate-alter-statements`, `sync-local-catalog`) always uses this engine.
 
 ```python
 # Running outside Databricks (no Spark session): use the SDK engine

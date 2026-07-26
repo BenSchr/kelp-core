@@ -38,7 +38,7 @@ kelp_models:
     cluster_by:
       - order_id
     materialization:
-      write_mode: append
+      mode: append
     quality:
       engine: dqx
       spark_violation_action: drop

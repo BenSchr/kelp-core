@@ -30,19 +30,20 @@ kelp_models:
       - order_date
       - order_updated_at
     materialization:
-      write_mode: merge
-      unique_keys:
+      mode: merge
+      keys:
         - order_nk
       sequence_by:
         - order_updated_at
       ignore_null_updates: true
-      include_at_target_cols:
-        - order_nk
-        - user_id
-        - product
-        - quantity
-        - unit_price
-        - line_amount
-        - order_date
-        - order_updated_at
-        - ingest_date
+      columns:
+        include:
+          - order_nk
+          - user_id
+          - product
+          - quantity
+          - unit_price
+          - line_amount
+          - order_date
+          - order_updated_at
+          - ingest_date

@@ -28,7 +28,7 @@ kelp = "kelp.cli.cli:main"
 dev = [
     { include-group = "test" },
     { include-group = "docs" },
-    "databricks-labs-dqx[datacontract]>=0.12.0",
+    "databricks-labs-dqx[datacontract]>=0.15.0",
     "pyspark[pipelines]>=4.1",
     "faker>=40.4.0",
     "datacontract-cli>=0.12.4",
@@ -99,7 +99,7 @@ extend-select = [
     "FURB",
     "RUF",
 ]
-ignore=["RET504","SIM105"]
+ignore=["RET504","SIM105","EXE002"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101","SLF001"]

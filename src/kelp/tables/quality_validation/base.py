@@ -3,19 +3,27 @@ from importlib.util import find_spec
 from kelp.config import project_settings
 
 
-def get_quality_monitorng_table_name() -> str | None:
-    project_config = project_settings()
-    return project_config.quality_config.dqx_monitoring_fqn
+def quality_monitoring_target() -> str | None:
+    """Return the DQX monitoring table FQN, or None when monitoring is disabled or unset.
+
+    Reads the project context once.
+
+    Returns:
+        The fully qualified name of the DQX monitoring table, or None when
+        monitoring is switched off or no table is configured.
+    """
+    quality_config = project_settings().quality_config
+    if not quality_config.dqx_monitoring_enabled:
+        return None
+    return quality_config.dqx_monitoring_fqn or None
 
 
-def should_apply_quality_monitoring() -> bool:
-    project_config = project_settings()
-    return project_config.quality_config.dqx_monitoring_enabled and bool(
-        project_config.quality_config.dqx_monitoring_fqn
-    )
+def ensure_dqx_installed() -> None:
+    """Verify that the optional ``databricks-labs-dqx`` dependency is importable.
 
-
-def ensure_dqx_installed():
+    Raises:
+        ImportError: If the package is not installed.
+    """
     try:
         if not find_spec("databricks.labs.dqx"):
             raise ImportError(

@@ -30,6 +30,6 @@ kelp_models:
         data_type: date
         description: Date this record was produced in the bronze load.
     materialization:
-      write_mode: overwrite
+      mode: overwrite
     cluster_by:
       - ingest_date
