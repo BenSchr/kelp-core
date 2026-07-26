@@ -32,7 +32,7 @@ resources:
         kelp.target: ${bundle.target}
       environment:
         dependencies:
-          - kelp-core==0.0.12
+          - kelp-core==0.0.13
           - databricks-labs-dqx
       # ...
 ```

@@ -1,17 +1,9 @@
-# 0.0.13 (TBD)
+# 0.0.13 (2026-07-26)
 
 ## ✨ Features
 
-- feat: improve-sync-metadata - Improved metadata sync code, added multi-threading to column-tag fetching in sdk, added optional spark metadata fetcher through describe and information-schema queries.
-- feat: improve-materialization - Reworked materialization around a `mode`-based config (`append`, `overwrite`, `merge`, `scd2`) that rejects unknown fields, adding SCD2 history tracking, a pure merge-planning layer that is unit-testable without Spark, `full_refresh_strategy: replace` to reset a table without dropping it (keeping Unity Catalog grants, tags and history), project-wide `materialization_options`, strict target-name resolution, and an opt-in parallel runner (`run_all(parallel=True)`).
-
-## 🐛 Fixes
-
-- fix: DQX monitoring and quarantine writes set `mergeSchema`, so an additive schema change no longer fails pipelines that write to a shared table from an older kelp or DQX version.
-- fix: DQX monitoring rows are grouped by rule fingerprint **and** severity — a rule firing as both error and warning in one batch no longer collapses into a single row with an arbitrarily chosen severity.
-- fix: models run by `Runner` receive the SparkSession from the caller. PySpark tracks the active session per thread, so models running in worker threads could not find it.
-- fix: `Runner.plan_one` no longer ignores `depends_on`; it returns the dependency-ordered models needed for its target.
-- fix: the model registry keys on the full model name instead of the last dotted segment, which silently overwrote same-named models in different schemas.
+- feat: improve-sync-metadata ([#25](https://github.com/BenSchr/kelp-core/pull/25)) - Improved metadata sync code, added multi-threading to column-tag fetching in sdk, added optional spark metadata fetcher through describe and information-schema queries.
+- feat: improve-materialization ([#29](https://github.com/BenSchr/kelp-core/pull/29)) - Reworked materialization around a `mode`-based config (`append`, `overwrite`, `merge`, `scd2`) that rejects unknown fields, adding SCD2 history tracking, a pure merge-planning layer that is unit-testable without Spark, `full_refresh_strategy: replace` to reset a table without dropping it (keeping Unity Catalog grants, tags and history), project-wide `materialization_options`, strict target-name resolution, and an opt-in parallel runner (`run_all(parallel=True)`).
 
 ## ⚠️ Breaking Changes
 
