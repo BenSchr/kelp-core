@@ -29,10 +29,10 @@ dev = [
     { include-group = "test" },
     { include-group = "docs" },
     "databricks-labs-dqx[datacontract]>=0.15.0",
-    "pyspark[pipelines]>=4.1",
     "faker>=40.4.0",
     "datacontract-cli>=0.12.4",
-    "delta-spark>=4.2.0",
+    "delta-spark>=4.4.1",
+    "pyspark[pipelines]>=4.2.0",
 ]
 
 test=[
