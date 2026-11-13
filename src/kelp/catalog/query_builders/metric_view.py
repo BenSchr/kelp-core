@@ -45,6 +45,36 @@ def _dict_entries(definition: dict[str, Any], key: str) -> list[dict[str, Any]]:
     return [entry for entry in entries if isinstance(entry, dict)]
 
 
+def _named_entry_tags(
+    definition: dict[str, Any], section: str, fqn: str, *, warn_unnamed: bool = False
+) -> dict[str, dict[str, str]]:
+    """Map each named entry of a definition section to its Kelp-managed tags.
+
+    Entries without a ``name`` are skipped: wildcard entries (e.g.
+    ``expr: source.* EXCEPT (col)``) bulk-import columns whose names
+    Databricks derives from the source, so there is no column name to
+    attach tags to. Tags placed on such an entry are ignored (with a warning
+    when *warn_unnamed* is set, i.e. for the local definition).
+
+    See: https://docs.databricks.com/aws/en/uc-semantics/metric-views/create#bulk-import-fields-and-measures-with-wildcards
+    """
+    tags_by_name: dict[str, dict[str, str]] = {}
+    for entry in _dict_entries(definition, section):
+        name = entry.get("name")
+        if not isinstance(name, str) or not name:
+            if warn_unnamed and entry.get("tags"):
+                logger.warning(
+                    "Ignoring tags on unnamed %s entry (expr: %s) in metric view '%s': "
+                    "wildcard entries have no column name to tag",
+                    section,
+                    entry.get("expr"),
+                    fqn,
+                )
+            continue
+        tags_by_name[name] = entry.get("tags") or {}
+    return tags_by_name
+
+
 def _strip_managed_tags(definition: dict[str, Any]) -> dict[str, Any]:
     """Return a copy of *definition* without Kelp-managed ``tags`` entries.
 
@@ -162,7 +192,8 @@ def generate_alter_metric_view_column_tags_ddl(
 ) -> list[str]:
     """Generate ALTER VIEW statements for metric view column tags.
 
-    Covers ``dimensions``/``fields``/``measures`` entries. Reuses
+    Covers named ``dimensions``/``fields``/``measures`` entries; unnamed
+    wildcard entries (``expr: source.*``) are skipped. Reuses
     ViewQueryBuilder logic for generating view column tag statements
     (metric views are UC views under the hood).
 
@@ -183,12 +214,8 @@ def generate_alter_metric_view_column_tags_ddl(
     builder = ViewQueryBuilder()
 
     for section in _COLUMN_SECTIONS:
-        local_tags = {
-            entry["name"]: entry.get("tags", {}) for entry in _dict_entries(local_def, section)
-        }
-        remote_tags = {
-            entry["name"]: entry.get("tags", {}) for entry in _dict_entries(remote_def, section)
-        }
+        local_tags = _named_entry_tags(local_def, section, fqn, warn_unnamed=True)
+        remote_tags = _named_entry_tags(remote_def, section, fqn)
 
         for name in set(local_tags) | set(remote_tags):
             tag_diff = _create_tag_diff(

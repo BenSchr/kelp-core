@@ -215,7 +215,7 @@ def table(
                 elif sdp_level == "drop":
                     expect_all_or_drop = {"dqx_error": "_errors IS NULL"}
 
-            validty_func = _apply_expectations(
+            validity_func = _apply_expectations(
                 _apply_dqx_checks,
                 expect_all,
                 expect_all_or_drop,
@@ -226,7 +226,7 @@ def table(
                 dp.table(
                     name=validation_model_name,
                     private=True,
-                )(validty_func)  # ty:ignore[no-matching-overload]
+                )(validity_func)  # ty:ignore[no-matching-overload]
 
                 @dp.table(**params)
                 def valid_table():
@@ -241,7 +241,7 @@ def table(
                     df = spark.readStream.table(validation_model_name)
                     return dq_engine.get_invalid(df)
             else:
-                dp.table(**params)(validty_func)
+                dp.table(**params)(validity_func)
 
         elif expect_all_or_quarantine:
             not_combined = _combine_rules(expect_all_or_quarantine, apply_not=True)
@@ -255,7 +255,7 @@ def table(
             expect_all.update(expect_all_or_quarantine)
             # expect_all.update({"quarantine_col": f"{quarantine_col} = false"})
 
-            validty_func = _apply_expectations(
+            validity_func = _apply_expectations(
                 validity_wrapper,
                 expect_all,
                 expect_all_or_drop,
@@ -266,7 +266,7 @@ def table(
                 name=validation_model_name,
                 private=True,
                 partition_cols=[quarantine_col],
-            )(validty_func)  # ty:ignore[no-matching-overload]
+            )(validity_func)  # ty:ignore[no-matching-overload]
 
             # Create two table one quarantined and one valid rows only.
             # Original table now only has valid rows.
