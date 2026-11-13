@@ -548,6 +548,78 @@ class TestAlterMetricViewColumnTagsDDL:
         assert not any("UNSET TAG" in s for s in statements)
 
 
+class TestWildcardEntries:
+    """Wildcard entries (``expr: source.*``) have no ``name`` and must be skipped."""
+
+    @pytest.fixture
+    def metric_view(self) -> MetricView:
+        """A minimal metric view used for column tag generation."""
+        return MetricView(
+            name="metrics",
+            catalog="cat",
+            schema_="sch",
+            definition={"source": "table"},
+        )
+
+    def test_unnamed_wildcard_entries_do_not_raise(self, metric_view: MetricView):
+        """Tags on named entries are still diffed alongside unnamed wildcard entries."""
+        local_def = {
+            "fields": [
+                {"expr": "source.* EXCEPT (o_comment)"},
+                {"name": "segment", "expr": "customer.c_mktsegment", "tags": {"pii": "false"}},
+            ],
+            "measures": [
+                {"expr": "source.*"},
+                {"name": "order_count", "expr": "COUNT(1)", "tags": {"kpi": "true"}},
+            ],
+        }
+        remote_def = {
+            "fields": [
+                {"expr": "source.* EXCEPT (o_comment)"},
+                {"name": "segment", "expr": "customer.c_mktsegment"},
+            ],
+            "measures": [
+                {"expr": "source.*"},
+                {"name": "order_count", "expr": "COUNT(1)"},
+            ],
+        }
+
+        statements = generate_alter_metric_view_column_tags_ddl(metric_view, local_def, remote_def)
+
+        assert len(statements) == 2
+        assert any("segment" in s and "pii" in s for s in statements)
+        assert any("order_count" in s and "kpi" in s for s in statements)
+
+    def test_tags_on_wildcard_entry_are_ignored_with_warning(
+        self, metric_view: MetricView, caplog: pytest.LogCaptureFixture
+    ):
+        """Tags on a wildcard entry cannot target a column, so they are skipped."""
+        local_def = {"fields": [{"expr": "source.*", "tags": {"pii": "true"}}]}
+
+        statements = generate_alter_metric_view_column_tags_ddl(metric_view, local_def, {})
+
+        assert statements == []
+        assert "Ignoring tags on unnamed fields entry" in caplog.text
+
+    def test_wildcard_tags_stripped_from_ddl(self):
+        """Wildcard entries pass through to DDL verbatim, without Kelp tags."""
+        metric_view = MetricView(
+            name="metrics",
+            catalog="cat",
+            schema_="sch",
+            definition={
+                "version": 1.1,
+                "source": "table",
+                "fields": [{"expr": "source.* EXCEPT (secret)", "tags": {"pii": "true"}}],
+            },
+        )
+
+        ddl = generate_create_metric_view_ddl(metric_view)
+
+        assert "expr: source.* EXCEPT (secret)" in ddl
+        assert "pii" not in ddl
+
+
 class TestComplexMetricViewScenarios:
     """Tests for complex metric view scenarios."""
 

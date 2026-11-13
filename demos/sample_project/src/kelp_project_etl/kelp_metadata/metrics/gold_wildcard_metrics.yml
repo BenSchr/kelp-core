@@ -1,0 +1,39 @@
+kelp_metric_views:
+  # Bulk-imports fields and measures with wildcards (requires Databricks Runtime
+  # 18.2+ and YAML spec 1.1). Wildcard entries have no `name` — Databricks
+  # derives the column names from the source — so Kelp skips them when syncing
+  # column tags.
+  #
+  # Semantic metadata isn't allowed on a wildcard: to add metadata to a specific
+  # column, exclude it from the wildcard with EXCEPT and define it explicitly.
+  #
+  # A `measures` wildcard only imports measures from a metric view source, so
+  # this view is composed on top of `revenue_metrics`.
+  # See: https://docs.databricks.com/aws/en/uc-semantics/metric-views/yaml-reference#bulk-import-fields-and-measures-with-wildcards
+  - name: order_wildcard_metrics
+    tags:
+      domain: sales
+    definition:
+      comment: Revenue metrics re-exposed via wildcards, with explicit metadata on selected columns
+      version: 1.1
+      source: ${ catalog }.kelp_gold.revenue_metrics
+      fields:
+        # Import all fields from the source metric view except `country`
+        - expr: source.* EXCEPT (country)
+        # Define `country` explicitly to add metadata (and a Kelp-managed tag)
+        - name: country
+          expr: source.country
+          comment: Customer's billing country
+          display_name: Country
+          tags:
+            data_classification: internal
+      measures:
+        # Import all measures from the source metric view except `total_revenue`
+        - expr: source.* EXCEPT (total_revenue)
+        # Define `total_revenue` explicitly to add metadata
+        - name: total_revenue
+          expr: MEASURE(total_revenue)
+          comment: Total revenue (sum of item prices) for the grouping
+          display_name: Total Revenue
+          tags:
+            data_classification: internal

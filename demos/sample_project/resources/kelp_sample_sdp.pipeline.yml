@@ -18,6 +18,9 @@ resources:
         kelp.project_file: ${var.kelp_project_file}
         kelp.target: ${bundle.target}
         pipelines.dropInactiveTables: "true"
+        # Disable retries: fail fast on the first error
+        pipelines.numUpdateRetryAttempts: "0"
+        pipelines.maxFlowRetryAttempts: "0"
 
       event_log:
         name: kelp_project_etl

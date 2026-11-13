@@ -37,8 +37,10 @@ from kelp.models.model import (
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 # Register kelp exporter/importer with datacontract factories
-exporter_factory.register_exporter("kelp", KelpExporter)  # ty: ignore[invalid-argument-type]
-importer_factory.register_importer("kelp", KelpImporter)  # ty: ignore[invalid-argument-type]
+# ty: ignore[invalid-argument-type]
+exporter_factory.register_exporter("kelp", KelpExporter)
+# ty: ignore[invalid-argument-type]
+importer_factory.register_importer("kelp", KelpImporter)
 
 
 @pytest.fixture
@@ -80,11 +82,16 @@ def sample_kelp_model() -> Model:
             ),
         ],
         columns=[
-            Column(name="customer_id", data_type="STRING", nullable=False, description="Unique ID"),
-            Column(name="email", data_type="STRING", nullable=False, description="Email address"),
-            Column(name="name", data_type="STRING", nullable=True, description="Full name"),
-            Column(name="country_code", data_type="STRING", nullable=False, description="Country"),
-            Column(name="created_at", data_type="TIMESTAMP", nullable=False, description="Created"),
+            Column(name="customer_id", data_type="STRING",
+                   nullable=False, description="Unique ID"),
+            Column(name="email", data_type="STRING",
+                   nullable=False, description="Email address"),
+            Column(name="name", data_type="STRING",
+                   nullable=True, description="Full name"),
+            Column(name="country_code", data_type="STRING",
+                   nullable=False, description="Country"),
+            Column(name="created_at", data_type="TIMESTAMP",
+                   nullable=False, description="Created"),
         ],
         partition_cols=["created_at"],
         tags={"finance": "core", "region": ""},
@@ -196,7 +203,8 @@ schema:
         model = models[0]
 
         assert len(model.constraints) == 3
-        constraint_types = [constraint.type for constraint in model.constraints]
+        constraint_types = [
+            constraint.type for constraint in model.constraints]
         assert "primary_key" in constraint_types
         assert constraint_types.count("foreign_key") == 2
 
@@ -209,7 +217,7 @@ class TestExportToContract:
         contract = export_to_contract(sample_kelp_model)
 
         assert contract.kind == "DataContract"
-        assert contract.apiVersion == "v3.1.0"
+        assert contract.apiVersion == "v3.2.0"
         assert contract.name == "customers"
         assert contract.domain == "crm"
         assert contract.status == "active"
@@ -273,11 +281,13 @@ class TestExportToContract:
         schema = contract.schema_[0]
         assert schema.properties is not None
 
-        customer_id = next(p for p in schema.properties if p.name == "customer_id")
+        customer_id = next(
+            p for p in schema.properties if p.name == "customer_id")
         assert customer_id.primaryKey is True
         assert customer_id.primaryKeyPosition == 1
 
-        country_code = next(p for p in schema.properties if p.name == "country_code")
+        country_code = next(
+            p for p in schema.properties if p.name == "country_code")
         assert country_code.relationships is not None
         assert country_code.relationships[0].type == "foreignKey"
         assert country_code.relationships[0].to == "countries.code"
@@ -295,7 +305,8 @@ class TestExportToContract:
             ],
             quality=SDPQuality(
                 engine="sdp",
-                expect_all_or_fail={"_rescued_data_is_null": "_rescued_data IS NULL"},
+                expect_all_or_fail={
+                    "_rescued_data_is_null": "_rescued_data IS NULL"},
             ),
         )
 
@@ -380,7 +391,8 @@ schema:
                 "quality": {
                     "engine": "dqx",
                     "checks": [
-                        {"name": "amount_positive", "check": {"function": "sql_expression"}},
+                        {"name": "amount_positive", "check": {
+                            "function": "sql_expression"}},
                     ],
                 },
             }
@@ -405,7 +417,8 @@ schema:
 
         result = _add_dqx_rules_to_models(models, new_rules)
         assert result[0]["quality"]["engine"] == "dqx"
-        assert [check["name"] for check in result[0]["quality"]["checks"]] == ["freshness"]
+        assert [check["name"]
+                for check in result[0]["quality"]["checks"]] == ["freshness"]
 
     def test_dqx_rules_skip_when_quality_engine_is_not_dqx(self) -> None:
         """DQX rules should be skipped only when a non-dqx engine is explicitly set."""
@@ -464,8 +477,10 @@ class TestKelpExporterClass:
 
     def test_export_via_datacontract(self) -> None:
         """Test that exporting via DataContract produces a kelp Model."""
-        dc = DataContract(data_contract_file=str(FIXTURES_DIR / "orders_contract.yml"))
-        result = dc.export(export_format="kelp")  # ty: ignore[invalid-argument-type]
+        dc = DataContract(data_contract_file=str(
+            FIXTURES_DIR / "orders_contract.yml"))
+        # ty: ignore[invalid-argument-type]
+        result = dc.export(export_format="kelp")
         model = result[0] if isinstance(result, list) else result
 
         assert isinstance(model, Model)
@@ -493,7 +508,8 @@ class TestKelpImporterClass:
         importer = KelpImporter(import_format="kelp")
 
         with pytest.raises(ValueError, match="only accepts a single Model"):
-            importer.import_source(source="not-a-model", import_args={})  # ty: ignore[invalid-argument-type]
+            # ty: ignore[invalid-argument-type]
+            importer.import_source(source="not-a-model", import_args={})
 
 
 class TestDQXRuleGeneration:
@@ -501,8 +517,10 @@ class TestDQXRuleGeneration:
 
     def test_generate_dqx_rules_via_exporter(self, spark) -> None:
         """Test DQX rule generation via KelpExporter with generate_dqx_rules=True."""
-        dc = DataContract(data_contract_file=str(FIXTURES_DIR / "orders_contract.yml"))
-        result = dc.export(export_format="kelp", generate_dqx_rules=True)  # ty: ignore[invalid-argument-type]
+        dc = DataContract(data_contract_file=str(
+            FIXTURES_DIR / "orders_contract.yml"))
+        # ty: ignore[invalid-argument-type]
+        result = dc.export(export_format="kelp", generate_dqx_rules=True)
         model = result[0] if isinstance(result, list) else result
 
         assert isinstance(model, Model)
@@ -551,7 +569,8 @@ class TestExportCli:
         monkeypatch.setattr("kelp.config.init", _fake_init)
 
         output_file = tmp_path / "contract_server.yml"
-        export_contract(model="customers", output=output_file, include_server=True)
+        export_contract(model="customers", output=output_file,
+                        include_server=True)
 
         output = output_file.read_text(encoding="utf-8")
         assert "servers:" in output
@@ -728,11 +747,14 @@ schema:
         schemas = patched.get("schema", [])
         assert len(schemas) == 2
 
-        customers = next(schema for schema in schemas if schema.get("name") == "customers")
-        orders = next(schema for schema in schemas if schema.get("name") == "orders")
+        customers = next(
+            schema for schema in schemas if schema.get("name") == "customers")
+        orders = next(
+            schema for schema in schemas if schema.get("name") == "orders")
 
         # Ensure target schema updated while preserving local-only fields
-        customer_props = {prop.get("name") for prop in customers.get("properties", [])}
+        customer_props = {prop.get("name")
+                          for prop in customers.get("properties", [])}
         assert "customer_id" in customer_props
         assert "legacy_only" in customer_props
         custom_props = {

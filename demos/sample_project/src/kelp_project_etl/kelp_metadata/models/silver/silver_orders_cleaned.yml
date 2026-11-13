@@ -23,10 +23,10 @@ kelp_models:
             arguments:
               column: order_state
               allowed:
-                - Pending
-                - Shipped
-                - Delivered
-                - Cancelled
+                - "'Pending'"
+                - "'Shipped'"
+                - "'Delivered'"
+                - "'Cancelled'"
               case_sensitive: false
     columns:
       - name: order_id

@@ -1,0 +1,7 @@
+[default]
+# Ignore hex-like identifiers (e.g. notebook cell ids "994fd8ba")
+extend-ignore-re = ['"id": "[0-9a-f]+"']
+
+[default.extend-words]
+# year-over-year
+yoy = "yoy"

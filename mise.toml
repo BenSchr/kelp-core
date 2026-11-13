@@ -1,0 +1,103 @@
+[settings]
+python.uv_venv_auto = "source"
+
+[env]
+HK_MISE = 1
+_.python.venv = { path = ".venv" }
+
+[tools]
+claude = "latest"
+databricks-cli = "latest"
+github-cli = "latest"
+"github:microsoft/waza" = "latest"
+java = "21"
+ruff = "latest"
+ty = "0.0.32"
+typos = "latest"
+uv = "latest"
+
+[tasks.sync]
+description = "Install/sync project dependencies with uv"
+run = "uv sync"
+
+[tasks.upload]
+description = "Build the wheel and upload it to the Databricks libs volume"
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+uv build
+version=$(uv version --short)
+databricks fs cp "dist/kelp_core-${version}-py3-none-any.whl" dbfs:/Volumes/workspace/default/libs/ --overwrite
+'''
+
+[tasks.update-manifest]
+description = "Regenerate the dev manifest for the sample project"
+dir = "{{config_root}}/demos/sample_project/src/kelp_project_with_manifest"
+run = "uv run kelp manifest --target dev -c kelp_project.yml -o kelp_manifest/kelp_manifest_dev.json"
+
+[tasks.lint]
+description = "Run ruff linting checks"
+run = "ruff check"
+
+[tasks.lint-fix]
+description = "Fix typos, fix linting issues with ruff, format, and check types with ty"
+run = [
+  "typos --write-changes src docs demos README.md CHANGELOG.md",
+  "ruff check --fix",
+  "ruff format",
+  "ty check",
+]
+
+[tasks.json-schema]
+description = "Generate JSON schema for Kelp configuration and save to .vscode/kelp_json_schema.json"
+run = "uv run kelp json-schema -o .vscode/kelp_json_schema.json"
+
+[tasks.sync-versions]
+description = "Sync kelp-core version from pyproject.toml to docs and source references"
+run = "uv run python scripts/sync_versions.py"
+
+[tasks.sync-readme-index]
+description = "Sync README.md and docs/index.md with identical content"
+run = "uv run python scripts/sync_readme_index.py"
+
+[tasks.check-todo]
+description = "Check for TODO/FIXME comments that should be resolved before merging to main"
+run = "ruff check src/kelp --select=FIX"
+
+[tasks.docs-serve]
+description = "Serve documentation locally using mkdocs"
+run = "uv run mkdocs serve"
+
+[tasks.docs-deploy]
+description = "Deploy documentation to GitHub Pages using mkdocs"
+run = "uv run mkdocs gh-deploy"
+
+[tasks.changelog]
+description = "Generate a changelog section for the given version (e.g. mise run changelog 0.0.X)"
+quiet = true
+usage = 'arg "<version>" help="Version to generate the changelog for, e.g. 0.0.X"'
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+v="${usage_version}"
+prev_tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
+echo "## [${v}] - $(date +%Y-%m-%d)"
+echo
+if [ -n "$prev_tag" ]; then
+  range="$prev_tag..HEAD"
+else
+  range="HEAD"
+fi
+git log "$range" --pretty=format:'%h%x09%s' | awk -F '\t' '
+{
+  hash = $1
+  subject = $2
+  if (match(subject, /\(#[0-9]+\)$/)) {
+    pr = substr(subject, RSTART + 1, RLENGTH - 2)
+    clean = substr(subject, 1, RSTART - 2)
+    printf "- %s (%s)\n", clean, pr
+  } else {
+    printf "- %s (commit %s)\n", subject, hash
+  }
+}'
+'''

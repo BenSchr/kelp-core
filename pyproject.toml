@@ -39,9 +39,6 @@ test=[
     "pytest>=8.3.0",
     "pytest-mock>=3.14.0",
     "pytest-cov>=7.0.0",
-    "ty==0.0.32",
-    "ruff>=0.15.12",
-    "codespell>=2.4.2",
 ]
 
 docs = [
@@ -125,5 +122,4 @@ log_cli_level = "INFO"
 
 
 [tool.ty.src]
-include = ["src", "tests", "scripts"]
-exclude = ["tests/fixtures"]
+include = ["src", "scripts"]
