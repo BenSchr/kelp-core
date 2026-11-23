@@ -1,3 +1,14 @@
+# 0.0.14 (2026-11-24)
+
+## ✨ Features
+
+- feat: unity-catalog-grants ([#45](https://github.com/BenSchr/kelp-core/pull/45)) - Manage direct Unity Catalog grants on models, metric views and functions through a `grants` field (`principal` + `privileges`). `+grants` in the project hierarchy extends down the tree and is merged by principal, and `privileges: []` marks a principal for revocation. `remote_catalog_config.grant_mode` selects `append` (default, keeps unconfigured grants) or `managed` (reconciles direct grants to the configuration). Current grants are read through the SDK permissions API or Spark `SHOW GRANTS`, ignoring grants inherited from catalogs and schemas. See the new [Unity Catalog Grants](docs/guides/grants.md) guide.
+
+## 🐛 Fixes
+
+- fix: metric view wildcard tag sync ([#39](https://github.com/BenSchr/kelp-core/pull/39)) - Column tag sync no longer fails with `KeyError: 'name'` on unnamed wildcard entries such as `expr: source.* EXCEPT (...)`. Tags placed on a wildcard entry are ignored with a warning.
+- fix: metric view semantic metadata ([#45](https://github.com/BenSchr/kelp-core/pull/45)) - Fetching a metric view from Unity Catalog now keeps each column's `display_name`, `format` and `synonyms`, which the generated SDK model previously dropped.
+
 # 0.0.13 (2026-07-26)
 
 ## ✨ Features
