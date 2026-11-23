@@ -17,7 +17,7 @@
       
       
       <link rel="icon" href="img/kelp_logo.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -937,6 +937,34 @@
     
   
     Metric Views
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="guides/grants.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unity Catalog Grants
   
 
     
@@ -1997,9 +2025,9 @@ Kelp is a powerful framework designed to simplify the management of data pipelin
 </ul>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <p>To install Kelp, you can use <code>uv</code>, <code>pip</code>, or the package manager of your choice. Below are the commands for both methods:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv add kelp-core==0.0.13
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv add kelp-core==0.0.14
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip install kelp-core==0.0.13
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip install kelp-core==0.0.14
 </span></code></pre></div>
 <h2 id="initialization">Initialization<a class="headerlink" href="#initialization" title="Permanent link">&para;</a></h2>
 <p>After installing <code>kelp</code>, initialize a new Kelp project in your desired directory by running the following command:</p>
@@ -2049,7 +2077,7 @@ Kelp is a powerful framework designed to simplify the management of data pipelin
 <p>Targets in Kelp represent different environments or configurations for your pipelines (e.g., development, staging, production). Define targets in your <code>kelp_project.yml</code> file under the <code>targets</code> section. Each target can have its own settings, such as catalog and schema variables, as well as other environment-specific configurations.</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">kelp_project</span><span class="p">:</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">models_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/models&quot;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">models_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/models"</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">models</span><span class="p">:</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="nt">+catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ catalog }</span><span class="w"> </span><span class="c1"># (1)!</span>
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="nt">bronze</span><span class="p">:</span>
@@ -2059,27 +2087,27 @@ Kelp is a powerful framework designed to simplify the management of data pipelin
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">    </span><span class="nt">gold</span><span class="p">:</span>
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">      </span><span class="nt">+schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kelp_gold</span>
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span><span class="nt">+tags</span><span class="p">:</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">      </span><span class="nt">kelp_managed</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="c1"># (2)!</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">      </span><span class="nt">kelp_managed</span><span class="p">:</span><span class="w"> </span><span class="s">""</span><span class="w"> </span><span class="c1"># (2)!</span>
 </span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
-</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">  </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/metrics&quot;</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">  </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/metrics"</span>
 </span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">  </span><span class="nt">metric_views</span><span class="p">:</span>
 </span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="w">    </span><span class="nt">+catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ catalog }</span>
 </span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">    </span><span class="nt">+schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kelp_gold</span>
 </span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">    </span><span class="nt">+tags</span><span class="p">:</span>
-</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">      </span><span class="nt">kelp_managed</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">      </span><span class="nt">kelp_managed</span><span class="p">:</span><span class="w"> </span><span class="s">""</span>
 </span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>
-</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="w">  </span><span class="nt">functions_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/functions&quot;</span>
+</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="w">  </span><span class="nt">functions_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/functions"</span>
 </span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="w">  </span><span class="nt">functions</span><span class="p">:</span>
 </span><span id="__span-6-24"><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="w">    </span><span class="nt">+catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ security_catalog }</span><span class="w"> </span><span class="c1"># (4)!</span>
 </span><span id="__span-6-25"><a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="w">    </span><span class="nt">+schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ security_schema }</span>
 </span><span id="__span-6-26"><a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>
-</span><span id="__span-6-27"><a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="w">  </span><span class="nt">abacs_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/abacs&quot;</span>
+</span><span id="__span-6-27"><a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="w">  </span><span class="nt">abacs_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/abacs"</span>
 </span><span id="__span-6-28"><a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a><span class="w">  </span><span class="nt">abacs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
 </span><span id="__span-6-29"><a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a>
-</span><span id="__span-6-30"><a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a><span class="w">  </span><span class="nt">sources_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/sources&quot;</span>
+</span><span id="__span-6-30"><a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a><span class="w">  </span><span class="nt">sources_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/sources"</span>
 </span><span id="__span-6-31"><a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a><span class="w">  </span><span class="nt">sources</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
 </span><span id="__span-6-32"><a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a>
-</span><span id="__span-6-33"><a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a><span class="w">  </span><span class="nt">policies_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/policies&quot;</span>
+</span><span id="__span-6-33"><a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a><span class="w">  </span><span class="nt">policies_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/policies"</span>
 </span><span id="__span-6-34"><a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a>
 </span><span id="__span-6-35"><a id="__codelineno-6-35" name="__codelineno-6-35" href="#__codelineno-6-35"></a><span class="nt">vars</span><span class="p">:</span>
 </span><span id="__span-6-36"><a id="__codelineno-6-36" name="__codelineno-6-36" href="#__codelineno-6-36"></a><span class="w">  </span><span class="nt">default_catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_catalog</span>
@@ -2109,7 +2137,7 @@ Kelp is a powerful framework designed to simplify the management of data pipelin
 </ol>
 <h2 id="sync-your-existing-catalog-metadata-to-kelp">Sync your existing catalog metadata to Kelp<a class="headerlink" href="#sync-your-existing-catalog-metadata-to-kelp" title="Permanent link">&para;</a></h2>
 <p>If you have existing tables in Unity Catalog, you can sync their metadata (descriptions, tags, constraints) to your local YAML files to start managing them with Kelp. Use the following CLI command:</p>
-<p><div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uv run kelp sync-from-catalog &quot;catalog.schema.table&quot; --output models/table.yml
+<p><div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uv run kelp sync-from-catalog "catalog.schema.table" --output models/table.yml
 </span></code></pre></div>
 This command will pull the metadata for the specified table and save it to a YAML file in your project. You can then customize this YAML file with additional metadata or use it as a template for new tables.</p>
 <p>To sync metadata from all tables in Declarative Pipelines at once, use the sync-from-pipeline command:</p>
@@ -2198,15 +2226,15 @@ This command will create a <code>kelp_json_schema.json</code> file in your proje
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">table</span><span class="p">()</span>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">silver_customers</span><span class="p">():</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">readStream</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">kp</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="s2">&quot;bronze_customers&quot;</span><span class="p">))</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">readStream</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">kp</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="s2">"bronze_customers"</span><span class="p">))</span>
 </span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>
 </span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>    <span class="k">return</span> <span class="p">(</span>
 </span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>        <span class="n">df</span>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>        <span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">apply_schema</span><span class="p">(</span><span class="s2">&quot;silver_customers&quot;</span><span class="p">))</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>        <span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">apply_schema</span><span class="p">(</span><span class="s2">"silver_customers"</span><span class="p">))</span>
 </span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>        <span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">apply_func</span><span class="p">(</span>
-</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>            <span class="n">func_name</span><span class="o">=</span><span class="s2">&quot;normalize_email&quot;</span><span class="p">,</span>
-</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>            <span class="n">new_column</span><span class="o">=</span><span class="s2">&quot;email_clean&quot;</span><span class="p">,</span>
-</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>            <span class="n">parameters</span><span class="o">=</span><span class="s2">&quot;email&quot;</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>            <span class="n">func_name</span><span class="o">=</span><span class="s2">"normalize_email"</span><span class="p">,</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>            <span class="n">new_column</span><span class="o">=</span><span class="s2">"email_clean"</span><span class="p">,</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>            <span class="n">parameters</span><span class="o">=</span><span class="s2">"email"</span>
 </span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>        <span class="p">))</span>
 </span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>    <span class="p">)</span>
 </span></code></pre></div>
@@ -2242,7 +2270,7 @@ This command will create a <code>kelp_json_schema.json</code> file in your proje
 </span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">          </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">COUNT(*)</span>
 </span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">      </span><span class="nt">fields</span><span class="p">:</span>
 </span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">order_month</span>
-</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">          </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DATE_TRUNC(&#39;MONTH&#39;, order_date)</span>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">          </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DATE_TRUNC('MONTH', order_date)</span>
 </span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="w">      </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ catalog }.gold.orders</span>
 </span></code></pre></div>
 <p>Learn more in the <a href="guides/functions.html">Functions</a>, <a href="guides/metric_views.html">Metric Views</a>, <a href="guides/abacs.html">ABAC Policies</a>, and <a href="guides/policies.html">Governance Policies</a> guides.</p>
@@ -2255,7 +2283,7 @@ This command will create a <code>kelp_json_schema.json</code> file in your proje
 </span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
 </span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="nt">kelp_policies</span><span class="p">:</span>
 </span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">required_metadata</span>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">    </span><span class="nt">applies_to</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;models/**&quot;</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">    </span><span class="nt">applies_to</span><span class="p">:</span><span class="w"> </span><span class="s">"models/**"</span>
 </span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">    </span><span class="nt">model</span><span class="p">:</span>
 </span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="w">      </span><span class="nt">require_description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="w">      </span><span class="nt">require_tags</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">owner</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">domain</span><span class="p p-Indicator">]</span>
@@ -2278,7 +2306,7 @@ This command will create a <code>kelp_json_schema.json</code> file in your proje
 </span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>uv<span class="w"> </span>run<span class="w"> </span>kelp<span class="w"> </span>json-schema<span class="w"> </span>--output<span class="w"> </span>kelp_json_schema.json
 </span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
 </span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="c1"># Sync metadata from Unity Catalog tables to YAML</span>
-</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>uv<span class="w"> </span>run<span class="w"> </span>kelp<span class="w"> </span>sync-from-catalog<span class="w"> </span><span class="s2">&quot;catalog.schema.table&quot;</span><span class="w"> </span>--output<span class="w"> </span>models/table.yml
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>uv<span class="w"> </span>run<span class="w"> </span>kelp<span class="w"> </span>sync-from-catalog<span class="w"> </span><span class="s2">"catalog.schema.table"</span><span class="w"> </span>--output<span class="w"> </span>models/table.yml
 </span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>
 </span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="c1"># Validate project configuration</span>
 </span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>uv<span class="w"> </span>run<span class="w"> </span>kelp<span class="w"> </span>validate<span class="w"> </span>--target<span class="w"> </span>prod
@@ -2288,7 +2316,7 @@ This command will create a <code>kelp_json_schema.json</code> file in your proje
 <p>After your pipeline creates tables, sync metadata (descriptions, tags, constraints) to the catalog:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">kelp.catalog</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kc</span>
 </span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">kc</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="s2">&quot;kelp_project.yml&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;prod&quot;</span><span class="p">)</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">kc</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="s2">"kelp_project.yml"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"prod"</span><span class="p">)</span>
 </span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
 </span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="c1"># Sync functions first (before pipeline runs)</span>
 </span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="k">for</span> <span class="n">query</span> <span class="ow">in</span> <span class="n">kc</span><span class="o">.</span><span class="n">sync_functions</span><span class="p">():</span>
@@ -2306,7 +2334,7 @@ This command will create a <code>kelp_json_schema.json</code> file in your proje
 </span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
 </span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1"># Now commands use these defaults</span>
 </span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>uv<span class="w"> </span>run<span class="w"> </span>kelp<span class="w"> </span>validate
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>uv<span class="w"> </span>run<span class="w"> </span>kelp<span class="w"> </span>catalog<span class="w"> </span>sync-from-catalog<span class="w"> </span><span class="s2">&quot;catalog.schema.table&quot;</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>uv<span class="w"> </span>run<span class="w"> </span>kelp<span class="w"> </span>catalog<span class="w"> </span>sync-from-catalog<span class="w"> </span><span class="s2">"catalog.schema.table"</span>
 </span></code></pre></div>
 <h2 id="llm-integration">LLM Integration<a class="headerlink" href="#llm-integration" title="Permanent link">&para;</a></h2>
 <p>Kelp provides following skills</p>
@@ -2391,10 +2419,10 @@ Visit <a href="https://github.com/tiangolo/library-skills">https://github.com/ti
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["content.code.annotate", "content.code.copy", "content.footnote.tooltips", "content.tabs.link", "navigation.tabs", "navigation.sections", "navigation.tabs.sticky"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["content.code.annotate", "content.code.copy", "content.footnote.tooltips", "content.tabs.link", "navigation.tabs", "navigation.sections", "navigation.tabs.sticky"], "search": "assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

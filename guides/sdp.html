@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../img/kelp_logo.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -27,10 +27,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -875,6 +875,34 @@
     
   
     Metric Views
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="grants.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unity Catalog Grants
   
 
     
@@ -1835,7 +1863,7 @@
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">        </span><span class="nt">kelp.target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${bundle.target}</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">      </span><span class="nt">environment</span><span class="p">:</span>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">        </span><span class="nt">dependencies</span><span class="p">:</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kelp-core==0.0.13</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kelp-core==0.0.14</span>
 </span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">databricks-labs-dqx</span>
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">      </span><span class="c1"># ...</span>
 </span></code></pre></div>
@@ -1844,7 +1872,7 @@
 <p>Note that you must call <code>init</code> in each file to guarantee that Kelp is properly initialized in all situations (e.g., when partially running a pipeline).</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">kelp.pipelines</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kp</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">kp</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="s2">&quot;&lt;path to kelp_project.yml&gt;&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;&lt;target&gt;&quot;</span><span class="p">)</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">kp</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="s2">"&lt;path to kelp_project.yml&gt;"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"&lt;target&gt;"</span><span class="p">)</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">table</span>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">my_table</span><span class="p">():</span>
@@ -1863,11 +1891,11 @@
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">my_table</span><span class="p">():</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="c1"># ...</span>
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;my_table&quot;</span><span class="p">)</span> <span class="c1"># (2)!</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"my_table"</span><span class="p">)</span> <span class="c1"># (2)!</span>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">different_name</span><span class="p">():</span>
 </span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="c1"># ...</span>
 </span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">materialized_view</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;my_mv&quot;</span><span class="p">)</span> <span class="c1"># (3)!</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">materialized_view</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"my_mv"</span><span class="p">)</span> <span class="c1"># (3)!</span>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="k">def</span><span class="w"> </span><span class="nf">my_mv</span><span class="p">():</span>
 </span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>  <span class="c1"># ...</span>
 </span></code></pre></div>
@@ -1885,7 +1913,7 @@
 <p>You can exclude parameters from being auto-injected by using <code>exclude_params</code>. This gives you more control over the parameters passed to your pipeline components. For example, you can exclude the <code>schema</code> parameter to prevent SDP from setting the Spark Schema.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">kelp.pipelines</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kp</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">])</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">exclude_params</span><span class="o">=</span><span class="p">[</span><span class="s2">"schema"</span><span class="p">])</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">my_table</span><span class="p">():</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="c1"># ...</span>
 </span></code></pre></div>
@@ -1894,11 +1922,11 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark</span><span class="w"> </span><span class="kn">import</span> <span class="n">pipelines</span> <span class="k">as</span> <span class="n">dp</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">kelp.pipelines</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kp</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nd">@dp</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="o">**</span><span class="n">kp</span><span class="o">.</span><span class="n">params</span><span class="p">(</span><span class="s2">&quot;my_table&quot;</span><span class="p">))</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nd">@dp</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="o">**</span><span class="n">kp</span><span class="o">.</span><span class="n">params</span><span class="p">(</span><span class="s2">"my_table"</span><span class="p">))</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">my_table</span><span class="p">():</span>
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="c1"># ...</span>
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="nd">@dp</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="o">**</span><span class="n">kp</span><span class="o">.</span><span class="n">params</span><span class="p">(</span><span class="s2">&quot;my_table&quot;</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">]))</span> <span class="c1"># (1)!</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="nd">@dp</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="o">**</span><span class="n">kp</span><span class="o">.</span><span class="n">params</span><span class="p">(</span><span class="s2">"my_table"</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">"schema"</span><span class="p">]))</span> <span class="c1"># (1)!</span>
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">my_table_no_schema</span><span class="p">():</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="c1"># ...</span>
 </span></code></pre></div>
@@ -1915,7 +1943,7 @@ The quarantine implementation is based on the Databricks documentation: <a href=
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="nt">quality</span><span class="p">:</span>
 </span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">      </span><span class="nt">engine</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sdp</span>
 </span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">      </span><span class="nt">expect_all</span><span class="p">:</span><span class="w"> </span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">       </span><span class="s">&quot;key&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="s">&quot;expectation&quot;</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">       </span><span class="s">"key"</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="s">"expectation"</span>
 </span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">      </span><span class="nt">expect_all_or_fail</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">      </span><span class="nt">expect_all_or_drop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">      </span><span class="nt">expect_all_or_quarantine</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span>
@@ -1969,15 +1997,15 @@ If you use a quarantine pattern, <code>target</code> will auto-resolve to the va
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark</span><span class="w"> </span><span class="kn">import</span> <span class="n">pipelines</span> <span class="k">as</span> <span class="n">dp</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">create_streaming_table</span><span class="p">(</span><span class="s2">&quot;my_table&quot;</span><span class="p">)</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">create_streaming_table</span><span class="p">(</span><span class="s2">"my_table"</span><span class="p">)</span>
 </span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="nd">@dp</span><span class="o">.</span><span class="n">append_flow</span><span class="p">(</span><span class="n">target</span> <span class="o">=</span> <span class="n">kp</span><span class="o">.</span><span class="n">target</span><span class="p">(</span><span class="s2">&quot;my_table&quot;</span><span class="p">),)</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="nd">@dp</span><span class="o">.</span><span class="n">append_flow</span><span class="p">(</span><span class="n">target</span> <span class="o">=</span> <span class="n">kp</span><span class="o">.</span><span class="n">target</span><span class="p">(</span><span class="s2">"my_table"</span><span class="p">),)</span>
 </span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">upstream_flow</span><span class="p">():</span>
 </span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>  <span class="c1">#...</span>
 </span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
 </span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="nd">@kp</span><span class="o">.</span><span class="n">table</span>
 </span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="k">def</span><span class="w"> </span><span class="nf">downstream_table</span><span class="p">():</span>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>    <span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">readStream</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">kp</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="s2">&quot;my_table&quot;</span><span class="p">))</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>    <span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">readStream</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">kp</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="s2">"my_table"</span><span class="p">))</span>
 </span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>    <span class="c1"># ...</span>
 </span></code></pre></div>
 <h2 id="create-streaming-table-function">Create Streaming Table Function<a class="headerlink" href="#create-streaming-table-function" title="Permanent link">&para;</a></h2>
@@ -1985,12 +2013,12 @@ If you use a quarantine pattern, <code>target</code> will auto-resolve to the va
 <p>Both options also inject the SDP expectation quality checks if they are defined in the model metadata.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">kelp.pipelines</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">kp</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">kp</span><span class="o">.</span><span class="n">create_streaming_table</span><span class="p">(</span><span class="s2">&quot;my_streaming_table&quot;</span><span class="p">)</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">kp</span><span class="o">.</span><span class="n">create_streaming_table</span><span class="p">(</span><span class="s2">"my_streaming_table"</span><span class="p">)</span>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># or using low-level API</span>
 </span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark</span><span class="w"> </span><span class="kn">import</span> <span class="n">pipelines</span> <span class="k">as</span> <span class="n">dp</span>
 </span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="n">dp</span><span class="o">.</span><span class="n">create_streaming_table</span><span class="p">(</span><span class="o">**</span><span class="n">kp</span><span class="o">.</span><span class="n">params_cst</span><span class="p">(</span><span class="s2">&quot;my_streaming_table&quot;</span><span class="p">))</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="n">dp</span><span class="o">.</span><span class="n">create_streaming_table</span><span class="p">(</span><span class="o">**</span><span class="n">kp</span><span class="o">.</span><span class="n">params_cst</span><span class="p">(</span><span class="s2">"my_streaming_table"</span><span class="p">))</span>
 </span></code></pre></div>
 <h2 id="applying-catalog-metadata-to-sdp-tables">Applying Catalog Metadata to SDP Tables<a class="headerlink" href="#applying-catalog-metadata-to-sdp-tables" title="Permanent link">&para;</a></h2>
 <p>Currently, SDP does not have full built-in support for catalog metadata like tags. If you wish to omit the Spark schema, you also cannot apply descriptions to your columns. Kelp provides a workaround for this by applying the catalog metadata in a separate step in your Lakeflow Job.</p>
@@ -2001,8 +2029,8 @@ If you use a quarantine pattern, <code>target</code> will auto-resolve to the va
 </span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">column1</span>
 </span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">        </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">This is column 1</span>
 </span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">        </span><span class="nt">tags</span><span class="p">:</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">          </span><span class="nt">tag1 </span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="c1"># (1)!</span>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">          </span><span class="nt">tag2 </span><span class="p">:</span><span class="w"> </span><span class="s">&quot;value&quot;</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">          </span><span class="nt">tag1 </span><span class="p">:</span><span class="w"> </span><span class="s">""</span><span class="w"> </span><span class="c1"># (1)!</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">          </span><span class="nt">tag2 </span><span class="p">:</span><span class="w"> </span><span class="s">"value"</span>
 </span></code></pre></div>
 <ol>
 <li>This will apply the tag <code>tag1</code> as key-only tag to <code>column1</code> in the catalog.</li>
@@ -2059,10 +2087,10 @@ If you use a quarantine pattern, <code>target</code> will auto-resolve to the va
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate", "content.code.copy", "content.footnote.tooltips", "content.tabs.link", "navigation.tabs", "navigation.sections", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate", "content.code.copy", "content.footnote.tooltips", "content.tabs.link", "navigation.tabs", "navigation.sections", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

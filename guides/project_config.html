@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../img/kelp_logo.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -27,10 +27,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1158,6 +1158,34 @@
     
   
     Metric Views
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="grants.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unity Catalog Grants
   
 
     
@@ -2394,15 +2422,15 @@
 <p>Kelp auto-discovers <code>kelp_project.yml</code> by searching up to 3 levels in your directory hierarchy. You can also specify the path explicitly:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">kelp.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">init</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="s2">&quot;./custom/path/kelp_project.yml&quot;</span><span class="p">)</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="s2">"./custom/path/kelp_project.yml"</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="basic-structure">Basic Structure<a class="headerlink" href="#basic-structure" title="Permanent link">&para;</a></h2>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">kelp_project</span><span class="p">:</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="c1"># Metadata paths</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">models_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/models&quot;</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/metrics&quot;</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">functions_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/functions&quot;</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">abacs_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/abacs&quot;</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">models_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/models"</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/metrics"</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">functions_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/functions"</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">abacs_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/abacs"</span>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="c1"># Configuration hierarchies with + inheritance</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">models</span><span class="p">:</span>
@@ -2442,10 +2470,10 @@
 <h2 id="project-paths">Project Paths<a class="headerlink" href="#project-paths" title="Permanent link">&para;</a></h2>
 <p>Define where Kelp looks for metadata files:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">kelp_project</span><span class="p">:</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">models_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/models&quot;</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/metrics&quot;</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">functions_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/functions&quot;</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">abacs_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/abacs&quot;</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">models_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/models"</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/metrics"</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">functions_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/functions"</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">abacs_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/abacs"</span>
 </span></code></pre></div>
 <p><strong>Path Resolution:</strong></p>
 <ul>
@@ -2458,7 +2486,7 @@
 <h3 id="basic-hierarchy">Basic Hierarchy<a class="headerlink" href="#basic-hierarchy" title="Permanent link">&para;</a></h3>
 <p>Apply catalog to all models:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">kelp_project</span><span class="p">:</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">models_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/models&quot;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">models_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/models"</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">models</span><span class="p">:</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">+catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">analytics_catalog</span>
 </span></code></pre></div>
@@ -2466,7 +2494,7 @@
 <h3 id="nested-hierarchies">Nested Hierarchies<a class="headerlink" href="#nested-hierarchies" title="Permanent link">&para;</a></h3>
 <p>Create sub-hierarchies for different domains:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">kelp_project</span><span class="p">:</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">functions_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/functions&quot;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">functions_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/functions"</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">functions</span><span class="p">:</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">+catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ function_catalog }</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">+schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ default_schema }</span>
@@ -2487,21 +2515,25 @@
 <h3 id="multi-layer-defaults">Multi-Layer Defaults<a class="headerlink" href="#multi-layer-defaults" title="Permanent link">&para;</a></h3>
 <p>Combine hierarchical levels for flexible configuration:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">kelp_project</span><span class="p">:</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">models_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/models&quot;</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">models_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/models"</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">models</span><span class="p">:</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nt">+catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ data_catalog }</span><span class="w">           </span><span class="c1"># All models</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="nt">+tags</span><span class="p">:</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">      </span><span class="nt">kelp_managed</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w">                    </span><span class="c1"># All models</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">      </span><span class="nt">kelp_managed</span><span class="p">:</span><span class="w"> </span><span class="s">""</span><span class="w">                    </span><span class="c1"># All models</span>
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="nt">bronze</span><span class="p">:</span>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">      </span><span class="nt">+schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kelp_bronze</span><span class="w">                </span><span class="c1"># bronze/* models</span>
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="nt">silver</span><span class="p">:</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">      </span><span class="nt">+schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kelp_silver</span><span class="w">                </span><span class="c1"># silver/* models</span>
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">      </span><span class="nt">+tags</span><span class="p">:</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">        </span><span class="nt">quality_checked</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w">               </span><span class="c1"># silver/* models</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">        </span><span class="nt">quality_checked</span><span class="p">:</span><span class="w"> </span><span class="s">""</span><span class="w">               </span><span class="c1"># silver/* models</span>
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span><span class="nt">gold</span><span class="p">:</span>
 </span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">      </span><span class="nt">+schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kelp_gold</span><span class="w">                  </span><span class="c1"># gold/* models</span>
 </span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">      </span><span class="nt">+column_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">replace</span><span class="w">           </span><span class="c1"># gold/* models</span>
 </span></code></pre></div>
+<p>For project- and folder-level Unity Catalog grants, see the
+<a href="grants.html">grants guide</a>. Grant lists are extended across hierarchy levels,
+unlike other list-valued defaults, which follow the general hierarchy merge
+behavior.</p>
 <h2 id="variables-and-interpolation">Variables and Interpolation<a class="headerlink" href="#variables-and-interpolation" title="Permanent link">&para;</a></h2>
 <p>Variables enable environment-specific configuration without changing YAML files.</p>
 <h3 id="define-variables">Define Variables<a class="headerlink" href="#define-variables" title="Permanent link">&para;</a></h3>
@@ -2572,13 +2604,13 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">kelp.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">init</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="c1"># Use dev environment</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">&quot;dev&quot;</span><span class="p">)</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">"dev"</span><span class="p">)</span>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
 </span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="c1"># Use prod environment</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">&quot;prod&quot;</span><span class="p">)</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">"prod"</span><span class="p">)</span>
 </span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
 </span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="c1"># Override variables for specific target</span>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">&quot;staging&quot;</span><span class="p">,</span> <span class="n">overwrite_vars</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data_catalog&quot;</span><span class="p">:</span> <span class="s2">&quot;custom_catalog&quot;</span><span class="p">})</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">"staging"</span><span class="p">,</span> <span class="n">overwrite_vars</span><span class="o">=</span><span class="p">{</span><span class="s2">"data_catalog"</span><span class="p">:</span> <span class="s2">"custom_catalog"</span><span class="p">})</span>
 </span></code></pre></div>
 <h3 id="cli-target-usage">CLI Target Usage<a class="headerlink" href="#cli-target-usage" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Validate dev configuration</span>
@@ -2594,9 +2626,9 @@
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">quality_config</span><span class="p">:</span>
 </span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="nt">quarantine_catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">              </span><span class="c1"># Use default catalog</span>
 </span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="nt">quarantine_schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">quarantine</span><span class="w">         </span><span class="c1"># Store quarantine tables here</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="nt">quarantine_prefix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="nt">quarantine_prefix</span><span class="p">:</span><span class="w"> </span><span class="s">""</span>
 </span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">    </span><span class="nt">quarantine_suffix</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">_quarantine</span><span class="w">        </span><span class="c1"># Suffix for quarantine tables</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="nt">validation_prefix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="nt">validation_prefix</span><span class="p">:</span><span class="w"> </span><span class="s">""</span>
 </span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="nt">validation_suffix</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">_validation</span><span class="w">        </span><span class="c1"># Suffix for validation tables</span>
 </span></code></pre></div>
 <h3 id="custom-naming">Custom Naming<a class="headerlink" href="#custom-naming" title="Permanent link">&para;</a></h3>
@@ -2606,9 +2638,9 @@
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="nt">quarantine_catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">quality_checks_catalog</span>
 </span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">    </span><span class="nt">quarantine_schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">failed_records</span>
 </span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">    </span><span class="nt">quarantine_prefix</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qtn_</span><span class="w">                </span><span class="c1"># Prefix for quarantine tables</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">    </span><span class="nt">quarantine_suffix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">    </span><span class="nt">quarantine_suffix</span><span class="p">:</span><span class="w"> </span><span class="s">""</span>
 </span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">    </span><span class="nt">validation_prefix</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">val_</span><span class="w">                </span><span class="c1"># Prefix for validation tables</span>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">    </span><span class="nt">validation_suffix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">    </span><span class="nt">validation_suffix</span><span class="p">:</span><span class="w"> </span><span class="s">""</span>
 </span></code></pre></div>
 <p>With this configuration, <code>expect_all_or_quarantine</code> on table <code>customers</code> creates:</p>
 <ul>
@@ -2623,7 +2655,7 @@
 </span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">      </span><span class="nt">engine</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sdp</span>
 </span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">      </span><span class="nt">expect_all_or_quarantine</span><span class="p">:</span>
 </span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">        </span><span class="nt">valid_amount</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">amount &gt; 0</span>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="w">        </span><span class="nt">valid_status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">status IN (&#39;pending&#39;, &#39;completed&#39;)</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="w">        </span><span class="nt">valid_status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">status IN ('pending', 'completed')</span>
 </span></code></pre></div>
 <p>Kelp creates this flow:</p>
 <pre class="mermaid"><code>flowchart LR
@@ -2643,9 +2675,9 @@
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nt">kelp_project</span><span class="p">:</span>
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="nt">remote_catalog_config</span><span class="p">:</span>
 </span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span><span class="c1"># Tag synchronization modes</span>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="nt">table_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;replace&quot;</span><span class="w">             </span><span class="c1"># append, replace, or managed</span>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="nt">column_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;replace&quot;</span>
-</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">    </span><span class="nt">table_property_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;append&quot;</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="nt">table_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"replace"</span><span class="w">             </span><span class="c1"># append, replace, or managed</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="nt">column_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"replace"</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">    </span><span class="nt">table_property_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"append"</span>
 </span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>
 </span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">    </span><span class="c1"># Managed keys - only these are synced in managed mode</span>
 </span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">    </span><span class="nt">managed_table_tags</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
@@ -2654,24 +2686,24 @@
 </span></code></pre></div>
 <h3 id="append-mode">Append Mode<a class="headerlink" href="#append-mode" title="Permanent link">&para;</a></h3>
 <p>Adds or updates tags/properties but never removes existing ones:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nt">table_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;append&quot;</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nt">table_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"append"</span>
 </span></code></pre></div>
 <p><strong>Effect:</strong> If tag exists locally, update it. If tag exists remotely but not locally, leave it alone.</p>
 <p><strong>Use case:</strong> When other systems also manage tags (e.g., governance tools).</p>
 <h3 id="replace-mode">Replace Mode<a class="headerlink" href="#replace-mode" title="Permanent link">&para;</a></h3>
 <p>Replaces all tags with those defined locally:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nt">table_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;replace&quot;</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="nt">column_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;replace&quot;</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nt">table_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"replace"</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="nt">column_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"replace"</span>
 </span></code></pre></div>
 <p><strong>Effect:</strong> Remote tags become exactly what's defined locally. Removes remote tags not in local config.</p>
 <p><strong>Use case:</strong> When Kelp is the source of truth for tags.</p>
 <h3 id="managed-mode">Managed Mode<a class="headerlink" href="#managed-mode" title="Permanent link">&para;</a></h3>
 <p>Manage only specific keys:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nt">table_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;managed&quot;</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nt">table_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"managed"</span>
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="nt">managed_table_tags</span><span class="p">:</span>
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;kelp_managed&quot;</span>
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;quality_level&quot;</span>
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;pii_classification&quot;</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"kelp_managed"</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"quality_level"</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"pii_classification"</span>
 </span></code></pre></div>
 <p><strong>Effect:</strong> Only manage listed tag keys. Leave all other tags untouched.</p>
 <p><strong>Use case:</strong> Teams sharing tag management (Kelp manages certain tags, other systems manage others).</p>
@@ -2679,17 +2711,17 @@
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nt">kelp_project</span><span class="p">:</span>
 </span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span><span class="nt">remote_catalog_config</span><span class="p">:</span>
 </span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">    </span><span class="c1"># Tags: Kelp is source of truth</span>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">    </span><span class="nt">table_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;replace&quot;</span>
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">    </span><span class="nt">column_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;replace&quot;</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">    </span><span class="nt">table_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"replace"</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">    </span><span class="nt">column_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"replace"</span>
 </span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>
 </span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="w">    </span><span class="c1"># Properties: Append only (other systems may set properties)</span>
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="w">    </span><span class="nt">table_property_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;append&quot;</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="w">    </span><span class="nt">table_property_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"append"</span>
 </span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="w">    </span><span class="nt">managed_table_properties</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 </span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>
 </span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="w">    </span><span class="c1"># Exclude certain properties from syncing</span>
 </span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="w">    </span><span class="nt">managed_table_properties</span><span class="p">:</span>
-</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;kelp_owner&quot;</span>
-</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;kelp_domain&quot;</span>
+</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"kelp_owner"</span>
+</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"kelp_domain"</span>
 </span></code></pre></div>
 <h2 id="metadata-governance-policies">Metadata Governance Policies<a class="headerlink" href="#metadata-governance-policies" title="Permanent link">&para;</a></h2>
 <p>Kelp can enforce governance standards on your local YAML metadata via a separate policy system. When enabled, policies are evaluated on every <code>kelp init()</code> call and on demand via <code>kelp check-policies</code>.</p>
@@ -2699,7 +2731,7 @@
 <h3 id="enabling-policies">Enabling Policies<a class="headerlink" href="#enabling-policies" title="Permanent link">&para;</a></h3>
 <p>Set <code>policies_path</code> to point at your policy YAML files, then flip the master switch:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nt">kelp_project</span><span class="p">:</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="nt">policies_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/policies&quot;</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="nt">policies_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/policies"</span>
 </span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span><span class="nt">policy_config</span><span class="p">:</span>
 </span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </span></code></pre></div>
@@ -2709,7 +2741,7 @@
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># kelp_metadata/policies/data_standards.yml</span>
 </span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="nt">kelp_policies</span><span class="p">:</span>
 </span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bronze_standards</span>
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">    </span><span class="nt">applies_to</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;bronze/*&quot;</span><span class="w">          </span><span class="c1"># Matches models in the bronze/ subdirectory</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">    </span><span class="nt">applies_to</span><span class="p">:</span><span class="w"> </span><span class="s">"bronze/*"</span><span class="w">          </span><span class="c1"># Matches models in the bronze/ subdirectory</span>
 </span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="w">    </span><span class="nt">model</span><span class="p">:</span>
 </span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="w">      </span><span class="nt">require_description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="w">      </span><span class="nt">require_tags</span><span class="p">:</span>
@@ -2720,7 +2752,7 @@
 </span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="w">      </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">error</span>
 </span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a>
 </span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">global_fallback</span>
-</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a><span class="w">    </span><span class="nt">applies_to</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;*&quot;</span><span class="w">                 </span><span class="c1"># Catch-all for any other models</span>
+</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a><span class="w">    </span><span class="nt">applies_to</span><span class="p">:</span><span class="w"> </span><span class="s">"*"</span><span class="w">                 </span><span class="c1"># Catch-all for any other models</span>
 </span><span id="__span-22-16"><a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a><span class="w">    </span><span class="nt">model</span><span class="p">:</span>
 </span><span id="__span-22-17"><a id="__codelineno-22-17" name="__codelineno-22-17" href="#__codelineno-22-17"></a><span class="w">      </span><span class="nt">require_description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </span><span id="__span-22-18"><a id="__codelineno-22-18" name="__codelineno-22-18" href="#__codelineno-22-18"></a><span class="w">      </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warn</span>
@@ -2732,16 +2764,16 @@
 </span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>
 </span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="nt">kelp_project</span><span class="p">:</span>
 </span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">  </span><span class="c1"># Metadata paths</span>
-</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="w">  </span><span class="nt">models_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/models&quot;</span>
-</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="w">  </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/metrics&quot;</span>
-</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="w">  </span><span class="nt">functions_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/functions&quot;</span>
-</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="w">  </span><span class="nt">abacs_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/abacs&quot;</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="w">  </span><span class="nt">models_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/models"</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="w">  </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/metrics"</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="w">  </span><span class="nt">functions_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/functions"</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="w">  </span><span class="nt">abacs_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/abacs"</span>
 </span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>
 </span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a><span class="w">  </span><span class="c1"># Models configuration with hierarchies</span>
 </span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a><span class="w">  </span><span class="nt">models</span><span class="p">:</span>
 </span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a><span class="w">    </span><span class="nt">+catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ data_catalog }</span>
 </span><span id="__span-23-13"><a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a><span class="w">    </span><span class="nt">+tags</span><span class="p">:</span>
-</span><span id="__span-23-14"><a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a><span class="w">      </span><span class="nt">kelp_managed</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-23-14"><a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a><span class="w">      </span><span class="nt">kelp_managed</span><span class="p">:</span><span class="w"> </span><span class="s">""</span>
 </span><span id="__span-23-15"><a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a><span class="w">      </span><span class="nt">environment</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ environment }</span>
 </span><span id="__span-23-16"><a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a><span class="w">    </span><span class="nt">bronze</span><span class="p">:</span>
 </span><span id="__span-23-17"><a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a><span class="w">      </span><span class="nt">+schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bronze</span>
@@ -2751,22 +2783,22 @@
 </span><span id="__span-23-21"><a id="__codelineno-23-21" name="__codelineno-23-21" href="#__codelineno-23-21"></a><span class="w">      </span><span class="nt">+schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">silver</span>
 </span><span id="__span-23-22"><a id="__codelineno-23-22" name="__codelineno-23-22" href="#__codelineno-23-22"></a><span class="w">      </span><span class="nt">+tags</span><span class="p">:</span>
 </span><span id="__span-23-23"><a id="__codelineno-23-23" name="__codelineno-23-23" href="#__codelineno-23-23"></a><span class="w">        </span><span class="nt">layer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">transformed</span>
-</span><span id="__span-23-24"><a id="__codelineno-23-24" name="__codelineno-23-24" href="#__codelineno-23-24"></a><span class="w">        </span><span class="nt">quality_checked</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-23-24"><a id="__codelineno-23-24" name="__codelineno-23-24" href="#__codelineno-23-24"></a><span class="w">        </span><span class="nt">quality_checked</span><span class="p">:</span><span class="w"> </span><span class="s">""</span>
 </span><span id="__span-23-25"><a id="__codelineno-23-25" name="__codelineno-23-25" href="#__codelineno-23-25"></a><span class="w">    </span><span class="nt">gold</span><span class="p">:</span>
 </span><span id="__span-23-26"><a id="__codelineno-23-26" name="__codelineno-23-26" href="#__codelineno-23-26"></a><span class="w">      </span><span class="nt">+schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gold</span>
 </span><span id="__span-23-27"><a id="__codelineno-23-27" name="__codelineno-23-27" href="#__codelineno-23-27"></a><span class="w">      </span><span class="nt">+tags</span><span class="p">:</span>
 </span><span id="__span-23-28"><a id="__codelineno-23-28" name="__codelineno-23-28" href="#__codelineno-23-28"></a><span class="w">        </span><span class="nt">layer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">analytics</span>
 </span><span id="__span-23-29"><a id="__codelineno-23-29" name="__codelineno-23-29" href="#__codelineno-23-29"></a>
 </span><span id="__span-23-30"><a id="__codelineno-23-30" name="__codelineno-23-30" href="#__codelineno-23-30"></a><span class="w">  </span><span class="c1"># Metrics configuration</span>
-</span><span id="__span-23-31"><a id="__codelineno-23-31" name="__codelineno-23-31" href="#__codelineno-23-31"></a><span class="w">  </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/metrics&quot;</span>
+</span><span id="__span-23-31"><a id="__codelineno-23-31" name="__codelineno-23-31" href="#__codelineno-23-31"></a><span class="w">  </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/metrics"</span>
 </span><span id="__span-23-32"><a id="__codelineno-23-32" name="__codelineno-23-32" href="#__codelineno-23-32"></a><span class="w">  </span><span class="nt">metric_views</span><span class="p">:</span>
 </span><span id="__span-23-33"><a id="__codelineno-23-33" name="__codelineno-23-33" href="#__codelineno-23-33"></a><span class="w">    </span><span class="nt">+catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ data_catalog }</span>
 </span><span id="__span-23-34"><a id="__codelineno-23-34" name="__codelineno-23-34" href="#__codelineno-23-34"></a><span class="w">    </span><span class="nt">+schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">metrics</span>
 </span><span id="__span-23-35"><a id="__codelineno-23-35" name="__codelineno-23-35" href="#__codelineno-23-35"></a><span class="w">    </span><span class="nt">+tags</span><span class="p">:</span>
-</span><span id="__span-23-36"><a id="__codelineno-23-36" name="__codelineno-23-36" href="#__codelineno-23-36"></a><span class="w">      </span><span class="nt">kelp_managed</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-23-36"><a id="__codelineno-23-36" name="__codelineno-23-36" href="#__codelineno-23-36"></a><span class="w">      </span><span class="nt">kelp_managed</span><span class="p">:</span><span class="w"> </span><span class="s">""</span>
 </span><span id="__span-23-37"><a id="__codelineno-23-37" name="__codelineno-23-37" href="#__codelineno-23-37"></a>
 </span><span id="__span-23-38"><a id="__codelineno-23-38" name="__codelineno-23-38" href="#__codelineno-23-38"></a><span class="w">  </span><span class="c1"># Functions configuration</span>
-</span><span id="__span-23-39"><a id="__codelineno-23-39" name="__codelineno-23-39" href="#__codelineno-23-39"></a><span class="w">  </span><span class="nt">functions_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/functions&quot;</span>
+</span><span id="__span-23-39"><a id="__codelineno-23-39" name="__codelineno-23-39" href="#__codelineno-23-39"></a><span class="w">  </span><span class="nt">functions_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/functions"</span>
 </span><span id="__span-23-40"><a id="__codelineno-23-40" name="__codelineno-23-40" href="#__codelineno-23-40"></a><span class="w">  </span><span class="nt">functions</span><span class="p">:</span>
 </span><span id="__span-23-41"><a id="__codelineno-23-41" name="__codelineno-23-41" href="#__codelineno-23-41"></a><span class="w">    </span><span class="nt">+catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ function_catalog }</span>
 </span><span id="__span-23-42"><a id="__codelineno-23-42" name="__codelineno-23-42" href="#__codelineno-23-42"></a><span class="w">    </span><span class="nt">public</span><span class="p">:</span>
@@ -2776,29 +2808,29 @@
 </span><span id="__span-23-46"><a id="__codelineno-23-46" name="__codelineno-23-46" href="#__codelineno-23-46"></a><span class="w">      </span><span class="nt">+catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${ security_catalog }</span>
 </span><span id="__span-23-47"><a id="__codelineno-23-47" name="__codelineno-23-47" href="#__codelineno-23-47"></a>
 </span><span id="__span-23-48"><a id="__codelineno-23-48" name="__codelineno-23-48" href="#__codelineno-23-48"></a><span class="w">  </span><span class="c1"># ABAC policies configuration</span>
-</span><span id="__span-23-49"><a id="__codelineno-23-49" name="__codelineno-23-49" href="#__codelineno-23-49"></a><span class="w">  </span><span class="nt">abacs_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/abacs&quot;</span>
+</span><span id="__span-23-49"><a id="__codelineno-23-49" name="__codelineno-23-49" href="#__codelineno-23-49"></a><span class="w">  </span><span class="nt">abacs_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/abacs"</span>
 </span><span id="__span-23-50"><a id="__codelineno-23-50" name="__codelineno-23-50" href="#__codelineno-23-50"></a><span class="w">  </span><span class="nt">abacs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
 </span><span id="__span-23-51"><a id="__codelineno-23-51" name="__codelineno-23-51" href="#__codelineno-23-51"></a>
 </span><span id="__span-23-52"><a id="__codelineno-23-52" name="__codelineno-23-52" href="#__codelineno-23-52"></a><span class="w">  </span><span class="c1"># Quarantine and validation table configuration</span>
 </span><span id="__span-23-53"><a id="__codelineno-23-53" name="__codelineno-23-53" href="#__codelineno-23-53"></a><span class="w">  </span><span class="nt">quality_config</span><span class="p">:</span>
 </span><span id="__span-23-54"><a id="__codelineno-23-54" name="__codelineno-23-54" href="#__codelineno-23-54"></a><span class="w">    </span><span class="nt">quarantine_catalog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
 </span><span id="__span-23-55"><a id="__codelineno-23-55" name="__codelineno-23-55" href="#__codelineno-23-55"></a><span class="w">    </span><span class="nt">quarantine_schema</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">quality</span>
-</span><span id="__span-23-56"><a id="__codelineno-23-56" name="__codelineno-23-56" href="#__codelineno-23-56"></a><span class="w">    </span><span class="nt">quarantine_prefix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-23-56"><a id="__codelineno-23-56" name="__codelineno-23-56" href="#__codelineno-23-56"></a><span class="w">    </span><span class="nt">quarantine_prefix</span><span class="p">:</span><span class="w"> </span><span class="s">""</span>
 </span><span id="__span-23-57"><a id="__codelineno-23-57" name="__codelineno-23-57" href="#__codelineno-23-57"></a><span class="w">    </span><span class="nt">quarantine_suffix</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">_quarantine</span>
-</span><span id="__span-23-58"><a id="__codelineno-23-58" name="__codelineno-23-58" href="#__codelineno-23-58"></a><span class="w">    </span><span class="nt">validation_prefix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-23-58"><a id="__codelineno-23-58" name="__codelineno-23-58" href="#__codelineno-23-58"></a><span class="w">    </span><span class="nt">validation_prefix</span><span class="p">:</span><span class="w"> </span><span class="s">""</span>
 </span><span id="__span-23-59"><a id="__codelineno-23-59" name="__codelineno-23-59" href="#__codelineno-23-59"></a><span class="w">    </span><span class="nt">validation_suffix</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">_validation</span>
 </span><span id="__span-23-60"><a id="__codelineno-23-60" name="__codelineno-23-60" href="#__codelineno-23-60"></a>
 </span><span id="__span-23-61"><a id="__codelineno-23-61" name="__codelineno-23-61" href="#__codelineno-23-61"></a><span class="w">  </span><span class="c1"># Remote catalog sync configuration</span>
 </span><span id="__span-23-62"><a id="__codelineno-23-62" name="__codelineno-23-62" href="#__codelineno-23-62"></a><span class="w">  </span><span class="nt">remote_catalog_config</span><span class="p">:</span>
-</span><span id="__span-23-63"><a id="__codelineno-23-63" name="__codelineno-23-63" href="#__codelineno-23-63"></a><span class="w">    </span><span class="nt">table_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;replace&quot;</span>
-</span><span id="__span-23-64"><a id="__codelineno-23-64" name="__codelineno-23-64" href="#__codelineno-23-64"></a><span class="w">    </span><span class="nt">column_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;replace&quot;</span>
-</span><span id="__span-23-65"><a id="__codelineno-23-65" name="__codelineno-23-65" href="#__codelineno-23-65"></a><span class="w">    </span><span class="nt">table_property_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;append&quot;</span>
+</span><span id="__span-23-63"><a id="__codelineno-23-63" name="__codelineno-23-63" href="#__codelineno-23-63"></a><span class="w">    </span><span class="nt">table_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"replace"</span>
+</span><span id="__span-23-64"><a id="__codelineno-23-64" name="__codelineno-23-64" href="#__codelineno-23-64"></a><span class="w">    </span><span class="nt">column_tag_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"replace"</span>
+</span><span id="__span-23-65"><a id="__codelineno-23-65" name="__codelineno-23-65" href="#__codelineno-23-65"></a><span class="w">    </span><span class="nt">table_property_mode</span><span class="p">:</span><span class="w"> </span><span class="s">"append"</span>
 </span><span id="__span-23-66"><a id="__codelineno-23-66" name="__codelineno-23-66" href="#__codelineno-23-66"></a><span class="w">    </span><span class="nt">managed_table_tags</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 </span><span id="__span-23-67"><a id="__codelineno-23-67" name="__codelineno-23-67" href="#__codelineno-23-67"></a><span class="w">    </span><span class="nt">managed_column_tags</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 </span><span id="__span-23-68"><a id="__codelineno-23-68" name="__codelineno-23-68" href="#__codelineno-23-68"></a><span class="w">    </span><span class="nt">managed_table_properties</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 </span><span id="__span-23-69"><a id="__codelineno-23-69" name="__codelineno-23-69" href="#__codelineno-23-69"></a>
 </span><span id="__span-23-70"><a id="__codelineno-23-70" name="__codelineno-23-70" href="#__codelineno-23-70"></a><span class="w">  </span><span class="c1"># Metadata governance policies (rules live in kelp_metadata/policies/)</span>
-</span><span id="__span-23-71"><a id="__codelineno-23-71" name="__codelineno-23-71" href="#__codelineno-23-71"></a><span class="w">  </span><span class="nt">policies_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./kelp_metadata/policies&quot;</span>
+</span><span id="__span-23-71"><a id="__codelineno-23-71" name="__codelineno-23-71" href="#__codelineno-23-71"></a><span class="w">  </span><span class="nt">policies_path</span><span class="p">:</span><span class="w"> </span><span class="s">"./kelp_metadata/policies"</span>
 </span><span id="__span-23-72"><a id="__codelineno-23-72" name="__codelineno-23-72" href="#__codelineno-23-72"></a><span class="w">  </span><span class="nt">policy_config</span><span class="p">:</span>
 </span><span id="__span-23-73"><a id="__codelineno-23-73" name="__codelineno-23-73" href="#__codelineno-23-73"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 </span><span id="__span-23-74"><a id="__codelineno-23-74" name="__codelineno-23-74" href="#__codelineno-23-74"></a>
@@ -2840,13 +2872,13 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">kelp.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">init</span><span class="p">,</span> <span class="n">get_context</span>
 </span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>
 </span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="c1"># Auto-discover and load with dev target</span>
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">&quot;dev&quot;</span><span class="p">)</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">"dev"</span><span class="p">)</span>
 </span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>
 </span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="c1"># Load with custom path</span>
-</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="n">config_path</span><span class="o">=</span><span class="s2">&quot;./config/kelp_project.yml&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;prod&quot;</span><span class="p">)</span>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="n">config_path</span><span class="o">=</span><span class="s2">"./config/kelp_project.yml"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"prod"</span><span class="p">)</span>
 </span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>
 </span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="c1"># Override variables</span>
-</span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">&quot;prod&quot;</span><span class="p">,</span> <span class="n">overwrite_vars</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data_catalog&quot;</span><span class="p">:</span> <span class="s2">&quot;custom_catalog&quot;</span><span class="p">})</span>
+</span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">"prod"</span><span class="p">,</span> <span class="n">overwrite_vars</span><span class="o">=</span><span class="p">{</span><span class="s2">"data_catalog"</span><span class="p">:</span> <span class="s2">"custom_catalog"</span><span class="p">})</span>
 </span><span id="__span-24-11"><a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>
 </span><span id="__span-24-12"><a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a><span class="c1"># Access configuration</span>
 </span><span id="__span-24-13"><a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a><span class="nb">print</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">project_settings</span><span class="o">.</span><span class="n">models_path</span><span class="p">)</span>
@@ -2950,10 +2982,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate", "content.code.copy", "content.footnote.tooltips", "content.tabs.link", "navigation.tabs", "navigation.sections", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate", "content.code.copy", "content.footnote.tooltips", "content.tabs.link", "navigation.tabs", "navigation.sections", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="img/kelp_logo.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -27,10 +27,10 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -692,6 +692,34 @@
     
   
     Metric Views
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="guides/grants.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unity Catalog Grants
   
 
     
@@ -2370,7 +2398,7 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>✓ Configuration is valid!
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>Project config loaded from: /path/to/kelp_project.yml
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>Target environment: prod
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>Runtime variables: {&#39;catalog&#39;: &#39;analytics_prod&#39;, &#39;schema&#39;: &#39;core_prod&#39;}
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>Runtime variables: {'catalog': 'analytics_prod', 'schema': 'core_prod'}
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>Relative models path: ./kelp_metadata/models
 </span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>Models found: 42
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>Relative functions path: ./kelp_metadata/functions
@@ -2420,9 +2448,9 @@
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>  -m, --manifest TEXT           Path to manifest JSON file (skips source file
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>                                loading)
 </span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>  --severity TEXT               Only show violations at this severity level or
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>                                above: &#39;warn&#39; or &#39;error&#39;
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>                                above: 'warn' or 'error'
 </span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>  --fail-on TEXT                Exit with code 1 when violations of this
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>                                severity are found: &#39;warn&#39; or &#39;error&#39;
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>                                severity are found: 'warn' or 'error'
 </span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>                                [default: error]
 </span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>  --fast-exit / --no-fast-exit  Stop policy evaluation on first violating
 </span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>                                policy per model. Defaults to
@@ -2430,8 +2458,8 @@
 </span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>  --debug                       Enable debug logging
 </span></code></pre></div>
 <p><strong>Output with violations:</strong></p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>⚠ [WARN]  catalog.schema.bronze_customers - Table &#39;catalog.schema.bronze_customers&#39; is missing a description.
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>✗ [ERROR] catalog.schema.silver_orders.order_id - Column &#39;order_id&#39; in table &#39;...&#39; is missing a description.
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>⚠ [WARN]  catalog.schema.bronze_customers - Table 'catalog.schema.bronze_customers' is missing a description.
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>✗ [ERROR] catalog.schema.silver_orders.order_id - Column 'order_id' in table '...' is missing a description.
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
 </span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>Policy check complete: 1 error(s), 1 warning(s) across 15 models(s).
 </span></code></pre></div>
@@ -2445,7 +2473,7 @@
 <h3 id="kelp-sync-from-catalog"><code>kelp sync-from-catalog</code><a class="headerlink" href="#kelp-sync-from-catalog" title="Permanent link">&para;</a></h3>
 <p>Fetch table metadata from Databricks Unity Catalog and generate a YAML model definition.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>kelp<span class="w"> </span>sync-from-catalog<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="s2">&quot;analytics_prod.core.customers&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="s2">"analytics_prod.core.customers"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span>--profile<span class="w"> </span>my-profile<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span>--output<span class="w"> </span>customers.yml<span class="w"> </span><span class="se">\</span>
 </span></code></pre></div>
@@ -2521,7 +2549,7 @@
 </span></code></pre></div>
 <p>Sync a specific object by name:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>kelp<span class="w"> </span>sync-local-catalog<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="w">  </span><span class="s2">&quot;customers&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="w">  </span><span class="s2">"customers"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">  </span>--config<span class="w"> </span>kelp_project.yml<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">  </span>--target<span class="w"> </span>prod
 </span></code></pre></div>
@@ -2574,12 +2602,12 @@
 <p>Generates CREATE TABLE statements:</p>
 <div class="language-sql highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1">-- bronze/bronze_customers.yml</span>
 </span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">kelp_catalog</span><span class="p">.</span><span class="n">kelp_bronze</span><span class="p">.</span><span class="n">bronze_customers</span><span class="w"> </span><span class="p">(</span>
-</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="w">  </span><span class="n">user_id</span><span class="w"> </span><span class="n">STRING</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">COMMENT</span><span class="w"> </span><span class="s1">&#39;Internal user identifier&#39;</span><span class="p">,</span>
-</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="w">  </span><span class="n">first_name</span><span class="w"> </span><span class="n">STRING</span><span class="w"> </span><span class="k">COMMENT</span><span class="w"> </span><span class="s1">&#39;Customer given name&#39;</span><span class="p">,</span>
-</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="w">  </span><span class="n">last_name</span><span class="w"> </span><span class="n">STRING</span><span class="w"> </span><span class="k">COMMENT</span><span class="w"> </span><span class="s1">&#39;Customer family name&#39;</span><span class="p">,</span>
-</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="w">  </span><span class="n">country</span><span class="w"> </span><span class="n">STRING</span><span class="w"> </span><span class="k">COMMENT</span><span class="w"> </span><span class="s1">&#39;Customer country&#39;</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="w">  </span><span class="n">user_id</span><span class="w"> </span><span class="n">STRING</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">COMMENT</span><span class="w"> </span><span class="s1">'Internal user identifier'</span><span class="p">,</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="w">  </span><span class="n">first_name</span><span class="w"> </span><span class="n">STRING</span><span class="w"> </span><span class="k">COMMENT</span><span class="w"> </span><span class="s1">'Customer given name'</span><span class="p">,</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="w">  </span><span class="n">last_name</span><span class="w"> </span><span class="n">STRING</span><span class="w"> </span><span class="k">COMMENT</span><span class="w"> </span><span class="s1">'Customer family name'</span><span class="p">,</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="w">  </span><span class="n">country</span><span class="w"> </span><span class="n">STRING</span><span class="w"> </span><span class="k">COMMENT</span><span class="w"> </span><span class="s1">'Customer country'</span>
 </span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="p">)</span><span class="w"> </span><span class="k">USING</span><span class="w"> </span><span class="n">DELTA</span>
-</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="n">TBLPROPERTIES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;domain&#39;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;customers&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;stage&#39;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;bronze&#39;</span><span class="p">);</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="n">TBLPROPERTIES</span><span class="w"> </span><span class="p">(</span><span class="s1">'domain'</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'customers'</span><span class="p">,</span><span class="w"> </span><span class="s1">'stage'</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'bronze'</span><span class="p">);</span>
 </span></code></pre></div>
 <h3 id="kelp-generate-alter-statements"><code>kelp generate-alter-statements</code><a class="headerlink" href="#kelp-generate-alter-statements" title="Permanent link">&para;</a></h3>
 <p>Generate ALTER TABLE statements to sync existing tables with metadata changes.</p>
@@ -2606,10 +2634,10 @@
 <p>Generates ALTER statements for metadata updates:</p>
 <div class="language-sql highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1">-- Update descriptions and tags</span>
 </span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">kelp_catalog</span><span class="p">.</span><span class="n">kelp_bronze</span><span class="p">.</span><span class="n">bronze_customers</span><span class="w"> </span>
-</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="w">  </span><span class="k">SET</span><span class="w"> </span><span class="n">TBLPROPERTIES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;owner&#39;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;analytics-team&#39;</span><span class="p">);</span>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="w">  </span><span class="k">SET</span><span class="w"> </span><span class="n">TBLPROPERTIES</span><span class="w"> </span><span class="p">(</span><span class="s1">'owner'</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'analytics-team'</span><span class="p">);</span>
 </span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a>
 </span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">kelp_catalog</span><span class="p">.</span><span class="n">kelp_bronze</span><span class="p">.</span><span class="n">bronze_customers</span><span class="w"> </span>
-</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="w">  </span><span class="k">ALTER</span><span class="w"> </span><span class="k">COLUMN</span><span class="w"> </span><span class="n">user_id</span><span class="w"> </span><span class="k">COMMENT</span><span class="w"> </span><span class="s1">&#39;Internal user identifier&#39;</span><span class="p">;</span>
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="w">  </span><span class="k">ALTER</span><span class="w"> </span><span class="k">COLUMN</span><span class="w"> </span><span class="n">user_id</span><span class="w"> </span><span class="k">COMMENT</span><span class="w"> </span><span class="s1">'Internal user identifier'</span><span class="p">;</span>
 </span></code></pre></div>
 <h2 id="init-commands">Init Commands<a class="headerlink" href="#init-commands" title="Permanent link">&para;</a></h2>
 <h3 id="kelp-init"><code>kelp init</code><a class="headerlink" href="#kelp-init" title="Permanent link">&para;</a></h3>
@@ -2695,23 +2723,23 @@
 <p>Configure Kelp CLI behavior using environment variables:</p>
 <h3 id="kelp_project_file"><code>KELP_PROJECT_FILE</code><a class="headerlink" href="#kelp_project_file" title="Permanent link">&para;</a></h3>
 <p>Path to the <code>kelp_project.yml</code> file (overrides auto-discovery):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KELP_PROJECT_FILE</span><span class="o">=</span><span class="s2">&quot;./custom_config.yml&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KELP_PROJECT_FILE</span><span class="o">=</span><span class="s2">"./custom_config.yml"</span>
 </span><span id="__span-37-2"><a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a>kelp<span class="w"> </span>validate
 </span></code></pre></div>
 <h3 id="kelp_manifest_file"><code>KELP_MANIFEST_FILE</code><a class="headerlink" href="#kelp_manifest_file" title="Permanent link">&para;</a></h3>
 <p>Path to a manifest JSON file for validation (skips source file loading):
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KELP_MANIFEST_FILE</span><span class="o">=</span><span class="s2">&quot;./manifest.json&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KELP_MANIFEST_FILE</span><span class="o">=</span><span class="s2">"./manifest.json"</span>
 </span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a>kelp<span class="w"> </span>validate
 </span></code></pre></div></p>
 <h3 id="kelp_target"><code>KELP_TARGET</code><a class="headerlink" href="#kelp_target" title="Permanent link">&para;</a></h3>
 <p>Default environment target:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KELP_TARGET</span><span class="o">=</span><span class="s2">&quot;prod&quot;</span>
-</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>kelp<span class="w"> </span>validate<span class="w">  </span><span class="c1"># Uses &quot;prod&quot; if not overridden by --target</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KELP_TARGET</span><span class="o">=</span><span class="s2">"prod"</span>
+</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>kelp<span class="w"> </span>validate<span class="w">  </span><span class="c1"># Uses "prod" if not overridden by --target</span>
 </span></code></pre></div>
 <h3 id="kelp_profile"><code>KELP_PROFILE</code><a class="headerlink" href="#kelp_profile" title="Permanent link">&para;</a></h3>
 <p>Default Databricks CLI profile:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KELP_PROFILE</span><span class="o">=</span><span class="s2">&quot;my-workspace&quot;</span>
-</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>kelp<span class="w"> </span>sync-from-catalog<span class="w"> </span><span class="s2">&quot;analytics.core.customers&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KELP_PROFILE</span><span class="o">=</span><span class="s2">"my-workspace"</span>
+</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>kelp<span class="w"> </span>sync-from-catalog<span class="w"> </span><span class="s2">"analytics.core.customers"</span>
 </span></code></pre></div>
 <h2 id="common-workflows">Common Workflows<a class="headerlink" href="#common-workflows" title="Permanent link">&para;</a></h2>
 <h3 id="setup-new-project">Setup New Project<a class="headerlink" href="#setup-new-project" title="Permanent link">&para;</a></h3>
@@ -2728,7 +2756,7 @@
 <h3 id="import-existing-table-metadata">Import Existing Table Metadata<a class="headerlink" href="#import-existing-table-metadata" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="c1"># Fetch from Databricks and generate YAML</span>
 </span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>kelp<span class="w"> </span>sync-from-catalog<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-42-3"><a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a><span class="w">  </span><span class="s2">&quot;analytics_prod.core.customers&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-42-3"><a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a><span class="w">  </span><span class="s2">"analytics_prod.core.customers"</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-42-4"><a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a><span class="w">  </span>-p<span class="w"> </span>my-profile<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-42-5"><a id="__codelineno-42-5" name="__codelineno-42-5" href="#__codelineno-42-5"></a><span class="w">  </span>-o<span class="w"> </span>kelp_metadata/models/customers.yml
 </span><span id="__span-42-6"><a id="__codelineno-42-6" name="__codelineno-42-6" href="#__codelineno-42-6"></a>
@@ -2751,23 +2779,23 @@
 </span></code></pre></div>
 <h3 id="sync-specific-objects">Sync Specific Objects<a class="headerlink" href="#sync-specific-objects" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a><span class="c1"># Sync a single table</span>
-</span><span id="__span-45-2"><a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>kelp<span class="w"> </span>sync-local-catalog<span class="w"> </span><span class="s2">&quot;customers&quot;</span><span class="w"> </span>--target<span class="w"> </span>prod
+</span><span id="__span-45-2"><a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>kelp<span class="w"> </span>sync-local-catalog<span class="w"> </span><span class="s2">"customers"</span><span class="w"> </span>--target<span class="w"> </span>prod
 </span><span id="__span-45-3"><a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a>
 </span><span id="__span-45-4"><a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a><span class="c1"># Sync a metric view</span>
-</span><span id="__span-45-5"><a id="__codelineno-45-5" name="__codelineno-45-5" href="#__codelineno-45-5"></a>kelp<span class="w"> </span>sync-local-catalog<span class="w"> </span><span class="s2">&quot;analytics.metrics.customer_agg&quot;</span><span class="w"> </span>--target<span class="w"> </span>prod
+</span><span id="__span-45-5"><a id="__codelineno-45-5" name="__codelineno-45-5" href="#__codelineno-45-5"></a>kelp<span class="w"> </span>sync-local-catalog<span class="w"> </span><span class="s2">"analytics.metrics.customer_agg"</span><span class="w"> </span>--target<span class="w"> </span>prod
 </span></code></pre></div>
 <h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
 <h3 id="common-errors">Common Errors<a class="headerlink" href="#common-errors" title="Permanent link">&para;</a></h3>
 <p><strong>Configuration not found:</strong></p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>✗ Project root with &#39;kelp_project.yml&#39; not found...
+<div class="language-text highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>✗ Project root with 'kelp_project.yml' not found...
 </span></code></pre></div>
 <p><strong>Solution:</strong> Use <code>--config</code> to specify the path or cd to a directory containing <code>kelp_project.yml</code>.</p>
 <p><strong>Target not found in configuration:</strong></p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>✗ Target &#39;staging&#39; not defined in kelp_project.yml
+<div class="language-text highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>✗ Target 'staging' not defined in kelp_project.yml
 </span></code></pre></div>
 <p><strong>Solution:</strong> Add the target to <code>kelp_project.yml</code> or use a target that exists.</p>
 <p><strong>Databricks profile not found:</strong></p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>✗ Profile &#39;my-profile&#39; not found in Databricks CLI
+<div class="language-text highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>✗ Profile 'my-profile' not found in Databricks CLI
 </span></code></pre></div>
 <p><strong>Solution:</strong> Configure the profile with <code>databricks configure</code> or use <code>-p</code> to specify an existing profile.</p>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
@@ -2832,10 +2860,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["content.code.annotate", "content.code.copy", "content.footnote.tooltips", "content.tabs.link", "navigation.tabs", "navigation.sections", "navigation.tabs.sticky"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["content.code.annotate", "content.code.copy", "content.footnote.tooltips", "content.tabs.link", "navigation.tabs", "navigation.sections", "navigation.tabs.sticky"], "search": "assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>
