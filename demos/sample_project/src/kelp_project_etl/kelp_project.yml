@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=/workspaces/kelp/.vscode/kelp_json_schema.json
 kelp_project:
   models_path: "./kelp_metadata/models"
 
@@ -6,6 +5,12 @@ kelp_project:
     +catalog: ${ catalog }
     bronze:
       +schema: kelp_bronze
+      +grants:
+        - principal: ${ test_group }
+          privileges:
+            - MODIFY
+        - principal: test_group_prod
+          privileges: []
 
     silver:
       +schema: kelp_silver
@@ -54,11 +59,13 @@ vars:
   landing_schema: kelp_bronze
   function_schema: kelp_funcs
   abac_schema: kelp_abac
+  test_group: test_group_dev
 
 targets:
   dev:
     vars:
       catalog: ${catalog}
+     
 
   prod:
     vars:

@@ -12,7 +12,7 @@ github-cli = "latest"
 "github:microsoft/waza" = "latest"
 java = "21"
 ruff = "latest"
-ty = "0.0.32"
+ty = "latest"
 typos = "latest"
 uv = "latest"
 
@@ -23,8 +23,6 @@ run = "uv sync"
 [tasks.upload]
 description = "Build the wheel and upload it to the Databricks libs volume"
 run = '''
-#!/usr/bin/env bash
-set -euo pipefail
 uv build
 version=$(uv version --short)
 databricks fs cp "dist/kelp_core-${version}-py3-none-any.whl" dbfs:/Volumes/workspace/default/libs/ --overwrite
@@ -77,8 +75,6 @@ description = "Generate a changelog section for the given version (e.g. mise run
 quiet = true
 usage = 'arg "<version>" help="Version to generate the changelog for, e.g. 0.0.X"'
 run = '''
-#!/usr/bin/env bash
-set -euo pipefail
 v="${usage_version}"
 prev_tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
 echo "## [${v}] - $(date +%Y-%m-%d)"

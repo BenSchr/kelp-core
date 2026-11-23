@@ -66,3 +66,7 @@ kelp_metric_views:
         - name: order_frequency
           expr: COUNT(DISTINCT order_id)
           comment: Number of distinct orders (frequency)
+    grants: 
+      - principal: test_group_dev
+        privileges: 
+          - SELECT

@@ -154,6 +154,11 @@ kelp_project:
       +column_tag_mode: replace           # gold/* models
 ```
 
+For project- and folder-level Unity Catalog grants, see the
+[grants guide](grants.md). Grant lists are extended across hierarchy levels,
+unlike other list-valued defaults, which follow the general hierarchy merge
+behavior.
+
 ## Variables and Interpolation
 
 Variables enable environment-specific configuration without changing YAML files.

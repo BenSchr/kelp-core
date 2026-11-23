@@ -31,6 +31,7 @@ from typing import Any
 
 import yaml
 
+from kelp.models.grant import Grant, merge_grants, normalize_privilege
 from kelp.models.metric_view import MetricView
 from kelp.models.model import Model
 from kelp.utils.databricks import _parse_clustering_columns, inject_metric_view_column_metadata
@@ -58,6 +59,78 @@ def _split_fqn(fqn: str) -> tuple[str, str, str]:
     if len(parts) != 3:
         raise ValueError(f"Expected a 3-part fully-qualified name, got '{fqn}'")
     return parts[0], parts[1], parts[2]
+
+
+def _row_value(row: Any, key: str) -> Any:
+    """Read a named value from Spark Row/dict-like grant output."""
+    if isinstance(row, dict):
+        return row.get(key)
+    values = row.asDict(recursive=True) if hasattr(row, "asDict") else {}
+    return values.get(key)
+
+
+def _normalize_object_key(value: Any) -> str:
+    """Normalize SHOW GRANTS object keys for exact direct-object filtering."""
+    return str(value or "").replace("`", "").replace('"', "").strip().casefold()
+
+
+class SparkGrantFetcher:
+    """Fetch direct grants with SHOW GRANTS from an active Spark session."""
+
+    def fetch(
+        self,
+        securable_type: str,
+        fqn: str,
+        profile: str | None = None,
+    ) -> list[Grant] | None:
+        """Return direct grants for a table-like object or function.
+
+        Rows inherited from catalog/schema scopes are excluded by matching
+        their object key to the requested object's fully qualified name.
+        """
+        del profile
+        if securable_type not in {"table", "function"}:
+            raise ValueError(f"Unsupported grants securable type: {securable_type!r}")
+        spark = _get_spark()
+        target = f"FUNCTION {fqn}" if securable_type == "function" else fqn
+        try:
+            rows = spark.sql(f"SHOW GRANTS ON {target}").collect()
+        except Exception as error:
+            condition = getattr(error, "getCondition", lambda: None)()
+            if condition in {"TABLE_OR_VIEW_NOT_FOUND", "ROUTINE_NOT_FOUND"}:
+                return None
+            raise
+
+        grants_by_principal: dict[str, tuple[str, set[str]]] = {}
+        expected_key = _normalize_object_key(fqn)
+        for row in rows:
+            object_key = _normalize_object_key(_row_value(row, "objectKey"))
+            if object_key != expected_key:
+                continue
+            principal = _row_value(row, "principal")
+            privilege = _row_value(row, "actionType")
+            if not principal or not privilege:
+                logger.warning("Skipping malformed SHOW GRANTS row for '%s': %s", fqn, row)
+                continue
+            if str(privilege).upper() == "OWN":
+                continue
+            key = str(principal).casefold()
+            stored_principal, privileges = grants_by_principal.setdefault(
+                key,
+                (str(principal), set()),
+            )
+            if stored_principal != principal:
+                raise ValueError(
+                    f"Conflicting principal spellings differ only by case in SHOW GRANTS "
+                    f"for '{fqn}': {stored_principal!r} and {principal!r}"
+                )
+            privileges.add(normalize_privilege(str(privilege)))
+
+        grants = [
+            Grant(principal=principal, privileges=sorted(privileges))
+            for principal, privileges in grants_by_principal.values()
+        ]
+        return merge_grants(grants) or []
 
 
 def _describe_as_json(spark, fqn: str) -> dict[str, Any] | None:

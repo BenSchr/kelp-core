@@ -159,6 +159,11 @@ When functions are synced, they are applied immediately, making them available f
 
 Kelp manages how metadata is applied to your catalog through configurable modes and managed keys. You can specify these settings in your `kelp_project.yml` file under the `remote_catalog_config` section.
 
+Direct Unity Catalog grants have their own `grant_mode` (`append` by default
+or `managed`) and can be set at project root, folder, and object levels. See
+the [Unity Catalog grants guide](grants.md) for merge, revoke, and execution
+semantics.
+
 The following are the available options:
 
 **append**

@@ -27,3 +27,6 @@ kelp_functions:
         data_type: STRING
     returns_data_type: STRING
     body_path: ./kelp_metadata/functions/python/format_full_name.py
+    grants: 
+      - principal: test_group_dev
+        privileges: []

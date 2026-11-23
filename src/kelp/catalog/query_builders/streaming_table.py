@@ -19,6 +19,7 @@ class StreamingTableQueryBuilder(BaseTableQueryBuilder):
             Capability.TABLE_TAGS,
             Capability.COLUMN_DESCRIPTION,
             Capability.COLUMN_TAGS,
+            Capability.GRANTS,
         }
     )
     securable = "STREAMING TABLE"

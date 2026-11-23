@@ -51,6 +51,7 @@ nav:
       - Functions: guides/functions.md
       - ABAC Policies: guides/abacs.md
       - Metric Views: guides/metric_views.md
+      - Unity Catalog Grants: guides/grants.md
       - Governance Policies: guides/policies.md
   - Reference:
       - Kelp: reference/kelp.md

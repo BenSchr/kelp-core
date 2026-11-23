@@ -33,3 +33,7 @@ kelp_models:
     engine: sdp
     expect_all_or_fail:
       _rescued_data_is_null: _rescued_data IS NULL
+  grants: 
+      - principal: test_group_dev
+        privileges: 
+          - SELECT

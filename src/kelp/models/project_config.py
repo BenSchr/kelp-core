@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 from pydantic.json_schema import SkipJsonSchema
 
+from kelp.models.grant import GrantMode
 from kelp.models.model_mat_config import MaterializationOptions
 from kelp.models.policy import PolicyConfig
 
@@ -65,6 +66,7 @@ class RemoteCatalogConfig(BaseModel):
         managed_column_tags: List of tag keys to manage on columns.
         table_property_mode: How to apply table properties ("append" or "managed").
         managed_table_properties: List of property keys to manage on tables.
+        grant_mode: How to manage direct grants ("append" or "managed").
     """
 
     table_tag_mode: Literal["append", "replace", "managed"] = Field(
@@ -90,6 +92,10 @@ class RemoteCatalogConfig(BaseModel):
     managed_table_properties: list[str] = Field(
         default_factory=list,
         description="List of property keys to manage on tables",
+    )
+    grant_mode: GrantMode = Field(
+        default="append",
+        description="How to manage direct Unity Catalog grants on configured objects",
     )
 
 

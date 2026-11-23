@@ -24,9 +24,10 @@ kelp_metric_views:
         - name: country
           expr: source.country
           comment: Customer's billing country
-          display_name: Country
+          display_name: Country2
           tags:
             data_classification: internal
+            a: b
       measures:
         # Import all measures from the source metric view except `total_revenue`
         - expr: source.* EXCEPT (total_revenue)

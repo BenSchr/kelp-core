@@ -2,15 +2,91 @@ import json
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any
+from typing import Any, cast
+from urllib.parse import quote
 
 import yaml
 from databricks.sdk import WorkspaceClient
+from databricks.sdk.errors import NotFound
 
+from kelp.models.grant import Grant, merge_grants
 from kelp.models.metric_view import MetricView
 from kelp.models.model import Model
 
 logger = logging.getLogger(__name__)
+
+# Semantic metadata properties Unity Catalog strips from a metric view's stored
+# YAML body and reports in each column's raw ``metadata`` object instead.
+METRIC_VIEW_SEMANTIC_METADATA_KEYS = ("display_name", "format", "synonyms")
+
+
+def get_direct_grants_from_dbx_sdk(
+    securable_type: str,
+    fqn: str,
+    w: WorkspaceClient | None = None,
+    profile: str | None = None,
+) -> list[Grant] | None:
+    """Fetch direct grants from the raw Unity Catalog permissions API.
+
+    The SDK's generated response decodes privileges through an enum, which can
+    discard values unknown to that SDK version. Reading the raw response keeps
+    those privileges available to the managed-mode diff.
+
+    Args:
+        securable_type: Unity Catalog API type, such as ``"table"`` or ``"function"``.
+        fqn: Fully qualified securable name.
+        w: Optional configured WorkspaceClient.
+        profile: Databricks CLI profile used when constructing a client.
+
+    Returns:
+        Direct grants, an empty list when no direct grants exist, or ``None``
+        when the securable does not exist.
+
+    Raises:
+        ValueError: If the securable type is unsupported.
+        Exception: Propagates API and permission failures.
+    """
+    if securable_type not in {"table", "function"}:
+        raise ValueError(f"Unsupported grants securable type: {securable_type!r}")
+
+    client = w or WorkspaceClient(profile=profile)
+    path = (
+        "/api/2.1/unity-catalog/permissions/"
+        f"{quote(securable_type, safe='')}/{quote(fqn, safe='.')}"
+    )
+    page_token: str | None = None
+    grants: list[Grant] = []
+
+    try:
+        while True:
+            query: dict[str, str | int] = {"max_results": 0}
+            if page_token is not None:
+                query["page_token"] = page_token
+            raw_response = client.api_client.do("GET", path, query=query)
+            if not isinstance(raw_response, dict):
+                raise TypeError(
+                    f"Expected a permissions response object for '{fqn}', "
+                    f"got {type(raw_response).__name__}"
+                )
+            response = cast(dict[str, Any], raw_response)
+            for assignment in response.get("privilege_assignments", []):
+                principal = assignment.get("principal")
+                if not principal:
+                    logger.warning(
+                        "Skipping direct grants for a deleted principal on '%s' because "
+                        "the permissions response has no principal name",
+                        fqn,
+                    )
+                    continue
+                privileges = assignment.get("privileges") or []
+                grants.append(Grant(principal=principal, privileges=privileges))
+            page_token = response.get("next_page_token")
+            if not page_token:
+                break
+    except NotFound:
+        return None
+
+    return merge_grants(grants) or []
 
 
 def on_databricks() -> bool:
@@ -62,7 +138,9 @@ def _fetch_tags(w: WorkspaceClient, entity_type: str, entity_name: str) -> dict[
     }
 
 
-def _fetch_column_tags(w: WorkspaceClient, columns: list, fqn: str) -> dict[str, dict[str, str]]:
+def _fetch_column_tags(
+    w: WorkspaceClient, column_names: list[str], fqn: str
+) -> dict[str, dict[str, str]]:
     """Fetch tags for every column of *fqn*, one SDK call per column in parallel.
 
     Returns a ``{column_name: {tag_key: tag_value}}`` mapping. Each column's
@@ -70,14 +148,33 @@ def _fetch_column_tags(w: WorkspaceClient, columns: list, fqn: str) -> dict[str,
     batched "all columns" endpoint), so a wide table means many round trips —
     threading keeps that latency from stacking up serially.
     """
-    if not columns:
+    if not column_names:
         return {}
 
-    def _fetch_one(col: Any) -> tuple[str, dict[str, str]]:
-        return col.name, _fetch_tags(w, "columns", f"{fqn}.{col.name}")
+    def _fetch_one(column_name: str) -> tuple[str, dict[str, str]]:
+        return column_name, _fetch_tags(w, "columns", f"{fqn}.{column_name}")
 
     with ThreadPoolExecutor() as executor:
-        return dict(executor.map(_fetch_one, columns))
+        return dict(executor.map(_fetch_one, column_names))
+
+
+def _get_raw_table_info(w: WorkspaceClient, fqn: str) -> dict[str, Any]:
+    """Return the raw Unity Catalog table response.
+
+    The generated SDK ``ColumnInfo`` model drops each column's ``metadata``
+    object, where metric views report semantic metadata such as
+    ``display_name``.
+
+    Raises:
+        TypeError: If the API returns a non-object response.
+    """
+    path = f"/api/2.1/unity-catalog/tables/{quote(fqn, safe='.')}"
+    raw_response = w.api_client.do("GET", path)
+    if not isinstance(raw_response, dict):
+        raise TypeError(
+            f"Expected a table response object for '{fqn}', got {type(raw_response).__name__}"
+        )
+    return cast(dict[str, Any], raw_response)
 
 
 def get_table_from_dbx_sdk(
@@ -132,7 +229,9 @@ def get_table_from_dbx_sdk(
             )
         ]
 
-        column_tags_by_name = _fetch_column_tags(w, info.columns, full_table)
+        column_tags_by_name = _fetch_column_tags(
+            w, [col.name for col in info.columns if col.name], full_table
+        )
         for col in info.columns:
             col_tags = column_tags_by_name.get(col.name, {}) if col.name else {}
             col_obj = {
@@ -176,14 +275,16 @@ def inject_metric_view_column_metadata(
     definition: dict,
     comments_by_column: dict[str, str],
     tags_by_column: dict[str, dict[str, str]],
+    semantic_metadata_by_column: dict[str, dict[str, Any]] | None = None,
 ) -> None:
-    """Inject column comments/tags into a metric view definition in-place.
+    """Inject column comments, tags, and semantic metadata into a metric view definition.
 
-    Comments and tags live in Unity Catalog column metadata, not in the
-    view's YAML body — this merges them back into the definition's
+    Unity Catalog stores these values as column metadata instead of in the
+    SDK-visible YAML body. This merges them back into the definition's
     ``dimensions``/``fields``/``measures`` entries by name so the resulting
     definition reflects the full remote state.
     """
+    semantic_metadata_by_column = semantic_metadata_by_column or {}
     for section in ("dimensions", "fields", "measures"):
         entries = definition.get(section)
         if not isinstance(entries, list):
@@ -196,6 +297,7 @@ def inject_metric_view_column_metadata(
                 entry["comment"] = comments_by_column[name]
             if tags_by_column.get(name):
                 entry["tags"] = tags_by_column[name]
+            entry.update(semantic_metadata_by_column.get(name, {}))
 
 
 def get_metric_view_from_dbx_sdk(
@@ -206,34 +308,52 @@ def get_metric_view_from_dbx_sdk(
     """Retrieve metric view metadata from Databricks SDK and convert to Kelp MetricView format.
 
     The returned ``definition`` follows the Databricks metric view YAML
-    reference verbatim (including its ``comment``); column comments and
-    Kelp-managed tags are merged into the dimension/field/measure entries.
+    reference verbatim (including its ``comment``); column comments, semantic
+    metadata, and Kelp-managed tags are merged into the dimension/field/measure
+    entries.
     """
     w = w or WorkspaceClient(profile=profile)
     try:
-        info = w.tables.get(full_metric_view)
+        info = _get_raw_table_info(w, full_metric_view)
     except Exception:  # noqa: BLE001
         return None
 
-    view_definition = info.view_definition or ""
+    view_definition = info.get("view_definition") or ""
     definition_payload = yaml.safe_load(view_definition) if view_definition else {}
     if not isinstance(definition_payload, dict):
         definition_payload = {}
 
     # The view-level comment is part of the YAML spec; if Unity Catalog only
     # reports it as the object comment, mirror it back into the definition.
-    if "comment" not in definition_payload and info.comment:
-        definition_payload["comment"] = info.comment
+    comment = info.get("comment")
+    if "comment" not in definition_payload and comment:
+        definition_payload["comment"] = comment
 
-    columns = info.columns or []
-    comments_by_column = {col.name: col.comment for col in columns if col.name and col.comment}
-    tags_by_column = _fetch_column_tags(w, columns, full_metric_view)
-    inject_metric_view_column_metadata(definition_payload, comments_by_column, tags_by_column)
+    columns = [
+        col
+        for col in info.get("columns") or []
+        if isinstance(col, dict) and isinstance(col.get("name"), str) and col["name"]
+    ]
+    comments_by_column = {col["name"]: col["comment"] for col in columns if col.get("comment")}
+    semantic_metadata_by_column = {
+        col["name"]: {
+            key: metadata[key] for key in METRIC_VIEW_SEMANTIC_METADATA_KEYS if key in metadata
+        }
+        for col in columns
+        if isinstance(metadata := col.get("metadata"), dict)
+    }
+    tags_by_column = _fetch_column_tags(w, [col["name"] for col in columns], full_metric_view)
+    inject_metric_view_column_metadata(
+        definition_payload,
+        comments_by_column,
+        tags_by_column,
+        semantic_metadata_by_column,
+    )
 
     return MetricView(
-        name=info.name or "",
-        catalog=info.catalog_name,
-        schema_=info.schema_name,
+        name=info.get("name") or "",
+        catalog=info.get("catalog_name"),
+        schema_=info.get("schema_name"),
         tags=_fetch_tags(w, "tables", full_metric_view),
         definition=definition_payload,
     )

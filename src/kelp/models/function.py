@@ -2,8 +2,10 @@
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.json_schema import SkipJsonSchema
+
+from kelp.models.grant import Grant, merge_grants
 
 
 class FunctionParameter(BaseModel):
@@ -104,11 +106,21 @@ class KelpFunction(BaseModel):
         description="Python environment declaration",
     )
     tags: dict[str, str] = Field(default_factory=dict, description="Metadata tags")
+    grants: list[Grant] | None = Field(
+        default=None,
+        description="Direct Unity Catalog grants for the function",
+    )
     meta: dict[str, Any] = Field(
         default_factory=dict,
         description="Generic user-defined metadata for filtering and grouping",
     )
     raw_config: SkipJsonSchema[dict] = Field(default_factory=dict)
+
+    @field_validator("grants")
+    @classmethod
+    def _merge_grants(cls, value: list[Grant] | None) -> list[Grant] | None:
+        """Merge repeated grant entries after hierarchy defaults are applied."""
+        return merge_grants(value)
 
     model_config = ConfigDict(
         validate_by_name=True,

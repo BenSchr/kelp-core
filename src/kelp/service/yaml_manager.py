@@ -327,7 +327,10 @@ class YamlManager:
         """
         # model = {"name": source_model.name}
         model = source_model.model_dump(
-            exclude_unset=True, exclude_none=True, exclude_defaults=True, exclude={"table_type"}
+            exclude_unset=True,
+            exclude_none=True,
+            exclude_defaults=True,
+            exclude={"table_type", "grants"},
         )
         # Get hierarchy defaults if requested and available
         defaults = {}

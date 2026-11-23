@@ -28,6 +28,7 @@ from kelp.catalog.query_builders._sql import (
     UNSET_TAGS,
     UNSET_TBLPROPERTIES,
     esc,
+    grant_statements,
     key_list,
     kv_tags,
 )
@@ -59,6 +60,7 @@ class Capability(StrEnum):
         CLUSTER_BY: ``ALTER TABLE <fqn> CLUSTER BY ...`` statement.
         CONSTRAINTS: ``ADD/DROP CONSTRAINT`` statements.
         AUTO_TTL: ``ALTER TABLE <fqn> DELETE ROWS <expiration_days> DAYS AFTER <time_column_name>`` statement.
+        GRANTS: Direct grant and revoke statements.
     """
 
     TABLE_DESCRIPTION = "table_description"
@@ -69,6 +71,7 @@ class Capability(StrEnum):
     CLUSTER_BY = "cluster_by"
     CONSTRAINTS = "constraints"
     AUTO_TTL = "auto_ttl"
+    GRANTS = "grants"
 
 
 class BaseTableQueryBuilder:
@@ -122,6 +125,8 @@ class BaseTableQueryBuilder:
             queries.extend(self.constraint_queries(fqn, diff.constraint_pk, diff.constraint_fk))
         if Capability.AUTO_TTL in caps:
             queries.extend(self.auto_ttl_queries(fqn, diff))
+        if Capability.GRANTS in caps:
+            queries.extend(grant_statements(diff.grants, fqn))
 
         return queries
 

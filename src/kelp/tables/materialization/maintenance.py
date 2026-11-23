@@ -142,7 +142,15 @@ def sync_metadata(spark: SparkSession, model: "KelpModel") -> None:
         try:
             spark.sql(query)
             logger.info("%s | %s", model.name, query)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
+            if query.lstrip().upper().startswith(("GRANT ", "REVOKE ")):
+                logger.error(
+                    "Grant sync query failed for model '%s': %s\nQuery: %s",
+                    model.name,
+                    str(e)[:500],
+                    query,
+                )
+                raise
             logger.warning(
                 "Metadata sync query failed for model '%s': %s\nQuery: %s",
                 model.name,

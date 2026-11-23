@@ -13,7 +13,9 @@ from kelp.catalog.uc_models import (
     RemoteCatalogConfig,
     TableDiff,
 )
+from kelp.models.grant import Grant
 from kelp.models.model import ForeignKeyConstraint, PrimaryKeyConstraint
+from kelp.service.grant_manager import diff_grants
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +33,18 @@ class TableDiffCalculator:
     def __init__(self, config: RemoteCatalogConfig) -> None:
         self._config = config
 
-    def calculate(self, local: Model, remote: Model) -> TableDiff:
+    def calculate(
+        self,
+        local: Model,
+        remote: Model,
+        actual_grants: list[Grant] | None = None,
+    ) -> TableDiff:
         """Return a TableDiff describing every change needed.
 
         Args:
             local: Desired state from the project catalog.
             remote: Current state fetched from Unity Catalog.
+            actual_grants: Direct grants fetched from Unity Catalog, if configured.
 
         Returns:
             A populated TableDiff instance.
@@ -67,6 +75,7 @@ class TableDiffCalculator:
 
         diff.auto_ttl_changed = local.auto_ttl != remote.auto_ttl
         diff.auto_ttl = local.auto_ttl
+        diff.grants = diff_grants(local.grants, actual_grants, self._config.grant_mode)
 
         return diff
 

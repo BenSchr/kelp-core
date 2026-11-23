@@ -24,11 +24,13 @@ from typing import Any
 
 import yaml
 
-from kelp.catalog.query_builders._sql import esc
+from kelp.catalog.query_builders._sql import esc, grant_statements
 from kelp.catalog.query_builders.view import ViewQueryBuilder
 from kelp.catalog.uc_diff import TableDiffCalculator
 from kelp.catalog.uc_models import DictDiff, RemoteCatalogConfig
+from kelp.models.grant import Grant
 from kelp.models.metric_view import MetricView
+from kelp.service.grant_manager import diff_grants
 
 logger = logging.getLogger(__name__)
 
@@ -267,7 +269,12 @@ class MetricViewQueryBuilder:
         self._config = config
         self._differ = TableDiffCalculator(config)
 
-    def build(self, metric_view: MetricView, remote: MetricView | None) -> list[str]:
+    def build(
+        self,
+        metric_view: MetricView,
+        remote: MetricView | None,
+        actual_grants: list[Grant] | None = None,
+    ) -> list[str]:
         """Return SQL statements required to sync *metric_view* to match *remote*.
 
         Args:
@@ -276,6 +283,7 @@ class MetricViewQueryBuilder:
                 When ``None``, a ``CREATE`` statement is emitted and tags are
                 enforced (set-only, no deletes) since there is no remote
                 state to diff against.
+            actual_grants: Direct grants on an existing remote view.
 
         Returns:
             Ordered list of SQL statements to execute.
@@ -332,4 +340,6 @@ class MetricViewQueryBuilder:
                 len(tag_diff.deletes),
             )
 
+        grant_diff = diff_grants(metric_view.grants, actual_grants, self._config.grant_mode)
+        statements.extend(grant_statements(grant_diff, fqn))
         return statements

@@ -26,6 +26,7 @@ __all__ = [
     "ConstraintFKDiff",
     "ConstraintPKDiff",
     "DictDiff",
+    "GrantDiff",
     "Model",
     "RemoteCatalogConfig",
     "TableDiff",
@@ -50,6 +51,20 @@ class DictDiff:
     def has_changes(self) -> bool:
         """Return True when at least one update or delete is present."""
         return bool(self.creates or self.updates or self.deletes)
+
+
+@dataclass
+class GrantDiff:
+    """Direct grant changes required for one Unity Catalog object."""
+
+    revoke_all: list[str] = field(default_factory=list)
+    revokes: dict[str, list[str]] = field(default_factory=dict)
+    grants: dict[str, list[str]] = field(default_factory=dict)
+
+    @property
+    def has_changes(self) -> bool:
+        """Return True when any grant or revoke statement is needed."""
+        return bool(self.revoke_all or self.revokes or self.grants)
 
 
 @dataclass
@@ -126,6 +141,7 @@ class TableDiff:
     columns: dict[str, ColumnDiff] = field(default_factory=dict)
     constraint_pk: ConstraintPKDiff = field(default_factory=ConstraintPKDiff)
     constraint_fk: ConstraintFKDiff = field(default_factory=ConstraintFKDiff)
+    grants: GrantDiff = field(default_factory=GrantDiff)
     cluster_by_changed: bool = False
     cluster_by_cols: list[str] | None = None
     cluster_by_auto: bool | None = None

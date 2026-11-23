@@ -76,3 +76,17 @@ class RemoteFetcherFactory:
         raise KeyError(
             f"No metric view fetcher registered for engine '{engine}'. Known: {list(_KNOWN_ENGINES)}"
         )
+
+    def get_grant_fetcher(self, engine: str = DEFAULT_ENGINE) -> Any:
+        """Return the direct-grant fetcher for *engine*."""
+        if engine == "spark":
+            from kelp.catalog.remote_fetchers.spark import SparkGrantFetcher
+
+            return SparkGrantFetcher()
+        if engine == "sdk":
+            from kelp.catalog.remote_fetchers.sdk import SdkGrantFetcher
+
+            return SdkGrantFetcher()
+        raise KeyError(
+            f"No grant fetcher registered for engine '{engine}'. Known: {list(_KNOWN_ENGINES)}"
+        )

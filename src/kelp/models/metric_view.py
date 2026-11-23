@@ -18,6 +18,8 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.json_schema import SkipJsonSchema
 
+from kelp.models.grant import Grant, merge_grants
+
 
 class MetricView(BaseModel):
     """Metric View definition for Databricks.
@@ -63,11 +65,21 @@ class MetricView(BaseModel):
         return value
 
     tags: dict[str, str] = Field(default_factory=dict)
+    grants: list[Grant] | None = Field(
+        default=None,
+        description="Direct Unity Catalog grants for the metric view",
+    )
     meta: dict[str, Any] = Field(
         default_factory=dict,
         description="Generic user-defined metadata for filtering and grouping",
     )
     raw_config: SkipJsonSchema[dict] = Field(default_factory=dict)
+
+    @field_validator("grants")
+    @classmethod
+    def _merge_grants(cls, value: list[Grant] | None) -> list[Grant] | None:
+        """Merge repeated grant entries after hierarchy defaults are applied."""
+        return merge_grants(value)
 
     # Model Config
     model_config = ConfigDict(

@@ -52,3 +52,8 @@ kelp_models:
         data_type: string
         tags:
           data_classification: pii
+    grants: 
+      - principal: test_group_dev
+        privileges: 
+          - SELECT
+  

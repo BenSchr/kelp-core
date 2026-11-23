@@ -94,6 +94,51 @@ targets:
       catalog: ${catalog}
 ```
 
+## Unity Catalog grants
+
+Kelp can sync direct grants for tables, views, materialized views, streaming
+tables, metric views, and functions. Set `remote_catalog_config.grant_mode` to
+`append` (the default) to add configured privileges while preserving direct
+grants for unconfigured principals, or `managed` to reconcile all direct grants
+on each configured object. Managed mode can revoke access granted outside Kelp.
+
+Configure grants with `principal` and `privileges` entries. Project-root and
+folder-level `+grants` are extended down the hierarchy for models, metric
+views, and functions; object-level `grants` are included in the same union.
+Privileges are unioned and deduplicated per principal. For example:
+
+```yaml
+kelp_project:
+  remote_catalog_config:
+    grant_mode: append
+  models:
+    +grants:
+      - principal: ${ engineers_group }
+        privileges: [MODIFY]
+    gold:
+      +grants:
+        - principal: analysts
+          privileges: [SELECT]
+
+kelp_models:
+  - name: gold_orders
+    grants:
+      - principal: analysts
+        privileges: [APPLY TAG]
+```
+
+An entry with `privileges: []` or `null` marks that principal for revocation
+only when the combined grants from every hierarchy level contain no privileges
+for that principal. It cannot remove privileges granted at another level. An
+empty `grants` list or `grants: null` does not clear inherited grants.
+
+Kelp compares direct grants only; grants inherited from catalogs and schemas
+are ignored, and catalog/schema-level permissions are managed separately.
+Grant statements are produced by catalog sync APIs after the target object
+exists; `generate-ddl` remains create-only. Treat `ALL PRIVILEGES` as a single
+privilege, noting that revoking it also removes the principal's other direct
+privileges before Kelp re-grants any desired privileges.
+
 ## Models
 
 Models represent tables, views, streaming tables or materialized views in Spark. They are defined in the `kelp_metadata/models` directory and can be organized into subdirectories for better structure. Each model is defined in a YAML file that specifies its properties, such as the schema definition, tags, and comments.
@@ -162,3 +207,4 @@ kelp_metric_views:
           comment: Total revenue (sum of item prices) for the grouping
         - name: ...
 ```
+
