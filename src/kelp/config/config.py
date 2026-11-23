@@ -28,6 +28,7 @@ _KELP_OBJECT_SPECS = tuple(
         model_class=spec.model_class,
         model_label=spec.model_label,
         preprocess=spec.preprocess,
+        extend_list_keys=spec.extend_list_keys,
     )
     for spec in CATALOG_PARSE_SPECS
 )

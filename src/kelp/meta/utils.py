@@ -12,7 +12,11 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined, TemplateNotFo
 # ============================================================================
 
 
-def _merge_with_precedence(base: dict, override: dict) -> dict:
+def _merge_with_precedence(
+    base: dict,
+    override: dict,
+    extend_list_keys: frozenset[str] = frozenset(),
+) -> dict:
     """Deep-merge two dicts where ``override`` wins for conflicts.
 
     This is used to build an effective defaults object from hierarchy layers
@@ -21,8 +25,14 @@ def _merge_with_precedence(base: dict, override: dict) -> dict:
     """
     merged = copy.deepcopy(base)
     for key, value in override.items():
-        if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
-            merged[key] = _merge_with_precedence(merged[key], value)
+        if (
+            key in extend_list_keys
+            and (merged.get(key) is None or isinstance(merged.get(key), list))
+            and (value is None or isinstance(value, list))
+        ):
+            merged[key] = copy.deepcopy(merged.get(key) or []) + copy.deepcopy(value or [])
+        elif key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
+            merged[key] = _merge_with_precedence(merged[key], value, extend_list_keys)
         else:
             merged[key] = copy.deepcopy(value)
     return merged
@@ -40,7 +50,11 @@ def _extract_plus_defaults(cfg_node: dict) -> dict:
     return defaults
 
 
-def merge_defaults(target: dict, defaults: dict) -> dict:
+def merge_defaults(
+    target: dict,
+    defaults: dict,
+    extend_list_keys: frozenset[str] = frozenset(),
+) -> dict:
     """Merge defaults into target without overwriting existing values.
 
     - If a key is missing in target, a deep copy of the default value is set.
@@ -50,6 +64,13 @@ def merge_defaults(target: dict, defaults: dict) -> dict:
     - Otherwise, leave the existing target value untouched.
     """
     for k, v in defaults.items():
+        if k in extend_list_keys and (target.get(k) is None or isinstance(target.get(k), list)):
+            if v is not None and not isinstance(v, list):
+                target[k] = copy.deepcopy(v)
+            else:
+                target[k] = copy.deepcopy(v or []) + copy.deepcopy(target.get(k) or [])
+            continue
+
         if k not in target:
             target[k] = copy.deepcopy(v)
             continue
@@ -57,7 +78,7 @@ def merge_defaults(target: dict, defaults: dict) -> dict:
         tv = target[k]
         # both dicts -> recurse
         if isinstance(tv, dict) and isinstance(v, dict):
-            merge_defaults(tv, v)
+            merge_defaults(tv, v, extend_list_keys)
             continue
 
         # both lists -> merge items that aren't already present
@@ -74,6 +95,7 @@ def apply_cfg_hierarchy_to_dict_recursive(
     target: dict,
     cfg: dict,
     tpl_path: str | Path | None = None,
+    extend_list_keys: frozenset[str] = frozenset(),
 ) -> dict:
     """Apply a configuration hierarchy onto `target` (recursive folder +defaults)."""
     if not isinstance(target, dict):
@@ -96,11 +118,15 @@ def apply_cfg_hierarchy_to_dict_recursive(
                 break
 
             folder_defaults = _extract_plus_defaults(next_cfg)
-            effective_defaults = _merge_with_precedence(effective_defaults, folder_defaults)
+            effective_defaults = _merge_with_precedence(
+                effective_defaults,
+                folder_defaults,
+                extend_list_keys,
+            )
             current_cfg = next_cfg
 
     # Apply computed defaults without overwriting explicit values in target.
-    merge_defaults(target, effective_defaults)
+    merge_defaults(target, effective_defaults, extend_list_keys)
 
     return target
 

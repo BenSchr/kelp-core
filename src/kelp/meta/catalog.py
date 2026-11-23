@@ -84,6 +84,7 @@ def build_catalog(
                 dict(raw_item),
                 hierarchy_cfg,
                 origin_file_path=hierarchy_origin_path,
+                extend_list_keys=frozenset(spec.extend_list_keys),
             )
             preprocessed_item = spec.preprocess(merged_item, project_root)
 

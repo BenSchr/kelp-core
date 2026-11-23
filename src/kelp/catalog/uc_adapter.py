@@ -3,10 +3,11 @@
 import logging
 
 from kelp.catalog.query_builders import UCQueryBuilderFactory
+from kelp.catalog.query_builders._sql import grant_statements
 from kelp.catalog.query_builders.metric_view import generate_create_metric_view_ddl
 from kelp.catalog.remote_fetchers import DEFAULT_ENGINE, RemoteFetcherFactory
 from kelp.catalog.uc_diff import TableDiffCalculator
-from kelp.catalog.uc_models import Model, RemoteCatalogConfig
+from kelp.catalog.uc_models import GrantDiff, Model, RemoteCatalogConfig
 from kelp.config import get_context
 from kelp.models.abac import AbacPolicy
 from kelp.models.function import KelpFunction
@@ -90,8 +91,24 @@ class UnityCatalogAdapter:
             logger.warning("Table '%s' not found in Unity Catalog; skipping sync.", fqn)
             return []
 
+        actual_grants = None
+        if table.grants is not None:
+            actual_grants = (
+                RemoteFetcherFactory()
+                .get_grant_fetcher(engine)
+                .fetch(
+                    "table",
+                    fqn,
+                    profile=profile,
+                )
+            )
+            if actual_grants is None:
+                raise RuntimeError(
+                    f"Table '{fqn}' exists but the direct-grants API reported it missing"
+                )
+
         local = table
-        diff = self._differ.calculate(local, remote)
+        diff = self._differ.calculate(local, remote, actual_grants=actual_grants)
         logger.debug("Diff for '%s': %s", fqn, diff)
         return UCQueryBuilderFactory().build(
             fqn=fqn,
@@ -142,25 +159,61 @@ class UnityCatalogAdapter:
         catalog_tables = tables or get_context().catalog_index.get_all("models")
         return self.sync_tables(catalog_tables, profile=profile, engine=engine)
 
-    def sync_function(self, function: KelpFunction) -> list[str]:
+    def sync_function(
+        self,
+        function: KelpFunction,
+        profile: str | None = None,
+        engine: str = DEFAULT_ENGINE,
+    ) -> list[str]:
         """Return SQL queries required to sync a single function.
 
         Functions are treated as pre-applied entities and currently use
-        CREATE OR REPLACE semantics.
+        CREATE OR REPLACE semantics. Configured grants are reconciled after
+        creation using direct grants on the function.
         """
-        return UCQueryBuilderFactory().get_builder("function").build(function)
+        actual_grants = None
+        if function.grants is not None:
+            actual_grants = (
+                RemoteFetcherFactory()
+                .get_grant_fetcher(engine)
+                .fetch(
+                    "function",
+                    function.get_qualified_name(),
+                    profile=profile,
+                )
+            )
+            if actual_grants is None:
+                actual_grants = []
+        return (
+            UCQueryBuilderFactory()
+            .get_builder(
+                "function",
+                config=self._config,
+            )
+            .build(function, actual_grants=actual_grants)
+        )
 
-    def sync_functions(self, functions: list[KelpFunction]) -> list[str]:
+    def sync_functions(
+        self,
+        functions: list[KelpFunction],
+        profile: str | None = None,
+        engine: str = DEFAULT_ENGINE,
+    ) -> list[str]:
         """Return SQL queries for all provided functions."""
         queries: list[str] = []
         for function in functions:
-            queries.extend(self.sync_function(function))
+            queries.extend(self.sync_function(function, profile=profile, engine=engine))
         return queries
 
-    def sync_all_functions(self, functions: list[KelpFunction] | None = None) -> list[str]:
+    def sync_all_functions(
+        self,
+        functions: list[KelpFunction] | None = None,
+        profile: str | None = None,
+        engine: str = DEFAULT_ENGINE,
+    ) -> list[str]:
         """Sync all functions from the current project context."""
         catalog_functions = functions or get_context().catalog_index.get_all("functions")
-        return self.sync_functions(catalog_functions)
+        return self.sync_functions(catalog_functions, profile=profile, engine=engine)
 
     def sync_metric_view(
         self,
@@ -184,8 +237,26 @@ class UnityCatalogAdapter:
         """
         fetcher = RemoteFetcherFactory().get_metric_view_fetcher(engine)
         remote = fetcher.fetch(metric_view.get_qualified_name(), profile=profile)
+        actual_grants = None
+        if metric_view.grants is not None:
+            actual_grants = (
+                RemoteFetcherFactory()
+                .get_grant_fetcher(engine)
+                .fetch(
+                    "table",
+                    metric_view.get_qualified_name(),
+                    profile=profile,
+                )
+            )
+            if actual_grants is None:
+                if remote is not None:
+                    raise RuntimeError(
+                        f"Metric view '{metric_view.get_qualified_name()}' exists but the "
+                        "direct-grants API reported it missing"
+                    )
+                actual_grants = []
         builder = UCQueryBuilderFactory().get_builder("metric_view", config=self._config)
-        return builder.build(metric_view, remote)
+        return builder.build(metric_view, remote, actual_grants=actual_grants)
 
     def sync_metric_views(
         self,
@@ -257,6 +328,17 @@ class UnityCatalogAdapter:
             try:
                 stmt = self.create_metric_view(metric_view)
                 statements.append(stmt)
+                if metric_view.grants is not None:
+                    desired = {
+                        grant.principal: grant.privileges
+                        for grant in metric_view.grants
+                        if grant.privileges
+                    }
+                    statements.extend(
+                        grant_statements(
+                            GrantDiff(grants=desired), metric_view.get_qualified_name()
+                        )
+                    )
             except Exception as e:  # noqa: BLE001
                 logger.error(
                     "Failed to generate DDL for metric view '%s': %s",

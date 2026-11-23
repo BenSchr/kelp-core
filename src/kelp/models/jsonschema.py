@@ -65,4 +65,27 @@ class JsonSchemaModel(BaseModel):
 
 def generate_json_schema() -> dict:
     """Generate JSON schema for the Kelp project configuration."""
-    return JsonSchemaModel.model_json_schema()
+    schema = JsonSchemaModel.model_json_schema()
+    schema["$defs"]["GrantHierarchyNode"] = {
+        "type": "object",
+        "patternProperties": {
+            r"^\+grants$": {
+                "type": "array",
+                "items": {"$ref": "#/$defs/Grant"},
+            },
+            r"^\+(?!grants$)": {},
+            r"^[^+].*$": {"$ref": "#/$defs/GrantHierarchyNode"},
+        },
+        "additionalProperties": {},
+    }
+
+    project_properties = schema["$defs"]["ProjectConfig"]["properties"]
+    for key in ("models", "metric_views", "functions"):
+        project_properties[key] = {
+            "allOf": [
+                project_properties[key],
+                {"$ref": "#/$defs/GrantHierarchyNode"},
+            ],
+        }
+
+    return schema

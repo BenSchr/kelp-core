@@ -5,6 +5,7 @@ import pytest
 from kelp.catalog.remote_fetchers import DEFAULT_ENGINE, RemoteFetcherFactory
 from kelp.catalog.remote_fetchers.sdk import SdkMetricViewFetcher, SdkTableFetcher
 from kelp.catalog.remote_fetchers.spark import (
+    SparkGrantFetcher,
     SparkMetricViewFetcher,
     SparkTableFetcher,
     _format_column_type,
@@ -29,6 +30,13 @@ def test_get_metric_view_fetcher_defaults_to_sdk() -> None:
 
     assert isinstance(factory.get_metric_view_fetcher("spark"), SparkMetricViewFetcher)
     assert isinstance(factory.get_metric_view_fetcher(), SdkMetricViewFetcher)
+
+
+def test_get_grant_fetcher_defaults_to_sdk() -> None:
+    factory = RemoteFetcherFactory()
+
+    assert isinstance(factory.get_grant_fetcher("spark"), SparkGrantFetcher)
+    assert factory.get_grant_fetcher().__class__.__name__ == "SdkGrantFetcher"
 
 
 def test_spark_table_fetcher_requires_active_session() -> None:
@@ -57,6 +65,64 @@ def test_get_metric_view_fetcher_rejects_unknown_engine() -> None:
 
     with pytest.raises(KeyError, match="bogus"):
         factory.get_metric_view_fetcher("bogus")
+
+
+def test_get_grant_fetcher_rejects_unknown_engine() -> None:
+    with pytest.raises(KeyError, match="bogus"):
+        RemoteFetcherFactory().get_grant_fetcher("bogus")
+
+
+def test_spark_grant_fetcher_filters_inherited_rows(monkeypatch) -> None:
+    class FakeSpark:
+        def __init__(self) -> None:
+            self.query = None
+
+        def sql(self, query: str):
+            self.query = query
+            return self
+
+        def collect(self) -> list[dict[str, str]]:
+            return [
+                {
+                    "principal": "analysts",
+                    "actionType": "SELECT",
+                    "objectKey": "main.sales.orders",
+                },
+                {
+                    "principal": "inherited",
+                    "actionType": "MODIFY",
+                    "objectKey": "main.sales",
+                },
+            ]
+
+    fake_spark = FakeSpark()
+    monkeypatch.setattr(
+        "kelp.catalog.remote_fetchers.spark._get_spark",
+        lambda: fake_spark,
+    )
+
+    grants = SparkGrantFetcher().fetch("table", "main.sales.orders")
+
+    assert grants is not None
+    assert [(grant.principal, grant.privileges) for grant in grants] == [("analysts", ["SELECT"])]
+    assert fake_spark.query == "SHOW GRANTS ON main.sales.orders"
+
+
+def test_spark_grant_fetcher_uses_function_keyword(monkeypatch) -> None:
+    class FakeSpark:
+        def sql(self, query: str):
+            assert query == "SHOW GRANTS ON FUNCTION main.sales.mask"
+            return self
+
+        def collect(self) -> list[dict[str, str]]:
+            return []
+
+    monkeypatch.setattr(
+        "kelp.catalog.remote_fetchers.spark._get_spark",
+        lambda: FakeSpark(),
+    )
+
+    assert SparkGrantFetcher().fetch("function", "main.sales.mask") == []
 
 
 def test_split_fqn() -> None:

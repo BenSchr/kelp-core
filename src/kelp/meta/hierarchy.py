@@ -14,6 +14,7 @@ def apply_hierarchy_defaults(
     hierarchy_config: dict[str, Any],
     *,
     origin_file_path: str | Path | None = None,
+    extend_list_keys: frozenset[str] = frozenset(),
 ) -> dict[str, Any]:
     """Apply folder hierarchy defaults to one metadata item.
 
@@ -33,6 +34,7 @@ def apply_hierarchy_defaults(
         item,
         hierarchy_config,
         tpl_path=origin_file_path,
+        extend_list_keys=extend_list_keys,
     )
 
 

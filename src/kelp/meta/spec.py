@@ -51,6 +51,10 @@ class MetaObjectSpec(BaseModel):
         default=_noop_preprocess,
         description="Optional preprocessing hook before model validation",
     )
+    extend_list_keys: tuple[str, ...] = Field(
+        default=(),
+        description="Keys whose project hierarchy lists concatenate at every level",
+    )
 
 
 class MetaProjectSpec(BaseModel):

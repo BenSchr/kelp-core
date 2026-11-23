@@ -1,7 +1,10 @@
 """Query builder and DDL generation for Unity Catalog functions."""
 
-from kelp.catalog.query_builders._sql import esc
+from kelp.catalog.query_builders._sql import esc, grant_statements
+from kelp.catalog.uc_models import RemoteCatalogConfig
 from kelp.models.function import KelpFunction
+from kelp.models.grant import Grant
+from kelp.service.grant_manager import diff_grants
 
 
 def _render_parameters(function: KelpFunction) -> str:
@@ -117,6 +120,19 @@ class FunctionQueryBuilder:
     re-issues a full ``CREATE OR REPLACE FUNCTION`` statement.
     """
 
-    def build(self, function: KelpFunction) -> list[str]:
-        """Return the ``CREATE OR REPLACE FUNCTION`` statement for *function*."""
-        return [generate_create_function_ddl(function)]
+    def __init__(self, config: RemoteCatalogConfig | None = None) -> None:
+        self._config = config or RemoteCatalogConfig()
+
+    def build(
+        self,
+        function: KelpFunction,
+        actual_grants: list[Grant] | None = None,
+    ) -> list[str]:
+        """Return function creation and direct-grant statements."""
+        statements = [generate_create_function_ddl(function)]
+        grant_diff = diff_grants(function.grants, actual_grants, self._config.grant_mode)
+        grant_diff.grants = {
+            grant.principal: grant.privileges for grant in function.grants or [] if grant.privileges
+        }
+        statements.extend(grant_statements(grant_diff, f"FUNCTION {function.get_qualified_name()}"))
+        return statements

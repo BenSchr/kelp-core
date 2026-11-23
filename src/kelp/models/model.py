@@ -5,6 +5,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.json_schema import SkipJsonSchema
 
+from kelp.models.grant import Grant, merge_grants
 from kelp.models.model_mat_config import DEFAULT_MODE, MaterializationConfig
 
 
@@ -327,6 +328,10 @@ class Model(BaseModel):
         default_factory=dict,
         description="Metadata tags for the model",
     )
+    grants: list[Grant] | None = Field(
+        default=None,
+        description="Direct Unity Catalog grants for the model",
+    )
     meta: dict[str, Any] = Field(
         default_factory=dict,
         description="Generic user-defined metadata for filtering and grouping",
@@ -335,6 +340,12 @@ class Model(BaseModel):
         default_factory=dict,
         description="Original unparsed configuration preserving placeholder variables",
     )
+
+    @field_validator("grants")
+    @classmethod
+    def _merge_grants(cls, value: list[Grant] | None) -> list[Grant] | None:
+        """Merge repeated grant entries after hierarchy defaults are applied."""
+        return merge_grants(value)
 
     @model_validator(mode="after")
     def _validate_catalog_requires_schema(self) -> "Model":

@@ -81,7 +81,11 @@ def sync_catalog(
     queries: list[str] = []
     if sync_functions:
         queries.extend(
-            uc_adapter.sync_all_functions(_get_objects("functions", filter_by_meta=filter_by_meta))
+            uc_adapter.sync_all_functions(
+                _get_objects("functions", filter_by_meta=filter_by_meta),
+                profile=profile,
+                engine=engine,
+            )
         )
     if sync_tables:
         queries.extend(
@@ -110,6 +114,8 @@ def sync_catalog(
 def sync_functions(
     function_names: list[str] | None = None,
     filter_by_meta: dict[str, Any] | None = None,
+    profile: str | None = None,
+    engine: str = DEFAULT_ENGINE,
 ) -> list[str]:
     """Synchronize specified functions to the remote catalog.
 
@@ -117,7 +123,7 @@ def sync_functions(
     """
     functions = _get_objects("functions", names=function_names, filter_by_meta=filter_by_meta)
     uc_adapter = UnityCatalogAdapter()
-    queries = uc_adapter.sync_all_functions(functions)
+    queries = uc_adapter.sync_all_functions(functions, profile=profile, engine=engine)
     return queries
 
 

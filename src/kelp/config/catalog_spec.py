@@ -24,6 +24,7 @@ class CatalogParseSpec:
     catalog_attr: str
     model_label: str
     preprocess: Callable[[dict[str, Any], str | None], dict[str, Any]]
+    extend_list_keys: tuple[str, ...] = ()
 
 
 def _noop_preprocess(item_dict: dict[str, Any], project_root: str | None) -> dict[str, Any]:
@@ -52,6 +53,7 @@ CATALOG_PARSE_SPECS: tuple[CatalogParseSpec, ...] = (
         catalog_attr="models",
         model_label="Model",
         preprocess=_noop_preprocess,
+        extend_list_keys=("grants",),
     ),
     CatalogParseSpec(
         root_key="kelp_metric_views",
@@ -61,6 +63,7 @@ CATALOG_PARSE_SPECS: tuple[CatalogParseSpec, ...] = (
         catalog_attr="metric_views",
         model_label="MetricView",
         preprocess=_noop_preprocess,
+        extend_list_keys=("grants",),
     ),
     CatalogParseSpec(
         root_key="kelp_functions",
@@ -70,6 +73,7 @@ CATALOG_PARSE_SPECS: tuple[CatalogParseSpec, ...] = (
         catalog_attr="functions",
         model_label="KelpFunction",
         preprocess=_function_preprocess,
+        extend_list_keys=("grants",),
     ),
     CatalogParseSpec(
         root_key="kelp_abacs",

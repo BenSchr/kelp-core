@@ -2,6 +2,8 @@
 
 from kelp.catalog.uc_adapter import UnityCatalogAdapter
 from kelp.catalog.uc_models import RemoteCatalogConfig, TableDiff
+from kelp.models.function import KelpFunction
+from kelp.models.grant import Grant
 from kelp.models.metric_view import MetricView
 from kelp.models.model import Model
 
@@ -40,8 +42,13 @@ def test_sync_table_passes_profile_to_databricks_lookup(monkeypatch) -> None:
 
     diff = TableDiff()
 
-    def fake_calculate(current: Model, remote_state: Model) -> TableDiff:
+    def fake_calculate(
+        current: Model,
+        remote_state: Model,
+        actual_grants: list[Grant] | None = None,
+    ) -> TableDiff:
         del current, remote_state
+        assert actual_grants is None
         return diff
 
     monkeypatch.setattr(adapter._differ, "calculate", fake_calculate)
@@ -115,3 +122,94 @@ def test_sync_metric_view_creates_when_remote_missing(monkeypatch) -> None:
     assert len(queries) == 2
     assert queries[0].startswith("CREATE OR REPLACE VIEW main.sales.order_metrics")
     assert "ALTER VIEW main.sales.order_metrics SET TAGS ('owner' = 'data')" in queries[1]
+
+
+def test_sync_table_fetches_grants_only_when_configured(monkeypatch) -> None:
+    table = Model(
+        name="orders",
+        catalog="main",
+        schema_="sales",
+        grants=[Grant(principal="analysts", privileges=["SELECT"])],
+    )
+    remote = Model(name="orders", catalog="main", schema_="sales")
+    captured: dict[str, object] = {}
+
+    class FakeFetcherFactory:
+        def get_table_fetcher(self, engine: str):
+            del engine
+            return self
+
+        def get_grant_fetcher(self, engine: str):
+            del engine
+            return self
+
+        def fetch(self, *args, **kwargs):
+            if args and args[0] == "table":
+                captured["grant_fetch"] = (args, kwargs)
+                return []
+            return remote
+
+    class FakeBuilderFactory:
+        def build(self, fqn: str, diff: TableDiff, table_type: str) -> list[str]:
+            captured["diff"] = diff
+            return []
+
+    monkeypatch.setattr(
+        "kelp.catalog.uc_adapter.RemoteFetcherFactory",
+        FakeFetcherFactory,
+    )
+    monkeypatch.setattr(
+        "kelp.catalog.uc_adapter.UCQueryBuilderFactory",
+        lambda: FakeBuilderFactory(),
+    )
+
+    UnityCatalogAdapter(config=RemoteCatalogConfig()).sync_table(
+        table,
+        profile="analytics",
+        engine="sdk",
+    )
+
+    assert captured["grant_fetch"] == (
+        ("table", "main.sales.orders"),
+        {"profile": "analytics"},
+    )
+
+
+def test_sync_function_fetches_grants_and_forwards_profile(monkeypatch) -> None:
+    function = KelpFunction(
+        name="mask",
+        catalog="main",
+        schema_="security",
+        language="SQL",
+        body="'x'",
+        grants=[Grant(principal="analysts", privileges=["EXECUTE"])],
+    )
+    captured: dict[str, object] = {}
+
+    class FakeFetcherFactory:
+        def get_grant_fetcher(self, engine: str):
+            captured["engine"] = engine
+            return self
+
+        def fetch(self, *args, **kwargs):
+            captured["fetch"] = (args, kwargs)
+            return []
+
+    monkeypatch.setattr(
+        "kelp.catalog.uc_adapter.RemoteFetcherFactory",
+        FakeFetcherFactory,
+    )
+
+    statements = UnityCatalogAdapter(config=RemoteCatalogConfig()).sync_function(
+        function,
+        profile="analytics",
+        engine="sdk",
+    )
+
+    assert statements[0].startswith("CREATE OR REPLACE FUNCTION")
+    assert statements[1] == "GRANT EXECUTE ON FUNCTION main.security.mask TO `analysts`"
+    assert captured["engine"] == "sdk"
+    assert captured["fetch"] == (
+        ("function", "main.security.mask"),
+        {"profile": "analytics"},
+    )

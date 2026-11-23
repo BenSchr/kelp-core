@@ -45,8 +45,15 @@ def test_sync_catalog_passes_profile_to_remote_fetch_paths(monkeypatch) -> None:
     class StubAdapter:
         """Capture adapter calls made by sync_catalog."""
 
-        def sync_all_functions(self, functions: list[SimpleNamespace]) -> list[str]:
+        def sync_all_functions(
+            self,
+            functions: list[SimpleNamespace],
+            profile: str | None = None,
+            engine: str = "spark",
+        ) -> list[str]:
             captured["functions"] = functions
+            captured["functions_profile"] = profile
+            captured["functions_engine"] = engine
             return ["CREATE FUNCTION"]
 
         def sync_all_tables(
@@ -90,6 +97,34 @@ def test_sync_catalog_passes_profile_to_remote_fetch_paths(monkeypatch) -> None:
     assert captured["metric_views_profile"] == "analytics"
     assert captured["tables_engine"] == "sdk"
     assert captured["metric_views_engine"] == "sdk"
+    assert captured["functions_profile"] == "analytics"
+    assert captured["functions_engine"] == "sdk"
+
+
+def test_sync_functions_passes_profile_and_engine_to_adapter(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+    ctx = SimpleNamespace(catalog_index=_CatalogIndex())
+
+    class StubAdapter:
+        def sync_all_functions(self, functions, profile=None, engine="spark"):
+            captured["functions"] = functions
+            captured["profile"] = profile
+            captured["engine"] = engine
+            return ["CREATE FUNCTION"]
+
+    monkeypatch.setattr(api, "get_context", lambda: ctx)
+    monkeypatch.setattr(api, "UnityCatalogAdapter", StubAdapter)
+
+    queries = api.sync_functions(
+        function_names=["normalize_name"],
+        profile="analytics",
+        engine="sdk",
+    )
+
+    assert queries == ["CREATE FUNCTION"]
+    assert [function.name for function in captured["functions"]] == ["normalize_name"]
+    assert captured["profile"] == "analytics"
+    assert captured["engine"] == "sdk"
 
 
 def test_sync_tables_passes_profile_to_adapter(monkeypatch) -> None:
@@ -162,7 +197,7 @@ def test_sync_catalog_with_filter_by_meta(monkeypatch) -> None:
     ctx = SimpleNamespace(catalog_index=_CatalogIndex())
 
     class StubAdapter:
-        def sync_all_functions(self, functions):
+        def sync_all_functions(self, functions, profile=None, engine="spark"):
             captured["functions"] = functions
             return []
 
